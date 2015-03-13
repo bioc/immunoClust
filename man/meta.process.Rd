@@ -1,0 +1,121 @@
+\name{meta.process}
+\alias{meta.process}
+
+\encoding{utf8}
+
+\title{
+Meta-clustering of Cell-clusters in the immunoClust-pipeline
+}
+
+\description{
+This function performs iterative model based clustering on the clusters obtained
+by \code{\link{cell.process}} of several samples. Its input is a vector of the 
+\code{immunoClust-objects} of the samples.
+
+The function also performs in a secondary step an ordering of the meta-clusters
+according to their distribution in the scatter parameter and an automated gating
+process. These procedures are preliminary and not part of the presented 
+algorithms of the reference.
+}
+
+\usage{
+meta.process(exp, dat.subset=c(), meta.iter=10, meta.bias=0.2,
+            meta.alpha=.5, meta.normalize=FALSE,
+            scatter.subset=c(1,2), scatter.bias=0.25, 
+            scatter.prior=6)}
+%- maybe also 'usage' for other objects documented here.
+\arguments{
+\item{exp}{A vector of \code{list} objects, each \code{list} contains the 
+cell-clustering result of a sample in the \code{res} field. Addition fields are
+\code{name} and \code{fsc} containing the cell-sample name and fcs-filename, 
+which are used for data output and plot routines.}
+\item{dat.subset}{A numeric vector defining the used observed parameters for the
+meta-clustering. If unset, all parameters in the cell-clustering results are 
+used.}
+\item{meta.iter}{The number of major iterations.}
+\item{meta.bias}{The ICL-bias used in the EMt-iteration of the meta-clustering.}
+\item{meta.alpha}{A value between 0 and 1 used to balance the bhattacharrya 
+probabilities calculated with either the full covariance matrices or using only
+the diagonal elements of it. When working with uncompensated FC data, very high
+correlations between parameters may be observed due to spill over. This leads to
+a very low bhattacharrya probability for two clusters even if they are located 
+nearby. Using a mixture of the probabilities calculated with the complete 
+covariance matrices and the variance information of each parameter avoids this 
+problem. With a value of alpha=1, only the probabilities with complete 
+covariance matrices are applied. A reasonable value for alpha is 0.5.}
+\item{meta.normalize}{A numeric indicator whether a normalization step should be
+performed during the major iteration. This is a preliminary approach in an 
+experimental stage performing an orthogonal procrustes analysis step in each 
+iteration step of the major loop.}
+\item{scatter.subset}{A numeric vector, giving the indices for the scatter 
+parameter. If the scatter.subset is empty, scatter clustering was not 
+performed.}
+\item{scatter.bias}{The ICL-bias used in EMt-iteration of scatter-clustering.}
+\item{scatter.prior}{experimental; gives the number of initial scatter regions 
+for scatter clustering.}
+}
+
+\value{
+The function returns a list-object with the following components:
+\tabular{ll}{
+\code{dat.clusters} \tab A \code{dat} list-object of the cell event clusters 
+used for meta-clustering.\cr
+\code{res.clusters} \tab The 
+\code{\link[=immunoClust.object]{immunoClust-object}} of the fitted 
+meta-clustering mixture model.\cr
+\code{dat.scatter}  \tab A \code{dat} list-object of the scatter parameters for
+the cell event clusters used for scatter clustering.\cr
+\code{res.scatter}  \tab The 
+\code{\link[=immunoClust.object]{immunoClust-object}} of the fitted 
+scatter-clustering mixture model.\cr
+\code{gating}       \tab A list-object containing the hierarchical 
+gating-tree.\cr
+}
+
+The components of the \code{dat} list-objects are:
+\tabular{ll}{
+\code{P}  \tab The number of parameters for the cell event clusters.\cr
+\code{N}  \tab The number of cell-clustering experiments.\cr
+\code{K}  \tab The \eqn{N}-dimensional vector with the numbers of cell event 
+clusters in each experiment. The total number of clusters is 
+\eqn{ sum_{i=1}^N K_i}{sum(K)}.\cr
+\code{W}  \tab The \eqn{totK}-dimensional vector with the mixture proportions 
+of all clusters.\cr
+\code{M}  \tab The \eqn{totK x P}-dimensional matrix of all cluster means.\cr
+\code{S}  \tab The \eqn{totK x P x P}-dimensional matrix of all cluster 
+covariance matrices.\cr 
+\code{expNames}   \tab The \eqn{N}-dimensional character vector with the 
+cell-clustering experiment names.\cr
+\code{expEvents}  \tab The \eqn{N}-dimensional vector with the numbers of 
+events in each cell-clustering experiment.\cr
+\code{clsEvents}  \tab The \eqn{totK}-dimensional vector with the number of 
+events in each cluster.\cr
+\code{desc}     \tab The \eqn{P}-dimensional character vector with the 
+parameter description.\cr
+}
+}
+
+\references{
+Sörensen, T., Baumgart, S., Durek, P., Grützkau, A. and Häupl, T. 
+immunoClust - an automated analysis pipeline for the identification of 
+immunophenotypic signatures in high-dimensional cytometric datasets. 
+\emph{Cytometry A} (accepted). 
+}
+\author{
+Till Sörensen \email{till-antoni.soerensen@charite.de}
+}
+
+\seealso{
+\code{\link[=immunoClust.object]{immunoClust-object}}, 
+\code{\link{meta.Clustering}}, \code{\link{meta.export}}, 
+\code{\link{cell.process}}
+}
+
+\examples{
+data(dat.exp)
+meta <- meta.process(dat.exp)
+summary(meta$res.clusters)
+tbl <- meta.numEvents(meta)
+}
+
+\keyword{ cluster }

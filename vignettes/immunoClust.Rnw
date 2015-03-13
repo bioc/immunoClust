@@ -1,0 +1,235 @@
+%\VignetteIndexEntry{immunoClust package}
+%\VignetteKeywords{}
+%\VignetteEncoding{UTF-8}
+%\VignettePackage{BiocStyle}
+%\VignetteEngine{utils::Sweave}
+
+
+\documentclass{article}
+
+<<style-Sweave, eval=TRUE, echo=FALSE, results=tex>>=
+BiocStyle::latex()
+@
+
+\usepackage{cite, hyperref}
+\usepackage[utf8]{inputenx}
+
+\bioctitle[immunoClust]{immunoClust - Automated Pipeline for Population 
+Detection in Flow Cytometry}
+\author{Till Sörensen\footnote{till-antoni.soerensen@charite.de}}
+
+\begin{document}
+\setkeys{Gin}{width=1.0\textwidth, height=1.1\textwidth}
+
+\maketitle
+
+\textnormal{\normalfont}
+
+\tableofcontents
+\newpage
+
+
+\section{Licensing}
+
+Under the Artistic License, you are free to use and redistribute this software.
+However, we ask you to cite the following paper if you use this software for 
+publication. 
+
+\begin{itemize}
+\item[] Sörensen, T., Baumgart, S., Durek, P., Grützkau, A. and Häupl, T. 
+
+immunoClust - an automated analysis pipeline for the identification of 
+
+immunophenotypic signatures in high-dimensional cytometric datasets. 
+
+\emph{Cytometry A} (accepted).
+\end{itemize}
+
+
+\section{Overview}
+
+\Rpackage{immunoClust} presents an automated analysis pipeline for 
+uncompensated fluorescence and mass cytometry data and consists of two parts. 
+First, cell events of each sample are grouped into individual clusters 
+(cell-clustering). Subsequently, a classification algorithm assorts these cell 
+event clusters into populations comparable between different samples 
+(meta-clustering). The clustering of cell events is designed for datasets with 
+large event counts in high dimensions as a global unsupervised method, 
+sensitive to identify rare cell types even when next to large populations. 
+Both parts use model-based clustering with an iterative Expectation 
+Maximization (EM) algorithm and the Integrated Classification Likelihood (ICL) 
+to obtain the clusters.
+
+The cell-clustering process fits a mixture model with $t$-distributions. Within
+the clustering process a optimisation of the $asinh$-transformation for the 
+fluorescence parameters is included.
+
+The meta-clustering fits a Gaussian mixture model for the meta-clusters, where 
+adjusted Bhattacharyya-Coefficients give the probability measures between cell-
+and meta-clusters. 
+
+Several plotting routines are available visualising the results of the cell- 
+and meta-clustering process. Additional helper-routines to extract population 
+features are provided.
+
+
+\section{Getting started}
+The installation on \Rpackage{immunoClust} is normally done within the
+Bioconductor. 
+
+The core functions of \Rpackage{immunoClust} are implemented in C/C++ for 
+optimal utilization of system resources and depend on the GNU Scientific 
+Library (GSL) and Basic Linear Subprogram (BLAS).
+When installing \Rpackage{immunoClust} form source using Rtools be aware to 
+adjust the GSL library and include pathes in src/Makevars.in or
+src/Makevars.win (on Windows systems) repectively to the correct installation
+directory of the GSL-library on the system.
+
+\Rpackage{immunoClust} relies on the \Rclass{flowFrame} structure imported from 
+the \Biocpkg{flowCore}-package for accessing the measured cell events from a 
+flow cytometer device. 
+
+
+\section{Example Illustrating the immunoClust Pipeline}
+
+The functionality of the immunoClust pipeline is demonstrated on a dataset of 
+blood cell samples of defined composition that were depleted of particular cell
+subsets by magnetic cell sorting. Whole blood leukocytes taken from three 
+healthy individuals, which were experimentally modified by the depletion of one
+particular cell type per sample, including granulocytes (using CD15-MACS-beads),
+monocytes (using CD14-MACS-beads), T lymphocytes (CD3-MACS-beads), T helper 
+lymphocytes (using CD4-MACS-beads) and B lymphocytes (using CD19-MACS-beads).
+
+The example datasets contain reduced (10.000 cell-events) of the first Flow 
+Cytometry (FC) sample in \Robject{dat.fcs} and the \Rpackage{immunoClust} 
+cell-clustering results of all 5 reduced FC samples for the first donor in 
+\Robject{dat.exp}.  The full sized dataset is published and available under 
+http://flowrepository.org/id/FR-FCM-ZZWB.
+
+
+\subsection{Cell Event Clustering}  \label{cell-clustering}
+
+<<stage0, results=hide>>=
+library(immunoClust)
+@
+The cell-clustering is performed by the \Rfunction{cell.process} function for 
+each FC sample separately. Its major input are the measured cell-events in a 
+\Rclass{flowFrame}-object  imported from the \Biocpkg{flowCore}-package.
+<<stage1data, echo=TRUE>>=
+data(dat.fcs)
+dat.fcs
+@
+In the \Rcode{parameters} argument the parameters (named as observables in the
+\Robject{flowFrame}) used for cell-clustering are specified. When omitted all 
+determined parameters are used.
+<<stage1cluster, echo=TRUE>>=
+pars=c("FSC-A","SSC-A","FITC-A","PE-A","APC-A","APC-Cy7-A","Pacific Blue-A")
+res.fcs <- cell.process(dat.fcs, parameters=pars)
+@
+The \Rfunction{summary} method for an \Rpackage{immunoClust}-object gives an 
+overview of the clustering results.
+<<stage1summary, echo=TRUE>>=
+summary(res.fcs)
+@
+With the \Rcode{bias} argument of the \Rfunction{cell.process} function the 
+number of clusters in the final model is controlled.
+<<stage1bias, echo=TRUE>>=
+res2 <- cell.process(dat.fcs, bias=0.25)
+summary(res2)
+@
+An ICL-bias of 0.3 is reasonable for fluorescence cytometry data based on our 
+experiences, whereas the number of clusters increase dramatically when a 
+\Rcode{bias} below 0.2 is applied. A principal strategy for the ICL-bias in 
+the whole pipeline is the use of a moderately small \Rcode{bias} (0.2 - 0.3) 
+for cell-clustering and to optimise the \Rcode{bias} on meta-clustering level 
+to retrieve the common populations across all samples.
+
+For plotting the clustering results on cell event level, the optimised 
+$asinh$-transformation has to be applied to the raw FC data first.
+<<stage1trans,echo=TRUE>>=
+dat.transformed <- trans.ApplyToData(res.fcs, dat.fcs)
+@
+A scatter plot matrix of all used parameters for clustering is obtained by the 
+\Rfunction{splom} method.
+<<stage1splom,fig=TRUE>>=
+splom(res.fcs, dat.transformed, N=1000)
+@
+For a scatter plot of 2 particular parameters the \Rfunction{plot} method can 
+be used, where parameters of interest are specified in the \Rcode{subset} 
+argument.
+<<stage1plot, fig=TRUE>>=
+plot(res.fcs, data=dat.transformed, subset=c(1,2))
+@
+
+
+\subsection{Meta Clustering} \label{meta-clustering}
+For meta-clustering the cell-clustering results of all FC samples obtained by 
+the \Rfunction{cell.process} function are collected in a \Robject{vector} of 
+\Rpackage{immunoClust}-objects and processed by the \Rfunction{meta.process} 
+function.
+
+<<stage2data, echo=TRUE>>=
+data(dat.exp)
+meta<-meta.process(dat.exp, meta.bias=0.3)
+@
+The obtained \Robject{list}-object contains the meta-clustering result in 
+\Rcode{\$res.clusters}, and the used cell-clusters information in 
+\Rcode{\$dat.clusters}. Additionally a meta-clustering using only the scatter 
+parameter is performed within the \Rfunction{meta.process} function with 
+results in \Rcode{\$res.scatter} and \Rcode{\$dat.scatter}. In a preliminary 
+state of development an automated hierarchical gating on the meta-cluster is 
+performed with results in \Rcode{\$gating}.
+
+A scatter plot matrix of the meta-clustering is again obtained by the 
+\Rfunction{splom} method. 
+<<stage2splom, fig=TRUE>>=
+splom(meta$res.clusters, meta$dat.clusters$M, ellipse=TRUE)
+@
+In these scatter plots each cell-cluster is marked by a point of its centre. 
+With the \Rcode{ellipse=TRUE} argument the meta-clusters are outlined by 
+ellipses of the 90\% quantile.
+
+A scatter plot of the scatter parameter distribution of the cell-clusters is 
+obtained by the \Rfunction{plot} method using \Rcode{\$res.scatter}. 
+<<stage2plot, fig=TRUE>>=
+plot(meta$res.scatter, data=meta$dat.scatter$M)
+@
+The scatter distribution is divided into 6 major regions \texttt{P1 - P6} with 
+default colors red, green, blue, cyan, magenta and yellow.
+
+The event numbers of each meta-cluster and each sample are extracted in a 
+numeric matrix by the \Rfunction{meta.numEvents} function.
+
+<<stage2export, echo=TRUE>>=
+tbl <- meta.numEvents(meta, out.all=FALSE)
+tbl[,1:5]
+@
+Each row denotes a meta-cluster and each column a data sample used for 
+meta-clustering. The row names give the automated generated gating name, the 
+meta-cluster index and the default color used in the plot routines for each 
+meta-cluster. With an argument \Rcode{out.all=TRUE} additionally the event 
+numbers in each gating hierarchy level are extracted. 
+In the last columns additionally the meta-cluster centre values in each 
+parameter are given, which helps to identify the meta-clusters. Further export 
+functions retrieve relative cell event frequencies and sample meta-cluster 
+centre values in a particular parameter.
+
+Picking the meta-clusters of the five commonly found population, with respect 
+to the technical depletion the scatter plot matrix reduces to
+<<stage2final, fig=TRUE>>=
+splom(meta$res.clusters, meta$dat.clusters$M, 
+include=c(3,9,10,4,7,12), subset=3:7, ellipse=TRUE)
+@
+The whole analysis is performed on uncompensated FC data, thus the high CD19 
+values on the CD14-population is explained by spillover of FITC into PE. The 
+variation of the CD3 expression in the CD14-population of sample \texttt{12546}
+is caused artificially due to depletion of the granulocytes, which constitute 
+about 60\% - 75\% of the cells in the other samples. 
+
+\section{Session Info}
+The documentation and example output was compiled and obtained on the system:
+<<sessionInfo, results=tex, print=TRUE, eval=TRUE>>=
+toLatex(sessionInfo())
+@
+
+\end{document}

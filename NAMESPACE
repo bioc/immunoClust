@@ -1,0 +1,21 @@
+useDynLib(immunoClust)
+
+import(methods)
+
+
+importFrom(stats, density)
+importFrom(graphics, plot, pairs, points, hist)
+importFrom(grid, get.gpar, grid.points, current.viewport)
+importFrom(lattice, panel.points, splom)
+
+importClassesFrom(flowCore, flowFrame)
+importMethodsFrom(flowCore, exprs, "exprs<-", description, "description<-", 
+    parameters, colnames, spillover)
+importFrom(flowCore, "read.FCS")
+
+## export anything w/out a dot in front. 
+exportPattern("^[^\\.]")
+
+exportClasses(immunoClust)
+exportMethods(show, summary, plot, splom)
+

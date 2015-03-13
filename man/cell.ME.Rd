@@ -1,0 +1,70 @@
+\name{cell.ME}
+\alias{cell.ME}
+
+\encoding{utf8}
+
+\title{
+immunoClust EM-iteration on Cell-events given initial Cluster Membership 
+Assignment
+}
+
+\description{
+Performs an EM-iteration on cell event observations given an initial cluster 
+membership for the cell events and returns the fitted cluster information in an
+object of class \code{\link[=immunoClust.object]{immunoClust}}.
+}
+
+\usage{
+cell.ME(data, parameters=NULL, expName="immunoClust Experiment", 
+        history=NULL, state=NULL, label, B=50, tol=1e-5, modelName="mvt")
+}
+
+\arguments{
+\item{data}{A numeric matrix, data frame of observations, or object of class 
+flowFrame.} 
+\item{parameters}{ A character vector specifying the parameters (columns) to be
+included in clustering. When it is left unspecified, all the parameters will be
+used.}
+\item{expName}{The name of the clustering experiment.}
+\item{history}{experimental; unused so far.}
+\item{state}{experimental: unused so far.}
+\item{label}{ The \eqn{N}-dimensional vector containing the initial cluster 
+membership. A label-number of 0 for an event indicates that this event is not 
+initially assigned to a cluster.}
+\item{B}{The maximum number of EMt-iterations.}
+\item{tol}{The tolerance used to assess the convergence of the EMt-algorithms.}
+\item{modelName}{Used mixture model; either \code{"mvt"} or \code{"mvn"} for a 
+\eqn{t}- or Gaussian mixture model respectively.}
+}
+
+\value{
+The fitted clusters information in an object of class 
+\code{\link[=immunoClust.object]{immunoClust}}.
+}
+
+\references{
+Sörensen, T., Baumgart, S., Durek, P., Grützkau, A. and Häupl, T. 
+immunoClust - an automated analysis pipeline for the identification of 
+immunophenotypic signatures in high-dimensional cytometric datasets. 
+\emph{Cytometry A} (accepted). 
+}
+\author{
+Till Sörensen \email{till-antoni.soerensen@charite.de}
+}
+
+\seealso{
+\code{\link{cell.EM}}
+}
+
+\examples{
+data(dat.fcs)
+data(dat.exp)
+## cell.clustering result for dat.fcs
+r1 <- dat.exp[[1]]
+summary(r1)
+## apply model parameter to all (unfiltered) events
+dat.trans <- trans.ApplyToData(r1, dat.fcs)
+r2 <- cell.ME(dat.trans, parameters=r1@parameters, label=r1@label)
+summary(r2)
+}
+\keyword{ cluster }

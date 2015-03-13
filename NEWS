@@ -1,0 +1,14 @@
+immunoClust 1.0.0:
+    The first version caintains basically the functios and routines usesd to 
+    obtain the results of 
+    "Soerensen, T., Baumgart, S., Durek, P., Gruetzkau, A. and Haeupl, T. 
+    immunoClust - an automated analysis pipeline for the identification of 
+    immunophenotypic signatures in high-dimensional cytometric datasets. 
+    Cytometry A (accepted)."
+
+  CHANGES:
+    * The code was cleaned and modified in the C-binding calls to make
+      it runable on R 3.1.2.
+    * A bug in the cell.hclust function was fixed, which does not effect
+      the general results but lead to minor differences in concrete
+      numbers.

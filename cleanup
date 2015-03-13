@@ -1,0 +1,17 @@
+#! /bin/sh
+for f in ./config.*; do
+rm -f $f
+done
+for f in ./autom4*; do
+rm -rf $f
+done
+if [ -e src/Makevars ]; then
+rm -f src/Makevars
+fi
+if [ -e src/immunoClust.so ]; then
+rm -f src/immunoClust.so
+fi
+for f in src/*.o; do
+rm -f $f
+done
+exit 0 
