@@ -15,7 +15,7 @@ extern "C" {
 
 int print_text(const char* txt) 
 {
-	// Rprintf("%s\n", txt);
+	Rprintf("%s\n", txt);
 	return 0;
 }
 	
@@ -53,6 +53,9 @@ int print_text(const char* txt)
 		/* cluster data extraction */
 		{"immunoC_clusterData", (DL_FUNC)(&call_clusterData), 8},
 		{"immunoC_clusterInclude", (DL_FUNC)(&call_clusterInclude), 10},
+        
+        /* meta */
+        {"immunoC_metaME", (DL_FUNC)(&call_metaME), 13},
 		{NULL, NULL, 0}
 	};
 	

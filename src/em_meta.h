@@ -27,26 +27,28 @@ protected:
 	const double	BIAS;
 	const double	ALPHA;
 	// 
-	const int	P;	// number of parameter
 
 	// data: in
-	const int	N;	// number of experiments
-	const int*	K;	// number of cluster in experiments: N
-	
-	int			totK;	// total number of cluster = sum K[i]
-	
-	const double*		W;	// cluster weights: totK
-	const double*		M;	// cluster mean: totK x P
-	const double*		S;	// cluster sigma: totK x P x P
+	const int	N;	// number of cell-clusters
+	const int	P;	// number of parameter
+    
+//	const int*	K;	// number of cluster in experiments: N
+//	int			totK;	// total number of cluster = sum K[i]
+    const int	G;		// number of components
+
+    
+	const double*		W;	// cluster weights: N
+	const double*		M;	// cluster mean: N x P
+	const double*		S;	// cluster sigma: N x P x P
 	
 	const double*		T;	// cluster weights
 	double				T_sum;
 	int					T_inc;
 	
 	// model: in/out
-	const int	G;		// number of components
 	int			L;		// number of resulting components
 	int			minG;
+	double*		Z;	// unobserved: N x G
 
 	double*		gW;		// component weights: G
 	double*		gM;		// component mean: G x P
@@ -54,8 +56,7 @@ protected:
 	double*		gP;		// component precision: G x P x P (=precision=sigma^{-1} during process
 	double*		gL;		// component cholewsky decomposition of gP: G x P x P (=sigma^{-1/2}
 
-	double*		Z;	// unobserved: totK x G
-	int*		C;	// classification: totK 
+	int*		C;	// classification: N 
 	
 	double*		Z_sum;
 	
@@ -66,7 +67,10 @@ protected:
 	double*		tmpS;
 	
 public:
-	em_meta(int p, int n, const int* k, const double* w, const double* m, const double* s, int g, double* gw, double* gm, double* gs, double bias=1.0, double alpha=1.0);
+	em_meta(int n, /*const int* k,*/ int p, int g,
+            const double* w, const double* m, const double* s, 
+            double* z, double* gw, double* gm, double* gs, 
+            double bias=1.0, double alpha=1.0);
 	~em_meta();
 	
 	

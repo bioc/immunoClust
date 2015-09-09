@@ -16,7 +16,7 @@ information in an object of class
 
 \usage{
 meta.ME(P, N, K, W, M, S, label, B=500, tol=1e-5, method=20, bias=0.25, 
-    alpha=1.0, min.class=0)
+    alpha=0.5, min.class=0)
 }
 
 \arguments{

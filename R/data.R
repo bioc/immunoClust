@@ -142,4 +142,93 @@ meta.exprs <- function(exp, sub=c())
 }
 ### cell.compensate
 
-
+removed.above <- function(fcs, parameters=NULL, N=NULL, max.count=10, max=NULL) 
+{
+    
+    dat <- fcs
+## restrict number of events?
+    if( !is.null(N) && N < nrow(dat) ) {
+        dat <- dat[1:N]
+    }
+    else {
+        N <- nrow(dat)
+    }
+    
+    if( is.null(parameters) ) {
+        parameters <- colnames(dat)
+        parameters <- parameters[ parameters != "Time" ]
+        
+    }
+    else {
+        parameters <- parameters[!is.na(match(parameters,colnames(fcs)))]
+    }
+    
+    y <- .exprs(dat, parameters) 
+    
+    removed <- matrix(0, ncol=ncol(y)+2, nrow=2)
+    removed.not <- matrix(FALSE, ncol=ncol(y), nrow=nrow(y))
+    
+    rm.above <- rep(FALSE, nrow(y))
+    if (max.count > -1) {
+        if (is.null(max)[1]) 
+        max <- apply(y, 2, max)
+        for (p in 1:ncol(y))  
+        if (sum(y[,p]>=max[p]) >= max.count) {
+            removed[1,p] <-  sum(y[,p] >= max[p])
+            rm.above <- rm.above | (y[,p] >= max[p])
+            for( q in 1:ncol(y) ) 
+            if( q != p ) {
+                removed.not[,q] <- removed.not[,q] | (y[,p] >= max[p])
+            }
+        }
+        rm.sum <- sum(rm.above)
+        for( p in 1:ncol(y) ) {
+            removed[2,p] <- sum(rm.above & !removed.not[,p])
+        }
+        
+        removed[1,ncol(y)+1] <- rm.sum
+        removed[1,ncol(y)+2] <- 100*rm.sum/nrow(y)
+        
+        removed[2,ncol(y)+1] <- sum(removed[2,1:ncol(y)])
+        removed[2,ncol(y)+2] <- 100*sum(removed[2,1:ncol(y)])/nrow(y)    
+        
+    }
+    
+#  id <- paste("$P", match(parameters, colnames(fcs)), "V", sep="")
+#   removed[3,1:ncol(y)] <- description(fcs)[id]
+    
+    
+#   removed.not <- matrix(FALSE, ncol=ncol(y), nrow=nrow(y))
+#    
+#    rm.below <- rep(FALSE, nrow(y))
+#    if (min.count > -1) {
+#        if (is.null(min)[1]) 
+#        min <- apply(y, 2, min)
+#        for (p in 1:ncol(y))  
+#        if (sum(y[,p]<=min[p]) >= min.count) {
+#            removed[3,p] <-  sum(y[,p] <= min[p])
+#            rm.below <- rm.below | (y[,p] <= min[p])
+#            for( q in 1:ncol(y) ) 
+#            if( q != p ) {
+#                removed.not[,q] <- removed.not[,q] | (y[,p] <= max[p])
+#            }
+#        }
+#        rm.sum <- sum(rm.below)
+#        for( p in 1:ncol(y) ) {
+#            removed[4,p] <- sum(rm.below & !removed.not[,p])
+#        }
+#        
+#        removed[3,ncol(y)+1] <- rm.sum
+#        removed[3,ncol(y)+2] <- 100*rm.sum/nrow(y)
+#        
+#        removed[4,ncol(y)+1] <- sum(removed[4,1:ncol(y)])
+#        removed[4,ncol(y)+2] <- 100*sum(removed[4,1:ncol(y)])/nrow(y)    
+#        
+#    }
+#    
+    
+    colnames(removed) <- c(parameters, "sum", "per ttl")
+    rownames(removed) <- c("above", "above.only")
+    
+    removed
+}

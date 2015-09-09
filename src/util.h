@@ -34,7 +34,8 @@ namespace mat {
 	double	trace(const int P, const double* A);
 	void	procrustes(const int P, double* A, double* U, double* V, double* D);
 	void	SV_decomp(const int P, double* A, double* V, double* D, double* tmpP);
-	
+    void    LU_invert(const int P, double* A);
+    
 	void	traceW(const int N, const int P, const double* y, double* trace);
 }
 

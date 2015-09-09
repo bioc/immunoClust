@@ -3,15 +3,22 @@
 ####
 meta.process <- function(
 exp, dat.subset=c(), meta.iter=10, meta.bias=0.2, 
-meta.alpha=.5, meta.normalize=FALSE, 
+meta.alpha=.5, meta.normalize=FALSE, norm.degree=1, 
 scatter.subset=c(1,2), scatter.bias=0.25,scatter.prior=6
 ) {
     dat <- meta.exprs(exp, sub=dat.subset)
     
     res <- meta.Clustering(dat$P, dat$N, dat$K, dat$clsEvents, dat$M, dat$S, 
                         bias=meta.bias, I.iter=meta.iter, EM.method=20, 
-                        alpha=meta.alpha)
+                        alpha=meta.alpha, normalize=meta.normalize, 
+                        norm.degree=norm.degree)
 
+    dat.norm <- dat
+    if( meta.normalize ) {
+        dat.norm <- meta.Normalize(dat$P, dat$N, dat$K, dat$clsEvents, 
+                                dat$M, dat$S, res@K, res@z, degree=norm.degree)
+    }
+    
     attr(res, "desc") <- dat$desc
     
     if( length(scatter.subset) > 0 ) {
@@ -24,7 +31,7 @@ scatter.subset=c(1,2), scatter.bias=0.25,scatter.prior=6
         dat.scatter <- scatter$dat
         attr(res.scatter,"desc") <- dat$desc
         
-        meta <- list("dat.scatter"=dat.scatter, "res.scatter"=res.scatter,  
+        meta <- list("dat.scatter"=dat.scatter, "res.scatter"=res.scatter, 
                     "dat.clusters"=dat, "res.clusters"=res)
         
 ## do auto gating of meta clusters
@@ -60,27 +67,103 @@ scatter.subset=c(1,2), scatter.bias=0.25,scatter.prior=6
 }
 ## meta.process
 
+##
+#   meta.Scale
+##
+meta.Scale <- function(P, N, K, W, M, S, method=5)
+{
+    totK <- sum(K)
+    label <- rep(1, totK)
+    obj <- .C("metaScale", 
+            as.integer(P), as.integer(N), as.integer(K),
+            W=as.double(W), M=as.double(c(t(M))), S=as.double(c(t(S))), 
+            label=as.integer(label), as.integer(method), 
+            package="immunoClust")
+
+    tW <- obj$W
+    tM <- matrix(obj$M, nrow=totK, ncol=P, byrow=TRUE)
+    tS <- matrix(obj$S, nrow=totK, ncol=(P*P), byrow=TRUE)
+
+    colnames(tM) <- colnames(M)
+    rownames(tM) <- rownames(M)
+
+    list("P"=P, "N"=N, "K"=K, "W"=tW,"M"=tM,"S"=tS)
+}
+## meta.Scale
+
+##
+#   meta.Mormalize
+##
+meta.GPA <- function(P, N, K, W, M, S, G, Z)
+{
+    totK <- sum(K)
+    groups <- rep(1, totK)
+    
+    obj <- .C("metaGPA", 
+            as.integer(P), as.integer(N), as.integer(K),
+            W=as.double(W), M=as.double(c(t(M))), S=as.double(c(t(S))), 
+            G=as.integer(G), z=as.double(t(Z)), groups=as.integer(groups), 
+            package="immunoCust")
+    
+    tW <- obj$W
+    tM <- matrix(obj$M, nrow=totK, ncol=P, byrow=TRUE)
+    tS <- matrix(obj$S, nrow=totK, ncol=(P*P), byrow=TRUE)
+    
+    colnames(tM) <- colnames(M)
+    rownames(tM) <- rownames(M)
+    
+    list("P"=P, "N"=N, "K"=K, "W"=tW,"M"=tM,"S"=tS)
+}
+meta.Normalize <- function(P, N, K, W, M, S, G, Z, degree=1)
+{
+    totK <- sum(K)
+    
+    obj <- .C("metaNormalize", 
+            as.integer(P), as.integer(N), as.integer(K),
+            W=as.double(W), M=as.double(c(t(M))), S=as.double(c(t(S))), 
+            G=as.integer(G), z=as.double(t(Z)), degree=as.integer(degree), 
+            package="immunoCust")
+    
+    tW <- obj$W
+    tM <- matrix(obj$M, nrow=totK, ncol=P, byrow=TRUE)
+    tS <- matrix(obj$S, nrow=totK, ncol=(P*P), byrow=TRUE)
+    
+    colnames(tM) <- colnames(M)
+    rownames(tM) <- rownames(M)
+    
+    list("P"=P, "N"=N, "K"=K, "W"=tW,"M"=tM,"S"=tS)
+}
+## meta.Normalize
+
 
 ##
 #   meta.ME
 ##
 meta.ME <- function(
 P, N, K, W, M, S, label, B=500, tol=1e-5, method=20, 
-bias=0.25, alpha=1.0, min.class=0
+bias=0.25, alpha=0.5, min.class=0
 ) {
     G <- max(label)
-    obj <- .C("metaME", 
-            as.integer(P), as.integer(N), as.integer(K),
-            as.double(W), as.double(c(t(M))), as.double(c(t(S))), 
-            G=as.integer(G), w=double(G), m=double(G*P), s=double(G*P*P),
-            label=as.integer(label), logLike=double(3), 
-            history=as.integer(1:G),
-            as.integer(B), as.double(tol), 
-            as.integer(method), as.double(bias), 
-            as.double(alpha), as.integer(min.class),
-            package="immunoClust")
+#    obj <- .C("metaME", 
+#            as.integer(P), as.integer(N), as.integer(K),
+#            as.double(W), as.double(c(t(M))), as.double(c(t(S))), 
+#            G=as.integer(G), w=double(G), m=double(G*P), s=double(G*P*P),
+#            label=as.integer(label), logLike=double(3), 
+#            history=as.integer(1:G),
+#            as.integer(B), as.double(tol), 
+#            as.integer(method), as.double(bias), 
+#            as.double(alpha), as.integer(min.class),
+#            package="immunoClust")
     
-    L <- obj$G
+    obj <- .Call("immunoC_metaME",
+            as.integer(sum(K)), as.integer(P), as.integer(G),
+            as.double(W), as.double(c(t(M))), as.double(c(t(S))),
+            as.integer(label), as.integer(B), as.double(tol),
+            as.integer(method), as.double(bias), as.double(alpha),
+            as.integer(min.class))
+    
+    
+    L <- obj$L
 # output obj$s to sigma
     sigma <- array(0, c(L, P, P))
     s <- matrix(obj$s, G, P * P, byrow=TRUE)
@@ -89,6 +172,14 @@ bias=0.25, alpha=1.0, min.class=0
     
     mu <- matrix(obj$m, G, P, byrow=TRUE)[1:L,]
     dim(mu) <- c(L,P)
+    
+    z <- matrix(obj$z, sum(K), G, byrow=TRUE)
+    z <- as.matrix(z[,1:L])
+    
+    if( sum(is.na(z)) > 0 ) {
+        warning("meta.ME: N/As in Z\n")
+        z[is.na(z)] <- 0
+    }
     
 # output BIC & ICL
     BIC <- obj$logLike[1]
@@ -100,9 +191,10 @@ bias=0.25, alpha=1.0, min.class=0
         parameters <- paste(sep="", "P", 1:P)
     }
     result <- new("immunoClust", expName="meta.ME", parameters=parameters, 
-                K=L, w=obj$w[1:L], mu=mu, sigma=sigma, label=obj$label, 
-                logLike=obj$logLike, BIC=BIC, ICL=ICL,
-                state=obj$history[1:L])
+                    K=L, w=obj$w[1:L], mu=mu, sigma=sigma, 
+                    z=z, label=obj$label, 
+                    logLike=obj$logLike, BIC=BIC, ICL=ICL,
+                    state=obj$history[1:L])
     
     result
     
@@ -115,26 +207,44 @@ bias=0.25, alpha=1.0, min.class=0
 ###
 meta.Clustering <- function(
 P, N, K, W, M, S, I.iter=10, B=500, tol=1e-5, 
-bias=0.25, alpha=0.5, EM.method=20
+bias=0.25, alpha=0.5, EM.method=20, 
+normalize=FALSE, norm.degree=1, norm.minG=10
 ) {
     
     totK <- sum(K)
+    tM <- M
+    tS <- S
+    if( normalize ) {
+        d <- meta.Scale(P, N, K, W, M, S, method=5)
+        tM <- d$M
+        tS <- d$S
+    }
+    
     label <- rep(1, totK)
     G <- 1
     for( i in 1:(I.iter) ) {
+        if( normalize && G >= norm.minG) {
+            d <- meta.Normalize(P, N, K, W, M, S, 
+                                res@K, res@z, degree=norm.degree)
+            tM <- d$M
+            tS <- d$S
+        }
+        
         
         if( G < 10 ) 
-        label <- meta.SubClustering(P, totK, W, M, S, label, tol=tol, 
-                                bias=bias*0.5, alpha=alpha, EM.method=EM.method)
+        label <- meta.SubClustering(P, totK, W, tM, tS, label, tol=tol, 
+                                    bias=bias*0.5, alpha=alpha, 
+                                    EM.method=EM.method)
         else
-        label <- meta.SubClustering(P, totK, W, M, S, label, tol=tol, 
-                                bias=bias, alpha=alpha, EM.method=EM.method)
+        label <- meta.SubClustering(P, totK, W, tM, tS, label, tol=tol, 
+                                    bias=bias, alpha=alpha,
+                                    EM.method=EM.method)
         
         message("meta.Clustering ", i, " of ", I.iter)
-        res <- meta.ME(P, N, K, W, M, S, label, B=B, tol=tol, 
-                    bias=bias, alpha=alpha, method=EM.method)
+        res <- meta.ME(P, N, K, W, tM, tS, label, B=B, tol=tol, 
+                        bias=bias, alpha=alpha, method=EM.method)
         
-        label <- res@label
+        label <- res@label 
         
         if( res@K == G ) break
         G <- res@K
@@ -260,23 +370,34 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
             parameters <- paste(sep="", "P", 1:P)
         }
         result <- vector("list", J)
-        
+
         label <- rep(1, N)
-        
-        obj <- .C("metaME", 
-                as.integer(P), as.integer(1), as.integer(N),
+
+#        obj <- .C("metaME", 
+#                as.integer(P), as.integer(1), as.integer(N),
+#                as.double(W), as.double(c(t(M))), as.double(c(t(S))), 
+#                G=as.integer(1), w=double(1), m=double(1*P), s=double(1*P*P),
+#                label=as.integer(label), logLike=double(3), 
+#                history=as.integer(1),
+#                as.integer(B), as.double(tol), as.integer(EM.method), 
+#                as.double(bias), as.double(alpha), as.integer(0),
+#                package="immunoClust")
+#        
+#        if( obj$G < 1 ) return(NULL)
+#        
+#        L <- obj$G
+
+        obj <- .Call("immunoC_metaME", 
+                as.integer(N), as.integer(P), as.integer(1),
                 as.double(W), as.double(c(t(M))), as.double(c(t(S))), 
-                G=as.integer(1), w=double(1), m=double(1*P), s=double(1*P*P),
-                label=as.integer(label), logLike=double(3), 
-                history=as.integer(1),
+                label=as.integer(label),
                 as.integer(B), as.double(tol), as.integer(EM.method), 
-                as.double(bias), as.double(alpha), as.integer(0),
-                package="immunoClust")
-        
-        if( obj$G < 1 ) return(NULL)
-        
-        L <- obj$G
-        
+                as.double(bias), as.double(alpha), as.integer(0))
+
+        if( obj$L < 1 ) return(NULL)
+
+        L <- obj$L
+
 # output obj$s to sigma
         sigma <- array(0, c(L, P, P))
         s <- matrix(obj$s, L, P * P, byrow=TRUE)
@@ -320,19 +441,28 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
                 
                 label[samples.set] <- .clust.hclass(hcPairs, k)
                 
-                obj <- .C("metaME", 
-                        as.integer(P), as.integer(1), as.integer(N),
+#                obj <- .C("metaME", 
+#                        as.integer(P), as.integer(1), as.integer(N),
+#                        as.double(W), as.double(c(t(M))), as.double(c(t(S))), 
+#                        G=as.integer(k), w=double(k), 
+#                        m=double(k*P), s=double(k*P*P),
+#                        label=as.integer(label), logLike=double(3), 
+#                        history=1:k,
+#                        as.integer(B), as.double(tol), as.integer(EM.method), 
+#                        as.double(bias), as.double(alpha), as.integer(0),
+#                        package="immunoClust")
+#                                
+#                L <- obj$G
+
+                obj <- .Call("immunoC_metaME", 
+                        as.integer(N), as.integer(P), as.integer(k),
                         as.double(W), as.double(c(t(M))), as.double(c(t(S))), 
-                        G=as.integer(k), w=double(k), 
-                        m=double(k*P), s=double(k*P*P),
-                        label=as.integer(label), logLike=double(3), 
-                        history=1:k,
+                        label=as.integer(label), 
                         as.integer(B), as.double(tol), as.integer(EM.method), 
-                        as.double(bias), as.double(alpha), as.integer(0),
-                        package="immunoClust")
-                
-                
-                L <- obj$G
+                        as.double(bias), as.double(alpha), as.integer(0))
+
+                L <- obj$L
+
 # output obj$s to sigma
                 sigma <- array(0, c(L, P, P))
                 s <- matrix(obj$s, k, P * P, byrow=TRUE)
@@ -384,6 +514,3 @@ meta.hclust <- function(P, N, W, M, S)
                 call = match.call())
 }
 ### meta.hclust
-
-
-

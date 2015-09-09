@@ -22,14 +22,14 @@
 /*
 	C´STR, D´STR
  */
-em_meta::em_meta(int p, int n, const int* k, const double* w, const double* m, const double* s, 
-				 int g, double* gw, double* gm, double* gs, double bias, double alpha):
+em_meta::em_meta(int n, int p, int g, 
+                 const double* w, const double* m, const double* s, 
+				 double* z, double* gw, double* gm, double* gs, 
+                 double bias, double alpha):
 	FLTMAX(1.7976931348623157e308), zero(0.0), one(1.0), two(2.0), BIAS(bias), ALPHA(alpha),
-	P(p), N(n), K(k), W(w), M(m), S(s), G(g), gW(gw), gM(gm), gS(gs)
+	N(n), P(p), G(g), W(w), M(m), S(s), Z(z), gW(gw), gM(gm), gS(gs)
 {	
-	totK = 0;
-	for( int i=0; i<N; ++i ) 
-		totK += K[i];
+    
 	L = G;
 	minG = 0;
 	
@@ -43,19 +43,18 @@ em_meta::em_meta(int p, int n, const int* k, const double* w, const double* m, c
 	gL = new double[G*P*P];
 	
 	Z_sum = new double[G];
-	Z = new double[totK*G];
 	
 	T = &one;
 	T_inc = 0;
-	T_sum = totK;
+	T_sum = N;
 
-	dbg::printf("meta.EM P=%d, N=%d, K=%d, G=%d (alpha=%.2lf)", P, N, totK, g, ALPHA);
+	dbg::printf("meta.EM P=%d, N=%d, G=%d (alpha=%.2lf)", P, N, G, ALPHA);
 	
 }
 
 em_meta::~em_meta()
 {
-	delete[] Z;
+	// delete[] Z;
 	delete[] Z_sum;
 	delete[] gL;
 	delete[] gP;
@@ -250,7 +249,7 @@ em_meta::kl_step()
 	
 	double* z = Z;
 	const double* t = T;
-	for(i=0;i<totK;i++) {
+	for(i=0; i<N; i++) {
 		// double w = W[i];
 
 		cblas_dcopy(G, &zero, 0, z, 1);
@@ -302,7 +301,7 @@ em_meta::kl_step()
 		z += G;	
 		t += T_inc;
 		
-	}	// for i<totK
+	}	// for i<N
 
 	return obLike;
 }
@@ -324,7 +323,7 @@ em_meta::bc_step()
 	
 	double* z = Z;
 	const double* t = T;
-	for(i=0;i<totK;i++) {
+	for(i=0; i < N;i++) {
         	
 		cblas_dcopy(G, &zero, 0, z, 1);
 		
@@ -392,7 +391,7 @@ em_meta::bt_step()
 	
 	double* z = Z;
 	const double* t = T;
-	for(i=0;i<totK;i++) {
+	for(i=0; i < N;i++) {
 		
 		cblas_dcopy(G, &zero, 0, z, 1);
 		
@@ -669,7 +668,7 @@ em_meta::m_init()
 		double z_sum = 0.0;
 		const double* z = Z + j;
 		const double* m = M;
-		for( i=0; i<totK; ++i ) {
+		for( i=0; i<N; ++i ) {
 			if( *z > 0 ) {
 				cblas_daxpy(P, *z, m, 1, gm, 1);
 				z_sum += (*z); 
@@ -717,7 +716,7 @@ em_meta::m_step()
 		cblas_dcopy(P, &zero, 0, gm, 1);
 		const double* z = Z + j;
 		const double* m = M;
-		for( i=0; i<totK; ++i ) {
+		for( i=0; i<N; ++i ) {
 			if( *z > 0.0 ) {
 				cblas_daxpy(P, *z, m, 1, gm, 1);
 			}
@@ -775,7 +774,7 @@ em_meta::m_step_sigma_g(int j)
 	const double* z = Z + j;
 	const double* s = S;
 	const double* m = M;
-	for( i=0; i<totK; ++i ) {
+	for( i=0; i<N; ++i ) {
 		if( *z > 0.0 ) {
 			for( p=0; p<P; ++p ) {
 				for( q=0; q<P; ++q ) {
@@ -829,22 +828,22 @@ em_meta::start(int* label, bool weighted)
 		T = W;
 		T_sum = 0;
 		const double* t = T;
-		for( int j=0; j<totK; ++j )
+		for( int j=0; j<N; ++j )
 			T_sum += *t++;
 		T_inc = 1;			
 	}
 	else {
 		// straight
 		T = &one;	
-		T_sum = totK;
+		T_sum = N;
 		T_inc = 0;
 	}
-	cblas_dcopy(totK*G, &zero, 0, Z, 1);
+	cblas_dcopy(N*G, &zero, 0, Z, 1);
 	cblas_dcopy(G, &zero, 0, Z_sum, 1);
 	if( label ) {
 		double* z = Z;
 		const double* t = T;
-		for(int i=0; i<totK; ++i) {
+		for(int i=0; i<N; ++i) {
 			// Initialize Z-matrix (with 1's and 0's) according to initial partition
 			int l = label[i];
 			if(l>0) {
@@ -1006,6 +1005,8 @@ int
 em_meta::final(int* label, double logLike[3], int* history)
 {
 	int i, j, l;
+    double* z;
+    const double* t;
 	
 	/*	
 	 remove empty cluster
@@ -1021,7 +1022,7 @@ em_meta::final(int* label, double logLike[3], int* history)
 				cblas_dcopy(P*P, gS+j*P*P, 1, gS+l*P*P, 1);
 				cblas_dcopy(P*P, gP+j*P*P, 1, gP+l*P*P, 1);
 				cblas_dcopy(P*P, gL+j*P*P, 1, gL+l*P*P, 1);
-				cblas_dcopy(totK, Z+j, G, Z+l, G);
+				cblas_dcopy(N, Z+j, G, Z+l, G);
 			}
 
 			++l;
@@ -1033,9 +1034,26 @@ em_meta::final(int* label, double logLike[3], int* history)
 		history[j] = 0;
 		cblas_dcopy(P, &zero, 0, gM+j*P, 1);
 		cblas_dcopy(P*P, &zero, 0, gS+j*P*P, 1);
-		cblas_dcopy(totK, &zero, 0, Z+j, G);
+		cblas_dcopy(N, &zero, 0, Z+j, G);
 	}
 	
+    /*
+	 do cluster labeling
+	 */
+	z = Z;
+ 	for(i=0; i<N; ++i) {
+		double z_max = z[0];
+		l = 0;
+		for( j=1;j<L; ++j) {
+			if( z[j] > z_max ) {
+				z_max = z[j];
+				l = j;
+			}
+		}
+		label[i] = l+1;
+		z += G;
+	}
+    
 	/*
 	 calc likelihood
 	 */
@@ -1043,8 +1061,9 @@ em_meta::final(int* label, double logLike[3], int* history)
 	// tmpG holds number of events in for cluster k
 	cblas_dcopy(G, &zero, 0, tmpG, 1);
 	
-	const double* t = T;
-	for(i=0;i<totK;i++)
+	t = T;
+    z = Z;
+	for(i=0;i<N;i++)
 	{   
 		double sumLike = 0;
 		double maxPDF = 0;
@@ -1063,10 +1082,11 @@ em_meta::final(int* label, double logLike[3], int* history)
 			if( gw > 0.0 ){
 				tmpPDF = bc_measure(i,j);
 
-				tmpLike = gw * tmpPDF;
-		
+// 2015.03.05: has to be pdf w/o mixture weight                
+				//tmpLike = gw * tmpPDF;
+				tmpLike = tmpPDF;
+                
 				sumLike += tmpLike;
-				
 				//if( tmpLike > maxLike ){
 				if( tmpPDF > maxPDF ) {
 					maxLike = tmpLike;
@@ -1074,36 +1094,43 @@ em_meta::final(int* label, double logLike[3], int* history)
 					maxClust = j;
 				}	
 			}	
-		} // for k
+            
+            z[j] = tmpLike;
+		} // for j
 		
 		
 		if( maxClust > -1 )
 			tmpG[maxClust] += (*t);
 		
-		
-		// !!! weights ???	include weights likelihood sum, only parts of event
+    	if( sumLike > 0.0 ) {
+            cblas_dscal(L, 1./sumLike, z, 1);
+        }
+    	// !!! weights ???	include weights likelihood sum, only parts of event
 		obLike += (sumLike>0.0)? (*t) * log(sumLike) : 0.0;
 		//clLike += (minLike>0.0)? log(minLike) : 0.0;
 		icLike += (maxPDF>0.0)? (*t) * log(maxPDF) : 0.0;
 		
 		t += T_inc;
+        z += G;
 	}
 	
 	// BIC: observation likelihood
 	logLike[0] = obLike - log(T_sum) * (L*(P+1)*P/2.0 + L*P + L-1) * 0.5;
 	// ICL: integrated classification likelihood minus cluster costs
 	//logLike[1] = icLike - icl::model_costs(T_sum, P, L, tmpG, -1);
-	logLike[1] = icLike - icl::model_costs(T_sum, P, L, tmpG, -1);
+	logLike[1] = icLike - icl::model_costs(T_sum, L, P, tmpG, -1);
 	
 	// ICL: icLike ???? partial icl for complete ICL calculation in total model
 	logLike[2] = icLike + icl::sum(L, tmpG);
+    //logLike[2] = icLike - BIAS * icl::model_costs(T_sum, P, L, tmpG, -1);
+	
 	
 	/*
 	 do cluster labeling
 	 */
-	double* z = Z, z_max;
-	for(i=0; i<totK; ++i) {
-		z_max = z[0];
+	z = Z;
+ 	for(i=0; i<N; ++i) {
+		double z_max = z[0];
 		l = 0;
 		for( j=1;j<L; ++j) {
 			if( z[j] > z_max ) {
@@ -1111,11 +1138,13 @@ em_meta::final(int* label, double logLike[3], int* history)
 				l = j;
 			}
 		}
+        //if( label[i] != l+1 ) {
+        //    dbg::printf("<%d>: %d <-> %d", i, label[i], l+1 );
+        //    dbg::print_vector(L, z);
+        //}
 		label[i] = l+1;
-		// !!! weights ???
 		z += G;
 	}
-	
 	
 	return L;
 	

@@ -20,7 +20,7 @@ algorithms of the reference.
 
 \usage{
 meta.process(exp, dat.subset=c(), meta.iter=10, meta.bias=0.2,
-            meta.alpha=.5, meta.normalize=FALSE,
+            meta.alpha=.5, meta.normalize=FALSE, norm.degree=1,
             scatter.subset=c(1,2), scatter.bias=0.25, 
             scatter.prior=6)}
 %- maybe also 'usage' for other objects documented here.
@@ -47,6 +47,8 @@ covariance matrices are applied. A reasonable value for alpha is 0.5.}
 performed during the major iteration. This is a preliminary approach in an 
 experimental stage performing an orthogonal procrustes analysis step in each 
 iteration step of the major loop.}
+\item{norm.degree}{The degree for the approximative polynominal function used 
+in the normalization step.} 
 \item{scatter.subset}{A numeric vector, giving the indices for the scatter 
 parameter. If the scatter.subset is empty, scatter clustering was not 
 performed.}

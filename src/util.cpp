@@ -339,7 +339,23 @@ namespace mat {
 		gsl_matrix_free(m);
 		return det;
 	}
-	
+    
+    void
+    LU_invert(const int P, double* A)
+    {
+		gsl_matrix_view a = gsl_matrix_view_array(A, P, P);
+		gsl_matrix* m = gsl_matrix_alloc(P, P);
+        int sgn=0;
+    	gsl_permutation* p = gsl_permutation_alloc(P);
+        
+        gsl_matrix_memcpy(m, &a.matrix);
+		gsl_linalg_LU_decomp(m, p, &sgn);
+        gsl_linalg_LU_invert(m, p, &a.matrix);
+        
+        gsl_permutation_free(p);
+		gsl_matrix_free(m);
+    }
+    	
 	void
 	sum(const int P, double* D, const double* A, const double* B, double wa, double wb)
 	{

@@ -446,6 +446,7 @@ function(res, inc, par, par.order=c(), iFilter=0, aFac=7/6, bFac=3/2, pop="")
     ret <- c()
     scatter_label <- meta$res.scatter@label
     cluster_label <- meta$res.clusters@label
+    scatter_weight <- meta$res.scatter@w
     cell_events <- meta$dat.clusters$clsEvents
     
     for( s in scatter ) {
@@ -454,27 +455,21 @@ function(res, inc, par, par.order=c(), iFilter=0, aFac=7/6, bFac=3/2, pop="")
         for( l in label ) {
 # all scatter-labels for cell-clusters in meta-cluster l 
 # t <- meta$res.scatter@label[meta$res.clusters@label==l]
+            
             t <- unique(scatter_label[cluster_label==l])
             
-            if( sum(cell_events[cluster_label==l & scatter_label==s]) > 
-                sum(cell_events[cluster_label==l & scatter_label!=s]) && 
-                sum(cluster_label==l) > filter ) {
-                ret <- c(ret, l)
+            max_events <- 0
+            max_scatter <- 0
+            for( j in t ) {
+                num_events <- scatter_weight[j] * 
+                sum(cell_events[cluster_label==l & scatter_label==j])
+                if( num_events > max_events ){
+                    max_events <- num_events
+                    max_scatter <- j
+                }
             }
-            else {
-                max_events <- 0
-                max_scatter <- 0
-                for( j in t ) {
-                    num_events <- sum(cell_events[cluster_label==l & 
-                                    scatter_label==j])
-                    if( num_events > max_events ){
-                        max_events <- num_events
-                        max_scatter <- j
-                    }
-                }
-                if( max_scatter == s ) {
-                    ret <- c(ret,l)
-                }
+            if( max_scatter == s ) {
+                ret <- c(ret,l)
             }
         }
     }

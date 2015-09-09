@@ -1,3 +1,14 @@
+immunoClust 1.1.1.
+  NEW FEATRUES:
+    * A normalization step which the sample cell-clusters to the common
+      meta-cluster model is included an optionally activated during the
+      major meta-clustering process.
+
+  CHANGES:
+    * The meta.ME C-binding and return value was modified in a way that the
+      A-Posterior probability matrix Z for a cell-cluster belonging to a
+      meta-cluster is also calculated and returned.
+
 immunoClust 1.0.0:
     The first version caintains basically the functios and routines usesd to 
     obtain the results of 

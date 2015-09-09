@@ -8,8 +8,6 @@
 ###
 .meta.numGate <- function(meta, gating, name, out.linage=TRUE, out.all=TRUE)
 {
-    
-#    cat("num events\n")
     N <- meta$dat.clusters$N
     P <- meta$dat.clusters$P
     K <- meta$dat.clusters$K
@@ -22,7 +20,8 @@
         else {
             name <- paste(sep="_", name, gating$desc)
         }
-        
+
+        clusters <- c()        
         if( out.linage && length(gating$clusters)>0 ) {
             M  <- rep(0, P)
             inc <- c() 
@@ -30,7 +29,6 @@
                 j <- which(meta$res.clusters@label==i)
                 M <- M + meta$res.clusters@mu[i,]*
                         sum(meta$dat.clusters$clsEvents[j])
-                
                 inc <- c(inc, j )
             }
             M <- M / sum(meta$dat.clusters$clsEvents[inc])
@@ -56,24 +54,31 @@
                             palette()[(gating$clusters%%8)+1])
                 rownames(tbl) <- name
             }
+            if( length(gating$clusters) == 1 )
+                clusters <- c(clusters, gating$clusters)
         }
         
-        if( !is.null(gating$childs) ) {
+
+
+        if( length(gating$childs) > 0 ) {
             c <- 0 
             for( i in 1:length(gating$childs) ) 
-            if( !is.null(gating$childs[[i]]) )
-            c <- c+1
+                if( !is.null(gating$childs[[i]]) )
+                    c <- c+1
             
-            for( i in 1:length(gating$childs) ) 
-            tbl <- rbind(tbl, .meta.numGate(meta, gating$childs[[i]], name, 
+            for( i in 1:length(gating$childs) ) {
+                clusters <- c(clusters, gating$childs[[i]]$clusters)
+                tbl <- rbind(tbl, .meta.numGate(meta, gating$childs[[i]], name, 
                                         out.linage=c>1, out.all=out.all))
+            }
             
         }
-        else
-        if( length(gating$clusters) > 1 ) {
+        clusters <- gating$clusters[ is.na(match(gating$clusters, clusters)) ]
+        
+        if( length(clusters) > 0 ) {
             rn <- rownames(tbl)
             
-            for( cls in gating$clusters ) {
+            for( cls in clusters ) {
                 inc <- which(meta$res.clusters@label==cls)
                 numEvents <- matrix(NA, nrow=1, ncol=N+P)                
                 k <- 0
@@ -148,7 +153,8 @@ meta.numEvents <- function(meta, out.all=TRUE)
         else {
             name <- paste(sep="_", name, gating$desc)
         }
-        
+
+        clusters <- c()        
         if( out.linage && length(gating$clusters)>0 ) {
             
             numClusters <- matrix(NA, nrow=1, ncol=N)
@@ -172,25 +178,29 @@ meta.numEvents <- function(meta, out.all=TRUE)
                 name <- paste(sep=".", name, gating$clusters, 
                             palette()[(gating$clusters%%8)+1])
                 rownames(tbl) <- name
+                if( length(gating$clusters) == 1 )
+                    clusters <- c(clusters, gating$clusters)
             }
         }
-        
-        if( !is.null(gating$childs) ) {
+
+        if( length(gating$childs) > 0 ) {
             c <- 0 
             for( i in 1:length(gating$childs) ) 
             if( !is.null(gating$childs[[i]]) )
             c <- c+1
             
-            for( i in 1:length(gating$childs) ) 
-            tbl <- rbind(tbl, .meta.clsGate(meta, gating$childs[[i]], name, 
+            for( i in 1:length(gating$childs) ) {
+                clusters <- c(clusters, gating$childs[[i]]$clusters)
+                tbl <- rbind(tbl, .meta.clsGate(meta, gating$childs[[i]], name, 
                                         out.linage=c>1, out.all=out.all))
+            }
+            clusters <- gating$clusters[is.na(match(gating$clusters, clusters))]
             
         }
-        else
-        if( length(gating$cluster) > 1 ) {
+        if( length(clusters) > 0 ) {
             rn <- rownames(tbl)
             
-            for( cls in gating$clusters ) {
+            for( cls in clusters ) {
                 inc <- which(meta$res.clusters@label==cls)
                 numClusters <- matrix(NA, nrow=1, ncol=N)                
                 k <- 0
@@ -217,7 +227,7 @@ meta.numClusters <- function(meta, out.all=TRUE)
     
     tbl <- matrix(NA, nrow=0, ncol=N)    
     
-    parDesc <- gsub("\n", ":", meta$res.clusters@parmeters)
+    parDesc <- gsub("\n", ":", meta$res.clusters@parameters)
     
     
 ## all
@@ -269,9 +279,11 @@ meta.relEvents <- function(meta, out.all=TRUE)
     
     tbl <- rbind(tbl, .meta.numGate(meta, meta$gating, NULL, out.all=out.all))
     
-    for( i in 1:nrow(tbl) ) {
-        for( j in 1:N ) {
-            tbl[i,j] <- tbl[i,j] / parEvents[1,j]
+    if( nrow(tbl) > 0 ) {
+        for( i in 1:nrow(tbl) ) {
+            for( j in 1:N ) {
+                tbl[i,j] <- tbl[i,j] / parEvents[1,j]
+            }
         }
     }
     
@@ -356,93 +368,189 @@ meta.relEvents2 <- function(meta, major=1:5, out.all=TRUE)
 ## meta.relEvents2
 
 
-#meta.relEvents3 <- function(meta, major=1:5, out.all=T)
-#{
-#    N <- meta$dat.clusters$N
-#    P <- meta$dat.clusters$P
-#    K <- meta$dat.clusters$K
-#    
-#    tbl <- matrix(NA, nrow=0, ncol=N+P)    
-#    
-#    parDesc <- gsub("\n", ":", meta$res.clusters@parameters)
-#    
+meta.relEvents3 <- function(meta, major=1:5, out.all=TRUE)
+{
+    N <- meta$dat.clusters$N
+    P <- meta$dat.clusters$P
+    K <- meta$dat.clusters$K
+    
+    tbl <- matrix(NA, nrow=0, ncol=N+P)    
+    
+    parDesc <- gsub("\n", ":", meta$res.clusters@parameters)
+    
 ## all (major)
-#    numEvents <- matrix(NA, nrow=(length(major)+1),ncol=N+P)
-#    parNames <- c("total", paste(sep="", "P", major))
-#    rownames(numEvents) <- parNames
-#    
-#    numEvents[1,1:N] <- meta$dat.clusters$expEvents
-#    
-#    gating <- meta$gating
-#    M  <- rep(0, P)
-#    
-#    if( !is.null(gating$childs) ) {
-#        majorEvents <- 1
-#        for( g in major ) {
-#            majorEvents <- majorEvents+1
-#            inc <- c()
-#            c <- 0
-#            if( !is.null(gating$childs[[g]]) ) {
-#                c <- c+1
-#                
+    numEvents <- matrix(NA, nrow=(length(major)+1),ncol=N+P)
+    parNames <- c("total", paste(sep="", "P", major))
+    rownames(numEvents) <- parNames
+    
+## total events    
+    numEvents[1,1:N] <- meta$dat.clusters$expEvents
+    
+    gating <- meta$gating
+    M  <- rep(0, P)
+    
+    if( !is.null(gating$childs) ) {
+        majorEvents <- 1
+        if( out.all ) {
+            rn <- rownames(tbl)
+            tbl <- rbind(tbl, numEvents[majorEvents,])
+            rownames(tbl) <- c(rn, parNames[majorEvents])
+        }
+        for( g in major ) {
+            majorEvents <- majorEvents+1
+            inc <- c()
+            c <- 0
+            if( !is.null(gating$childs[[g]]) ) {
+                c <- c+1
+                
 ## get mean of major
-#                for( i in gating$childs[[g]]$clusters ) {
-#                    j <- which(meta$res.clusters@label==i)
-#                    M <- M + meta$res.clusters@mu[i,]*
-#                             sum(meta$dat.clusters$clsEvents[j])
-#                    
-#                    inc <- c(inc, j )
-#                }
-#                
-#            }
-#            
+                for( i in gating$childs[[g]]$clusters ) {
+                    j <- which(meta$res.clusters@label==i)
+                    M <- M + meta$res.clusters@mu[i,] *
+                                sum(meta$dat.clusters$clsEvents[j])
+                    inc <- c(inc, j )
+                }
+                
+            }
+            
 ## mean of major
-#            M <- M / sum(meta$dat.clusters$clsEvents[inc])
-#            
-#            for( p in 1:P ) {
-#                numEvents[majorEvents,N+p] <- M[p]
-#            }
+            M <- M / sum(meta$dat.clusters$clsEvents[inc])
+            
+            for( p in 1:P ) {
+                numEvents[majorEvents,N+p] <- M[p]
+            }
 #            
 ## get numEvents of major for all experiment
-#            k <- 0
-#            for( i in 1:N ) {
-#                l <- k+1
-#                k <- k+K[i]
-#                ine <- inc[(inc>=l) & (inc<=k)]
-#                numEvents[majorEvents,i] <- 
-#                   sum(meta$dat.clusters$clsEvents[ine])
-#            }
-#            
-#            gbl <- .meta.numGate(meta, gating$childs[[g]], NULL, 
-#                                 out.linage=c>1, out.all=out.all)
-#            for( i in 1:nrow(gbl) ) {
-#                for( j in 1:N ) {
-#                    gbl[i,j] <- gbl[i,j] / numEvents[majorEvents,j]
-#                }
-#            }
-#            
-#            if( out.all ) {
-#                for( j in 1:N ) {
-#                    numEvents[majorEvents,j] <- numEvents[majorEvents,j] / 
-#                                                 numEvents[1,j]
-#                }
-#                
-#                tbl <- rbind(tbl, numEvents[majorEvents,])
-#            }
-#            
-#            rowNames <- rownames(gbl)
-#            rownames(gbl) <- paste(sep="/",rowNames, 
-#                               rownames(numEvents)[majorEvents])
-#            tbl <- rbind(tbl,gbl)
-#        }    
-#    }
-#    
-#    
-#    colnames(tbl) <- c(meta$dat.clusters$expNames, parDesc)
-#    tbl
-#}
+            k <- 0
+            for( i in 1:N ) {
+                l <- k+1
+                k <- k+K[i]
+                ine <- inc[(inc>=l) & (inc<=k)]
+                numEvents[majorEvents,i] <- 
+                sum(meta$dat.clusters$clsEvents[ine])
+            }
+            
+            .gbl <- .meta.numGate(meta, gating$childs[[g]], NULL, 
+                                out.linage=c>1, out.all=out.all)
+            gbl <- matrix(NA, nrow=2*nrow(.gbl), ncol=ncol(.gbl))
+            if( nrow(.gbl) > 0 ) {
+                rowNames <- rep("", nrow(gbl))
+                for( i in 1:nrow(.gbl) ) {
+                    for( j in 1:N ) {
+                        gbl[2*i-1,j] <- .gbl[i,j] / numEvents[1,j]
+                        gbl[2*i-1,(N+1):ncol(.gbl)] <- .gbl[i,(N+1):ncol(.gbl)]
+                        gbl[2*i,j] <- .gbl[i,j] / numEvents[majorEvents,j]
+                        gbl[2*i,(N+1):ncol(.gbl)] <- .gbl[i,(N+1):ncol(.gbl)]
+                    }
+                    rowNames[2*i-1] <- paste(sep="/", 
+                                        rownames(.gbl)[i], "total")
+                    rowNames[2*i] <- paste(sep="/", rownames(.gbl)[i], 
+                                        parNames[majorEvents])
+                }
+                rownames(gbl) <- rowNames
+            }
+            
+            if( out.all ) {
+                for( j in 1:N ) {
+                    numEvents[majorEvents,j] <- numEvents[majorEvents,j] / 
+                                                numEvents[1,j]
+                }
+                rn <- rownames(tbl)
+                tbl <- rbind(tbl, numEvents[majorEvents,])
+                rownames(tbl) <- c(rn, parNames[majorEvents])
+            }
+            
+            tbl <- rbind(tbl,gbl)
+        }
+    }
+    
+    
+    colnames(tbl) <- c(meta$dat.clusters$expNames, parDesc)
+    tbl
+}
 ## meta.relEvents3
 ### meta.relEvents
+
+### meta.majorEvents
+meta.majorEvents <- function(meta, major=1:6, out.events=TRUE)
+{
+    N <- meta$dat.clusters$N
+    P <- meta$dat.clusters$P
+    K <- meta$dat.clusters$K
+    
+    tbl <- matrix(NA, nrow=0, ncol=N+P)    
+    
+    parDesc <- gsub("\n", ":", meta$res.clusters@parameters)
+    
+## all (major)
+    numEvents <- matrix(NA, nrow=(length(major)+1),ncol=N+P)
+    parNames <- c("total", paste(sep="", "P", major))
+    rownames(numEvents) <- parNames
+    
+## total events    
+    numEvents[1,1:N] <- meta$dat.clusters$expEvents
+    
+    gating <- meta$gating
+    M  <- rep(0, P)
+    
+    if( !is.null(gating$childs) ) {
+        majorEvents <- 1
+        
+        if( out.events ) {
+            rn <- rownames(tbl)
+            tbl <- rbind(tbl, numEvents[majorEvents,])
+            rownames(tbl) <- c(rn, parNames[majorEvents])
+        }
+        for( g in major ) {
+            majorEvents <- majorEvents+1
+            inc <- c()
+            c <- 0
+            if( !is.null(gating$childs[[g]]) ) {
+                c <- c+1
+## get mean of major
+                for( i in gating$childs[[g]]$clusters ) {
+                    j <- which(meta$res.clusters@label==i)
+                    M <- M + meta$res.clusters@mu[i,] * 
+                    sum(meta$dat.clusters$clsEvents[j])
+                    
+                    inc <- c(inc, j )
+                }
+                
+            }
+            
+## mean of major
+            M <- M / sum(meta$dat.clusters$clsEvents[inc])
+            
+            for( p in 1:P ) {
+                numEvents[majorEvents,N+p] <- M[p]
+            }
+#            
+## get numEvents of major for all experiment
+            k <- 0
+            for( i in 1:N ) {
+                l <- k+1
+                k <- k+K[i]
+                ine <- inc[(inc>=l) & (inc<=k)]
+                numEvents[majorEvents,i] <- 
+                sum(meta$dat.clusters$clsEvents[ine])
+            }
+            if( !out.events ) {
+                for( j in 1:N ) {
+                    numEvents[majorEvents,j] <- numEvents[majorEvents,j] / 
+                                                numEvents[1,j]
+                }
+            }
+            rn <- rownames(tbl)
+            tbl <- rbind(tbl, numEvents[majorEvents,])
+            rownames(tbl) <- c(rn, parNames[majorEvents])
+            
+        }    
+    }
+    
+    colnames(tbl) <- c(meta$dat.clusters$expNames, parDesc)
+    tbl
+}
+### meta.majorEvents
 
 
 ###
@@ -465,8 +573,8 @@ function(meta, gating, par, name, out.linage=TRUE, out.all=TRUE)
         else {
             name <- paste(sep="_", name, gating$desc)
         }
-        
-##        cat(name, out.linage, length(gating$clusters), "\n")
+
+        clusters <- c() 
         if( out.linage && length(gating$clusters)>0 ) {
             M  <- rep(0, P)
             inc <- c() 
@@ -502,28 +610,34 @@ function(meta, gating, par, name, out.linage=TRUE, out.all=TRUE)
                 name <- paste(sep=".", name, gating$clusters, 
                             palette()[(gating$clusters%%8)+1])
                 rownames(tbl) <- name
+                if( length(gating$clusters) == 1 ) 
+                    clusters <- c(clusters, gating$clusters)
             }
         }
         
-        if( !is.null(gating$childs) ) {
+
+        if( length(gating$childs) > 0 ) {
             c <- 0 
             for( i in 1:length(gating$childs) ) 
-            if( !is.null(gating$childs[[i]]) )
-            c <- c+1
+                if( !is.null(gating$childs[[i]]) )
+                    c <- c+1
             
-            for( i in 1:length(gating$childs) ) 
-            tbl <- rbind(tbl, .meta.parGate(meta, gating$childs[[i]], 
+            for( i in 1:length(gating$childs) ) {
+                clusters <- c(clusters, gating$childs[[i]]$clusters)
+                tbl <- rbind(tbl, .meta.parGate(meta, gating$childs[[i]], 
                                         par, name, 
                                         out.linage=c>1, out.all=out.all))
+            }
             
         }
-        else
-        if( length(gating$cluster) > 1 ) {
+        clusters <- gating$clusters[ is.na(match(gating$clusters, clusters)) ]
+        
+        if( length(clusters) > 0 ) {
             rn <- rownames(tbl)
             
-            for( cls in gating$cluster ) {
+            for( cls in clusters ) {
                 inc <- which(meta$res.clusters@label==cls)
-                numEvents <- matrix(NA, nrow=1, ncol=N+P)                
+                numEvents <- matrix(NA, nrow=1, ncol=N+P) 
                 k <- 0
                 for( i in 1:N ) {
                     l <- k+1
@@ -668,7 +782,7 @@ meta.parMFI <- function(meta, par, out.all=TRUE)
             
         }
         
-        if( !is.null(gating$childs) ) {
+        if( length(gating$childs) > 0 ) {
             
             c <- 0 
             for( i in 1:length(gating$childs) ) 

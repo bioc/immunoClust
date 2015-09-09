@@ -55,10 +55,10 @@ npoints=501, add=FALSE, ...)
         inc <- match(x@parameters, par@data[,'name'])
         name <- par@data[inc, 'name']
         desc <- par@data[inc, 'desc']
-        lab <- paste(sep=" / ", name, desc)[subset]
+        lab <- paste(sep=": ", name, desc)[subset]
     }
     else {
-        lab <- x@parameters[subset]
+        lab <- gsub("\n", ": ", x@parameters[subset])
     }
     
     if (is(data, "flowFrame")) 
