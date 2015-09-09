@@ -683,7 +683,8 @@ X, S, step.size=1, step.min=1e-5, aFac=7/6, bFac=7/6.25
         s2 <- s2 + S[i,,] + (M[i,]-m2) %*% t(M[i,]-m2)
     }
     s2 <- s2 / sum(label>1)
-    d1 <- mahalanobis(m1,m2, (s1 + s2)/2)
+    d1 <- 0
+    try(d1 <- mahalanobis(m1,m2, (s1 + s2)/2))
     
     m1 <- rep(0, P)
     m2 <- rep(0, P)
@@ -706,7 +707,8 @@ X, S, step.size=1, step.min=1e-5, aFac=7/6, bFac=7/6.25
         s2 <- s2 + S[i,,] + (M[i,]-m2) %*% t(M[i,]-m2)
     }
     s2 <- s2 / sum(label==3)
-    d2 <- mahalanobis(m1,m2, (s1 + s2)/2)
+    d2 <- 0
+    try(d2 <- mahalanobis(m1,m2, (s1 + s2)/2))
     
     (d1+d2)/2
 }
