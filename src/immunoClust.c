@@ -15,7 +15,7 @@ extern "C" {
 
 int print_text(const char* txt) 
 {
-	Rprintf("%s\n", txt);
+//	Rprintf("%s\n", txt);
 	return 0;
 }
 	

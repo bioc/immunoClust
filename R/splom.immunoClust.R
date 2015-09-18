@@ -213,12 +213,12 @@ N=NULL,label=NULL, desc=NULL,...
     range <- range(data)[inc]
     
     if( is.null(label) ){
-        clust.frame <- list(K=(x@K), P=length(params), sigma=(x@sigma), 
-                            mu=(x@mu), range=range, label=x@label)
+        clust.frame <- list(K=(x@K), P=length(params), sigma=(x@sigma[,subset,subset]), 
+                            mu=(x@mu[,subset]), range=range, label=x@label)
     }
     else {
-        clust.frame <- list(K=(x@K), P=length(params), sigma=(x@sigma), 
-                            mu=(x@mu), range=range, label=label)
+        clust.frame <- list(K=(x@K), P=length(params), sigma=(x@sigma[,subset,subset]), 
+                            mu=(x@mu[,subset]), range=range, label=label)
     }
     
     
@@ -231,7 +231,10 @@ N=NULL,label=NULL, desc=NULL,...
     
     name <- par@data[inc, 'name']
     if( is.null(desc) ) {
+        if( is.null(attr(x, "desc")) )
         desc <- par@data[inc, 'desc']
+        else
+        desc <- attr(x,"desc")[inc]
     }
     else {
         desc <- desc[inc]

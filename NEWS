@@ -8,6 +8,8 @@ immunoClust 1.1.1.
     * The meta.ME C-binding and return value was modified in a way that the
       A-Posterior probability matrix Z for a cell-cluster belonging to a
       meta-cluster is also calculated and returned.
+  BUFIXES:
+    * Ellipse position were not correct when ploting a parameter subset
 
 immunoClust 1.0.0:
     The first version caintains basically the functios and routines usesd to 

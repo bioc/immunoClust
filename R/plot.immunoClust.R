@@ -50,6 +50,12 @@ npoints=501, add=FALSE, ...)
     
     if (!is.numeric(subset)) subset <- match(subset, x@parameters)
     
+    if( !is.null(attr(x, "desc")) ) {
+        desc <- attr(x, "desc")
+        name <- gsub("\n", ": ", x@parameters)
+        lab <- paste(sep=": ", name, desc)[subset]
+    }
+    else
     if( !is.null(attr(data, "parameters")) ) {
         par <- parameters(data)
         inc <- match(x@parameters, par@data[,'name'])
