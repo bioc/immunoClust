@@ -8,6 +8,7 @@
  */
 
 
+
 #include "em_mvn.h"
 #include "em_mvt.h"
 
@@ -20,6 +21,7 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Print.h>
+#include "immunoClust.h"
 
 const int MVT_Nu=5;
 
@@ -143,21 +145,24 @@ extern "C" {
 		int iterations = INTEGER(max_iter)[0];
 		double tolerance = REAL(max_tol)[0];
 		
-		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), REAL(VECTOR_ELT(ret, 1)), REAL(VECTOR_ELT(ret, 2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), REAL(t), 0.0);
+		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
+                       REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
+                       (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, 0.0);
 		
 		// Rprintf("ME weighted=%s\n", t!=0? "true" : "false");
 		status = em.start(INTEGER(label));
 		if( status == 0 ) {
 			status = em.em(iterations, tolerance);
-			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret, 6)), INTEGER(VECTOR_ELT(ret, 5)), INTEGER(VECTOR_ELT(ret, 7)));
+			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
 		}	
 		
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
-		
-//		Rprintf("ME (%d) with %d clusters required %d iterations, tolerance is %g, loglike is %g\n", status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret, 6))[0]);
 	
+#ifdef DEBUG        
+		Rprintf("ME (%d) with %d clusters required %d iterations, tolerance is %g, loglike is %g\n", status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret, 6))[0]);
+#endif	
 		Rf_unprotect(1);	// unprocted ret
 		
 		return ret;
@@ -176,22 +181,22 @@ extern "C" {
 		SEXP ret = _ME_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0]);
 		
 		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
-					   REAL(VECTOR_ELT(ret, 1)), REAL(VECTOR_ELT(ret, 2)), REAL(VECTOR_ELT(ret, 3)), REAL(VECTOR_ELT(ret, 4)), 
-					   REAL(t), REAL(bias)[0] );
+					   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
+					   (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0, REAL(bias)[0] );
 		
 		status = em.start(INTEGER(label));
 		if( status == 0 ) {
 			status = em.em_t(iterations, tolerance);
-			INTEGER(VECTOR_ELT(ret, 0))[0] = em.final(REAL(VECTOR_ELT(ret, 6)), INTEGER(VECTOR_ELT(ret, 5)), INTEGER(VECTOR_ELT(ret, 7)));
+			INTEGER(VECTOR_ELT(ret, 0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
 		}	
 		
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
 		
-		
-//		Rprintf("MEt (%d) with %d clusters required %d iterations, tolerance is %g, loglike is %g\n", status, INTEGER(VECTOR_ELT(ret, 0)), iterations, tolerance, REAL(VECTOR_ELT(ret, 6))[0]);
-		
+#ifdef DEBUG		
+		Rprintf("MEt (%d) with %d clusters required %d iterations, tolerance is %g, loglike is %g\n", status, INTEGER(VECTOR_ELT(ret, 0)), iterations, tolerance, REAL(VECTOR_ELT(ret, 6))[0]);
+#endif		
 		Rf_unprotect(1);	// unprotect ret
 		
 		return ret;
@@ -201,7 +206,7 @@ extern "C" {
 	// em algorithm with start estimation of model parameter
 	SEXP call_mvnEM(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
 					SEXP w, SEXP m, SEXP s, 
-					SEXP max_iter, SEXP max_tol, SEXP bias)  
+					SEXP max_iter, SEXP max_tol)  
 	{
 		int status;		
 		
@@ -211,22 +216,22 @@ extern "C" {
 		SEXP ret = _EM_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], w, m, s);
 		
 		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
-					   REAL(VECTOR_ELT(ret, 1)), REAL(VECTOR_ELT(ret, 2)), REAL(VECTOR_ELT(ret, 3)) , REAL(VECTOR_ELT(ret, 4)), 
-					   REAL(t), REAL(bias)[0]);	
+					   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)) , REAL(VECTOR_ELT(ret,4)), 
+					   (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);	
 		
 		status = em.start(0);
 		if( status == 0 ) {
 			status = em.em(iterations, tolerance);
-			INTEGER(VECTOR_ELT(ret, 0))[0] = em.final(REAL(VECTOR_ELT(ret, 6)), INTEGER(VECTOR_ELT(ret, 5)), INTEGER(VECTOR_ELT(ret, 7)));
+			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
 		}
 		
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
 		
-		
-//		Rprintf("EM (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret,6))[0]);	
-		
+#ifdef DEBUG		
+		Rprintf("EM (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret,6))[0]);	
+#endif		
 		Rf_unprotect(1);	// unprotect ret
 		
 		return ret;
@@ -247,21 +252,22 @@ extern "C" {
 		SEXP ret = _EM_ret( INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], w, m, s);
 		
 		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
-					   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret, 4)), 
-					   REAL(t), REAL(bias)[0]);	
+					   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
+					   (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0, REAL(bias)[0]);	
 		
 		status = em.start(0);
 		if( status == 0 ) {
 			status = em.do_iterate(iterations, tolerance);
-			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret, 6)), INTEGER(VECTOR_ELT(ret, 5)), INTEGER(VECTOR_ELT(ret, 7)));
+			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
 		}
 		
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
-		
-//		Rprintf("EMt (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret,6))[0]);	
 
+#ifdef DEBUG		
+		Rprintf("EMt (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret,6))[0]);	
+#endif
 		Rf_unprotect(1); // unprotect ret
 		
 		return ret;
@@ -277,12 +283,12 @@ extern "C" {
 		SEXP ret = _EM_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], w, m, s);
 
 		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
-					   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret, 2)), REAL(VECTOR_ELT(ret, 3)), REAL(VECTOR_ELT(ret, 4)), 
-					   REAL(t));	
+					   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
+					   (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);	
 		
 		status = em.start(0);
 		if( status == 0 ) {
-			INTEGER(VECTOR_ELT(ret, 0))[0] = em.final(REAL(VECTOR_ELT(ret, 6)), INTEGER(VECTOR_ELT(ret, 5)), INTEGER(VECTOR_ELT(ret, 7)));
+			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
 		}
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 	
@@ -315,14 +321,15 @@ extern "C" {
 		status = em.start(INTEGER(label));
 		if( status == 0 ) {
 			status = em.em(iterations, tolerance);
-			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret, 5)), INTEGER(VECTOR_ELT(ret,7)));
+			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
 		}	
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
-		
-//		Rprintf("ME (%d) with %d clusters required %d iterations, tolerance is %g, loglike is %g\n", status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret,6))[0]);
-		
+
+#ifdef DEBUG		
+		Rprintf("ME (%d) with %d clusters required %d iterations, tolerance is %g, loglike is %g\n", status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret,6))[0]);
+#endif		
 		Rf_unprotect(1);	// unprotect ret
 		
 		return ret;
@@ -355,9 +362,9 @@ extern "C" {
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
 		
-		
-//		Rprintf("MEt (%d) with %d clusters required %d iterations, tolerance is %g, loglike is %g\n", status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret, 6))[0]);
-		
+#ifdef DEBUG		
+		Rprintf("MEt (%d) with %d clusters required %d iterations, tolerance is %g, loglike is %g\n", status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret, 6))[0]);
+#endif		
 		Rf_unprotect(1);	// unprotect ret
 		
 		return ret;
@@ -378,22 +385,22 @@ extern "C" {
 		SEXP ret = _EM_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], w, m, s);
 		
 		em_mvt em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
-				  REAL(VECTOR_ELT(ret, 1)), REAL(VECTOR_ELT(ret, 2)), REAL(VECTOR_ELT(ret, 3)), REAL(VECTOR_ELT(ret, 4)), 
+				  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
 				  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);	
 		
 		status = em.start(0);
 		if( status == 0 ) {
 			status = em.em(iterations, tolerance);
-			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret, 6)), INTEGER(VECTOR_ELT(ret, 5)), INTEGER(VECTOR_ELT(ret, 7)));
+			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
 		}
 		
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
 		
-		
-//		Rprintf("EM (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",status, INTEGER(VECTOR_ELT(ret, 0)), iterations, tolerance, REAL(VECTOR_ELT(ret,6))[0]);	
-		
+#ifdef DEBUG		
+		Rprintf("EM (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",status, INTEGER(VECTOR_ELT(ret, 0)), iterations, tolerance, REAL(VECTOR_ELT(ret,6))[0]);	
+#endif		
 		Rf_unprotect(1);
 		
 		return ret;
@@ -420,14 +427,15 @@ extern "C" {
 		status = em.start(0);
 		if( status == 0 ) {
 			status = em.do_iterate(iterations, tolerance);
-			INTEGER(VECTOR_ELT(ret, 0))[0] = em.final(REAL(VECTOR_ELT(ret, 6)), INTEGER(VECTOR_ELT(ret, 5)), INTEGER(VECTOR_ELT(ret, 7)));
+			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
 		}
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
-		
-//		Rprintf("EMt (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",status, INTEGER(VECTOR_ELT(ret, 0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret, 6))[0]);	
-		
+	
+#ifdef DEBUG        
+		Rprintf("EMt (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",status, INTEGER(VECTOR_ELT(ret, 0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret, 6))[0]);	
+#endif		
 		Rf_unprotect(1); // unprotect ret
 		
 		return ret;
@@ -443,12 +451,12 @@ extern "C" {
 		SEXP ret = _EM_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], w, m, s);
 
 		em_mvt em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
-				  REAL(VECTOR_ELT(ret, 1)), REAL(VECTOR_ELT(ret, 2)), REAL(VECTOR_ELT(ret, 3)), REAL(VECTOR_ELT(ret, 4)), 
+				  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
 				  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);	
 		
 		status = em.start(0);
 		if( status == 0 ) {
-			INTEGER(VECTOR_ELT(ret, 0))[0] = em.final(REAL(VECTOR_ELT(ret, 6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret, 7)));
+			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
 		}
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 		

@@ -145,20 +145,41 @@ em_meta::bhattacharryya(int i, int j)
 	const double wi = 0.5; 
 	const double wj = 0.5; 
 	double det_i = logdet(S+i*P*P, status);  // =0.5*logdet_invS for w1=0.5
-	double det_j = logdet(gS+j*P*P, status); // =0.5*logdet_invS for w2=0.5	
+    if( status ) {
+        //double r = bc_diag(i,j);
+        //dbg::printf("cell-cluster %d (%d): logdet status=%d => %g", i, j, status, r);
+        //return r;
+        return bc_diag(i,j);
+    }
+	double det_j = logdet(gS+j*P*P, status); // =0.5*logdet_invS for w2=0.5
+	if( status ) {
+        //dbg::printf("meta-cluster (%d) %d: logdet status=%d", i, j, status);
+        return bc_diag(i,j);
+    }
 	
 	//  
 	mat::sum(P, tmpS, S+i*P*P, gS+j*P*P, wi, wj);
 	// covariance matrix -> precision matrix 
-	status = mat::cholesky_decomp(P, tmpS);	
+	status = mat::cholesky_decomp(P, tmpS);
+	if( status ) {
+        //dbg::printf("bhattacharryya %d %d: cholesky status %d", i, j, status);
+        return bc_diag(i,j);
+    }
 	mat::invert(P, tmpS, tmpPxP);
 	double det = logdet(tmpS, status);
+    if( status ) {
+        //dbg::printf("bhattacharryya %d %d: logdet status=%d", i, j, status);
+        return bc_diag(i,j);
+    }
 	status = mat::cholesky_decomp(P, tmpS);
-	
+	if( status ) {
+        //dbg::printf("bhattacharryya %d %d: cholesky status %d", i, j, status);  
+        return bc_diag(i,j);
+    }
 	double logD = det + wi*det_i + wj*det_j;
 	logD -= wi*wj*sqr(mvn::mahalanobis(P, M+i*P, gM+j*P, tmpS, tmpP));
 	
-	// normalization fatcor
+	// normalization factor
 	logD -= 0.25*det_j;
 	
 	return exp(0.5*logD);
@@ -187,7 +208,7 @@ em_meta::bc_diag(int i, int j)
 	
 	cblas_dcopy(P*P, &zero, 0, tmpS, 1);
 	for( p=0; p<P; ++p ) {
-		// log set
+		// log det
 		det_i += log(*(cs+p*P+p));
 		det_j += log(*(gs+p*P+p));
 		// sum
@@ -213,7 +234,7 @@ em_meta::bc_diag(int i, int j)
 	double logD = det + 0.5*det_i + 0.5*det_j;
 	logD -= 0.25*sqr(mvn::mahalanobis(P, M+i*P, gM+j*P, tmpS, tmpP));
 	
-	// normalizarin factor
+	// normalization factor
 	logD -= 0.25*det_j;
 	
 	return exp(0.5*logD);
@@ -225,7 +246,19 @@ double
 em_meta::bc_measure(int i, int j)
 {
 	if( ALPHA < 1.0 ) {
-		return ALPHA*bhattacharryya(i,j) + (1.0-ALPHA)*bc_diag(i,j);
+		//return ALPHA*bhattacharryya(i,j) + (1.0-ALPHA)*bc_diag(i,j);
+        double a = bhattacharryya(i,j);
+        double b = bc_diag(i,j);
+        int pc = fpclassify( a );
+        if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL ) {
+            dbg::printf("BC %d %d: bhatt NaN (%d)  ", i, j, pc);
+        }
+        pc = fpclassify( b );
+        if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL ) {
+            dbg::printf("BC %d %d: diag NaN (%d)  ", i, j, pc);
+        }
+        
+        return ALPHA*a + (1.0-ALPHA)*b;
 	}
 	
 	return bhattacharryya(i,j);
@@ -791,7 +824,7 @@ em_meta::m_step_sigma_g(int j)
 	cblas_dcopy(P*P, gs, 1, gp, 1);
 	status = mat::cholesky_decomp(P, gp);
 	if( status!=0){
-		dbg::printf("m-step %d, singularity in co-variance\n", j);
+		dbg::printf("m-step %d, singularity in co-variance", j);
 		mat::set_identity(P, gs);
 		mat::set_identity(P, gp);
 		mat::set_identity(P, gl);
@@ -804,7 +837,7 @@ em_meta::m_step_sigma_g(int j)
 	
 	status = mat::cholesky_decomp(P, gl);
 	if( status!=0 ) {
-		dbg::printf("m-step %d: singularity in precision\n", j);
+		dbg::printf("m-step %d: singularity in precision", j);
 		mat::set_identity(P, gs);
 		mat::set_identity(P, gp);
 		mat::set_identity(P, gl);
@@ -1104,6 +1137,13 @@ em_meta::final(int* label, double logLike[3], int* history)
 		
     	if( sumLike > 0.0 ) {
             cblas_dscal(L, 1./sumLike, z, 1);
+            // 2015.10.16: should not happen but does!?
+            for( j=0; j<L; ++j ) {
+                if( z[j] > 1.0 ){
+                    dbg::printf("meta %d %d: z > 1 (%.2lf)", i, j, z[j]);
+                    z[j] = 1.0;
+                }
+            }
         }
     	// !!! weights ???	include weights likelihood sum, only parts of event
 		obLike += (sumLike>0.0)? (*t) * log(sumLike) : 0.0;

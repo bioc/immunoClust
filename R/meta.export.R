@@ -1,7 +1,10 @@
 ####
 ### output tables
 ####
-
+.cls_colors <- function()
+{
+c("black","red","green3","blue","cyan","magenta","yellow","gray")
+}
 ###
 ## meta.numEvents: 
 ##        number of events in meta-clusters for cell-event samples
@@ -51,7 +54,7 @@
                 tbl <- rbind(tbl, numEvents)
                 if( length(gating$clusters) == 1 )
                 name <- paste(sep=".", name, gating$clusters, 
-                            palette()[(gating$clusters%%8)+1])
+                            .cls_colors()[(gating$clusters%%8)+1])
                 rownames(tbl) <- name
             }
             if( length(gating$clusters) == 1 )
@@ -93,7 +96,7 @@
                 }
                 
                 
-                rn <- c(rn, paste(sep=".", name, cls, palette()[cls%%8+1]))
+                rn <- c(rn, paste(sep=".", name, cls, .cls_colors()[cls%%8+1]))
                 tbl <- rbind(tbl, numEvents)
             }
             rownames(tbl) <- rn
@@ -176,7 +179,7 @@ meta.numEvents <- function(meta, out.all=TRUE)
                 tbl <- rbind(tbl, numClusters)
                 if( length(gating$clusters) == 1 )
                 name <- paste(sep=".", name, gating$clusters, 
-                            palette()[(gating$clusters%%8)+1])
+                            .cls_colors()[(gating$clusters%%8)+1])
                 rownames(tbl) <- name
                 if( length(gating$clusters) == 1 )
                     clusters <- c(clusters, gating$clusters)
@@ -210,7 +213,7 @@ meta.numEvents <- function(meta, out.all=TRUE)
                     numClusters[1,i] <- sum((inc>=l) & (inc<=k))
                 }
                 
-                rn <- c(rn, paste(sep=".", name, cls, palette()[cls%%8+1]))
+                rn <- c(rn, paste(sep=".", name, cls, .cls_colors()[cls%%8+1]))
                 tbl <- rbind(tbl, numClusters)
             }
             rownames(tbl) <- rn
@@ -608,7 +611,7 @@ function(meta, gating, par, name, out.linage=TRUE, out.all=TRUE)
                 tbl <- rbind(tbl, numEvents)
                 if( length(gating$clusters) == 1 )
                 name <- paste(sep=".", name, gating$clusters, 
-                            palette()[(gating$clusters%%8)+1])
+                            .cls_colors()[(gating$clusters%%8)+1])
                 rownames(tbl) <- name
                 if( length(gating$clusters) == 1 ) 
                     clusters <- c(clusters, gating$clusters)
@@ -653,7 +656,7 @@ function(meta, gating, par, name, out.linage=TRUE, out.all=TRUE)
                 }
                 
                 
-                rn <- c(rn, paste(sep=".", name, cls, palette()[cls%%8+1]))
+                rn <- c(rn, paste(sep=".", name, cls, .cls_colors()[cls%%8+1]))
                 tbl <- rbind(tbl, numEvents)
             }
             rownames(tbl) <- rn
@@ -739,7 +742,7 @@ meta.parMFI <- function(meta, par, out.all=TRUE)
             numEvents <- matrix(NA, nrow=nrow(totEvents), ncol=N+P)
             if( length(gating$cluster) == 1 ){
                 name <- paste(sep=".", name, gating$clusters, 
-                            palette()[(gating$clusters%%8)+1])
+                            .cls_colors()[(gating$clusters%%8)+1])
                 
                 for( p in 1:P ) {
                     numEvents[,N+p] <- meta$res.clusters@mu[gating$clusters,p]
@@ -813,7 +816,7 @@ meta.parMFI <- function(meta, par, out.all=TRUE)
                 
                 for( j in 1:nrow(parEvents) ) {                
                     freqs[j,1:N] <- numEvents[1,] / parEvents[j,]
-                    rn <- c(rn, paste(sep=".", name, cls, palette()[cls%%8+1], 
+                    rn <- c(rn, paste(sep=".", name, cls, .cls_colors()[cls%%8+1], 
                                     "/", rownames(parEvents)[j]))
                 }
                 

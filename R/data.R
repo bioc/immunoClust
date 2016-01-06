@@ -87,6 +87,7 @@ meta.exprs <- function(exp, sub=c())
     clsEvents <- rep(0, totK)
     expEvents <- rep(0, N)
     expNames <- rep("", N)
+    removedEvents <- rep(0, N)
     if( !is.null(desc) ) {
         colnames(M) <- paste(sep="\n", varNames, desc[map])
         varDesc <- desc[map]
@@ -100,6 +101,7 @@ meta.exprs <- function(exp, sub=c())
         res <- exp[[i]]
         expEvents[i] <- sum(!is.na(res@label))
         expNames[i] <- attr(res, "expName")
+        removedEvents[i] <- sum(is.na(res@label))
         l <- k+1
         for( j in 1:(K[i]) ) {
             clsEvents[k+j] <- sum(!is.na(res@label) & res@label==j)
@@ -116,7 +118,8 @@ meta.exprs <- function(exp, sub=c())
     rownames(M) <- cls
     
     list("P"=P, "N"=N, "K"=K, "W"=W, "M"=M, "S"=S, "expNames"=expNames, 
-        "expEvents"=expEvents, "clsEvents"=clsEvents, "desc"=varDesc)
+        "expEvents"=expEvents, "removedEvents"=removedEvents, 
+        "clsEvents"=clsEvents, "desc"=varDesc)
 }
 
 
@@ -142,7 +145,7 @@ meta.exprs <- function(exp, sub=c())
 }
 ### cell.compensate
 
-removed.above <- function(fcs, parameters=NULL, N=NULL, max.count=10, max=NULL) 
+removed.above <- function(fcs, parameters=NULL, N=NULL, max.count=10, max=NULL)
 {
     
     dat <- fcs
@@ -157,7 +160,6 @@ removed.above <- function(fcs, parameters=NULL, N=NULL, max.count=10, max=NULL)
     if( is.null(parameters) ) {
         parameters <- colnames(dat)
         parameters <- parameters[ parameters != "Time" ]
-        
     }
     else {
         parameters <- parameters[!is.na(match(parameters,colnames(fcs)))]
@@ -190,7 +192,7 @@ removed.above <- function(fcs, parameters=NULL, N=NULL, max.count=10, max=NULL)
         removed[1,ncol(y)+2] <- 100*rm.sum/nrow(y)
         
         removed[2,ncol(y)+1] <- sum(removed[2,1:ncol(y)])
-        removed[2,ncol(y)+2] <- 100*sum(removed[2,1:ncol(y)])/nrow(y)    
+        removed[2,ncol(y)+2] <- 100*sum(removed[2,1:ncol(y)])/nrow(y)
         
     }
     
@@ -232,3 +234,61 @@ removed.above <- function(fcs, parameters=NULL, N=NULL, max.count=10, max=NULL)
     
     removed
 }
+removed.below <- function(fcs, parameters=NULL, N=NULL, min.count=10, min=NULL)
+{
+    
+    dat <- fcs
+## restrict number of events?
+    if( !is.null(N) && N < nrow(dat) ) {
+        dat <- dat[1:N]
+    }
+    else {
+        N <- nrow(dat)
+    }
+    
+    if( is.null(parameters) ) {
+        parameters <- colnames(dat)
+        parameters <- parameters[ parameters != "Time" ]
+    }
+    else {
+        parameters <- parameters[!is.na(match(parameters,colnames(fcs)))]
+    }
+    
+    y <- .exprs(dat, parameters) 
+    
+    removed <- matrix(0, ncol=ncol(y)+2, nrow=2)
+    removed.not <- matrix(FALSE, ncol=ncol(y), nrow=nrow(y))
+    
+    rm.below <- rep(FALSE, nrow(y))
+    if (min.count > -1) {
+        if (is.null(min)[1]) 
+        min <- apply(y, 2, min)
+        for (p in 1:ncol(y))  
+        if (sum(y[,p]<=min[p]) >= min.count) {
+            removed[1,p] <-  sum(y[,p] <= min[p])
+            rm.below <- rm.below | (y[,p] <= min[p])
+            for( q in 1:ncol(y) ) 
+            if( q != p ) {
+                removed.not[,q] <- removed.not[,q] | (y[,p] <= min[p])
+            }
+        }
+        rm.sum <- sum(rm.below)
+        for( p in 1:ncol(y) ) {
+            removed[2,p] <- sum(rm.below & !removed.not[,p])
+        }
+        
+        removed[1,ncol(y)+1] <- rm.sum
+        removed[1,ncol(y)+2] <- 100*rm.sum/nrow(y)
+        
+        removed[2,ncol(y)+1] <- sum(removed[2,1:ncol(y)])
+        removed[2,ncol(y)+2] <- 100*sum(removed[2,1:ncol(y)])/nrow(y)
+        
+    }
+    
+    
+    colnames(removed) <- c(parameters, "sum", "per ttl")
+    rownames(removed) <- c("below", "below.only")
+    
+    removed
+}
+

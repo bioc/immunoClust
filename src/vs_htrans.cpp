@@ -1535,7 +1535,7 @@ vs_htrans::estimateA(double* a, double* b, int& max_iteration, double& max_toler
 		if( a[j] > 0.0 ) {
 	
 			FDF.params = this;
-			gsl_vector_set(x,0, vsA_x((a[j]<1e-4)? 0.0001 : a[j]));	// constraint a > 0
+			gsl_vector_set(x,0, vsA_x((a[j]<1e-4)? 0.0001 : a[j]>10 ? 10.0: a[j]));	// constraint a > 0
 			
 			gsl_multimin_fdfminimizer_set (s, &FDF, x, 0.001, 0.1);
 			
@@ -1553,7 +1553,7 @@ vs_htrans::estimateA(double* a, double* b, int& max_iteration, double& max_toler
 			} while( status==GSL_CONTINUE && iter < max_iteration );
 			
 			double aj = vsA_a(gsl_vector_get(s->x,0));
-			if( aj > 0.0001 ) {				  
+			if( aj > 0.0001 && aj < 10.0 ) {				  
 				a[j] = aj;	// constraint a>0
 			}
 

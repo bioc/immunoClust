@@ -67,7 +67,8 @@ namespace icl {
 
 namespace dbg {
 	int printf(const char*, ...);
-	int print_vector(int P, const double* v);
+	int print_vector(const int P, const double* v);
+    int print_matrix(const int N, const int P, const double* v); 
 }
 
 namespace htrans {

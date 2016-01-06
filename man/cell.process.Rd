@@ -28,7 +28,7 @@ cell.process(fcs, parameters=NULL,
     modelName="mvt", tol=1e-5, bias=0.3,
     sub.tol= 1e-4, sub.bias=bias, sub.thres=bias, sub.samples=1500, 
     sub.extract=0.8, sub.weights=1, sub.standardize=TRUE,
-    trans.estimate=TRUE, trans.minclust=5, 
+    trans.estimate=TRUE, trans.minclust=10, 
     trans.a=0.01, trans.b=0.0, trans.parameters=NULL)
 
 cell.MajorIterationLoop(dat, x=NULL, parameters=NULL, 

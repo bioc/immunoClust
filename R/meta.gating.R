@@ -79,7 +79,7 @@ EM.method=1, EM.bias=0.25, EM.alpha=.5
     else {
         meta <- .meta.scatter.prior.6(dat)
     }
-    
+    cat("Scatter Gating\n")
     try(res <- meta.ME(dat$P, dat$N, dat$K, dat$clsEvents, dat$M, dat$S, 
                     meta$label, method=EM.method, bias=EM.bias, alpha=EM.alpha))
     
@@ -476,27 +476,6 @@ function(res, inc, par, par.order=c(), iFilter=0, aFac=7/6, bFac=3/2, pop="")
     ret
 }
 
-
-## meta.expClusterForActivation
-#meta.expClusterForActivation <- function(meta, exp=1, clusters=c())
-#{
-#
-#    inc <- c()
-#    cls <- c()
-#
-#    for( i in clusters ) {
-#        cl <- which(meta$res.clusters@label==i)
-#        cls <- c(cls, cl )
-#    }
-#    for( i in 1:exp ) {
-#        k <- meta$dat.clusters$K[i]
-#        inc <- cls[ cls <= k ]
-#        cls <- cls[ cls > k ] - k
-#    }
-#
-#    inc
-#}
-###
 
 ################################################################################
 

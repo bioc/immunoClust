@@ -13,8 +13,22 @@
 
 class normalize
 {
+    // Notation Convention: Y = consensus, X = measured
 public:
+    enum {
+        NONE = 0,
+        SCALE_X = 1,    // Y = a * X        : minimize  [Y - a*X]^2
+        LINEAR_X = 2,   // Y = a * X + b    : minimize  [Y - (a*X+b)]^2
+        SCALE_Y = 3,    // X = a * Y        : minimize  [a*Y -X]^2
+        LINEAR_Y = 4   // X = a * Y + b    : minimize  [a*Y+b -X]^2
+        //,LOGREG = 5,     // log(X) = a * log(Y) + b  : 
+        //,H_REG = 6       // X = a * asinh( b * sinh(Y) ) : minimize iteration
+        //SCALE_xwY = 5,
+        //LINEAR_xwY = 6,
+        //SCALE_ywY = 7,
+        //LINEAR_ywY = 8
 
+    };
 protected:
 	// const
 	const double	FLTMAX;
@@ -39,43 +53,64 @@ protected:
 	double*		S;	// sigma: totK x P x P
 
     int			L;			// number of meta clusters
-	int			G;			// number of groups
+	//int			G;			// number of groups
 
     const double* Z;        // probability matrix: totK x L
 
     
 	// for group wise normalization
-	const int*	groups;		// experiment groups: N
+	//const int*	groups;		// experiment groups: N
     
-    const int   DEGREE;
-    
+    const int   METHOD;
+    //const int   DEGREE;
+    const int   COEFF;
 
 	// transformation
     double*     cW;
     double*     cM;
     double*     cS;
     
-    double*     X;          // X^T * X: (DEGREE+1) x (DEGREE+1)
-    double*     Y;          // X^T * Y: (DEGREE+1)
-	double*		A;			// P x (DEGREE+1)
+    //double*     X;          // X^T * X: (DEGREE+1) x (DEGREE+1)
+    //double*     Y;          // X^T * Y: (DEGREE+1) x (DEGREE+1)
+	double*		A;			// P x COEFF
     double*     scaleA;     // P 
 	
 	    
 public:
-    normalize(int p, int n, const int* k, double* w, double* m, double* s, int l, const double* z, const int* g=0, const int degree=1);
+    normalize(int p, int n, const int* k, double* w, double* m, double* s, int l, const double* z, const int method=3);
 	~normalize();
 	
 	
 	void		process();	
 protected:
 private:
-	int			build_consensus();
-//	int			build_transformation(int kb, int kn);
-    int         build_regression(int kb, int kn);
-    int         build_regression_0(int kb, int kn);
-    //	int			build_marginal_transformation(int kb, int kn);
-	void		transform(int kb, int kn);
-	
+	int			build_consensus();    // since h-transformed already geometric 
+    
+    void        process_linreg();
+    int         linear_X(int kb, int kn);
+    int         scale_X(int kb, int kn);
+    int         linear_Y(int kb, int kn);
+    int         scale_Y(int kb, int kn);
+    /*
+    int         linear_xwY(int kb, int kn);
+    int         scale_xwY(int kb, int kn);
+    int         linear_ywY(int kb, int kn);
+    int         scale_ywY(int kb, int kn);
+     */
+	void		linear_transform(int kb, int kn);
+
+	/*
+    void        process_logreg();
+    int         log_regression(int kb, int kn);
+	void		log_transform(int kb, int kn);
+    
+    void        process_hreg();
+    int         h_regression(int kb, int kn);
+    double      h_reg_0(int kb, int kn, int p);
+    double      h_reg_1(int kb, int kn, int p);
+    
+	void		h_transform(int kb, int kn);   
+    */ 
 };
 
 #endif

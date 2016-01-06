@@ -519,6 +519,19 @@ namespace dbg {
 		print_text(tmp);
 		return 0;
 	}
+    
+    int 
+	print_matrix( const int N, const int P, const double* V) {
+		char tmp[1024];
+        for( int n=0; n<N; ++n ) {
+            size_t s = 0;
+            for( int q=0; q<P; ++q ) {
+			s += sprintf(tmp+s, "%.2lf, ", *(V+n*P+q));
+            }
+            print_text(tmp);
+        }
+		return 0;
+	}
 	
 }
 

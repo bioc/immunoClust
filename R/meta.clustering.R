@@ -3,20 +3,22 @@
 ####
 meta.process <- function(
 exp, dat.subset=c(), meta.iter=10, meta.bias=0.2, 
-meta.alpha=.5, meta.normalize=FALSE, norm.degree=1, 
+meta.alpha=.5, norm.method=0, norm.blur=2,
 scatter.subset=c(1,2), scatter.bias=0.25,scatter.prior=6
 ) {
     dat <- meta.exprs(exp, sub=dat.subset)
     
-    res <- meta.Clustering(dat$P, dat$N, dat$K, dat$clsEvents, dat$M, dat$S, 
+    res <- meta.Clustering(dat$P, dat$N, dat$K, 
+                        dat$clsEvents, dat$M, dat$S, 
                         bias=meta.bias, I.iter=meta.iter, EM.method=20, 
-                        alpha=meta.alpha, normalize=meta.normalize, 
-                        norm.degree=norm.degree)
+                        alpha=meta.alpha, norm.method=norm.method, 
+                        norm.blur=norm.blur)
 
     dat.norm <- dat
-    if( meta.normalize ) {
+    if( norm.method > 0 ) {
         dat.norm <- meta.Normalize(dat$P, dat$N, dat$K, dat$clsEvents, 
-                                dat$M, dat$S, res@K, res@z, degree=norm.degree)
+                                dat$M, dat$S, res@K, res@z, 
+                                method=norm.method)
     }
     
     attr(res, "desc") <- dat$desc
@@ -68,60 +70,16 @@ scatter.subset=c(1,2), scatter.bias=0.25,scatter.prior=6
 ## meta.process
 
 ##
-#   meta.Scale
+#   meta.Normalize
 ##
-meta.Scale <- function(P, N, K, W, M, S, method=5)
-{
-    totK <- sum(K)
-    label <- rep(1, totK)
-    obj <- .C("metaScale", 
-            as.integer(P), as.integer(N), as.integer(K),
-            W=as.double(W), M=as.double(c(t(M))), S=as.double(c(t(S))), 
-            label=as.integer(label), as.integer(method), 
-            package="immunoClust")
-
-    tW <- obj$W
-    tM <- matrix(obj$M, nrow=totK, ncol=P, byrow=TRUE)
-    tS <- matrix(obj$S, nrow=totK, ncol=(P*P), byrow=TRUE)
-
-    colnames(tM) <- colnames(M)
-    rownames(tM) <- rownames(M)
-
-    list("P"=P, "N"=N, "K"=K, "W"=tW,"M"=tM,"S"=tS)
-}
-## meta.Scale
-
-##
-#   meta.Mormalize
-##
-meta.GPA <- function(P, N, K, W, M, S, G, Z)
-{
-    totK <- sum(K)
-    groups <- rep(1, totK)
-    
-    obj <- .C("metaGPA", 
-            as.integer(P), as.integer(N), as.integer(K),
-            W=as.double(W), M=as.double(c(t(M))), S=as.double(c(t(S))), 
-            G=as.integer(G), z=as.double(t(Z)), groups=as.integer(groups), 
-            package="immunoCust")
-    
-    tW <- obj$W
-    tM <- matrix(obj$M, nrow=totK, ncol=P, byrow=TRUE)
-    tS <- matrix(obj$S, nrow=totK, ncol=(P*P), byrow=TRUE)
-    
-    colnames(tM) <- colnames(M)
-    rownames(tM) <- rownames(M)
-    
-    list("P"=P, "N"=N, "K"=K, "W"=tW,"M"=tM,"S"=tS)
-}
-meta.Normalize <- function(P, N, K, W, M, S, G, Z, degree=1)
+meta.Normalize <- function(P, N, K, W, M, S, G, Z, method=3)
 {
     totK <- sum(K)
     
     obj <- .C("metaNormalize", 
             as.integer(P), as.integer(N), as.integer(K),
             W=as.double(W), M=as.double(c(t(M))), S=as.double(c(t(S))), 
-            G=as.integer(G), z=as.double(t(Z)), degree=as.integer(degree), 
+            G=as.integer(G), z=as.double(t(Z)), method=as.integer(method), 
             package="immunoCust")
     
     tW <- obj$W
@@ -144,16 +102,6 @@ P, N, K, W, M, S, label, B=500, tol=1e-5, method=20,
 bias=0.25, alpha=0.5, min.class=0
 ) {
     G <- max(label)
-#    obj <- .C("metaME", 
-#            as.integer(P), as.integer(N), as.integer(K),
-#            as.double(W), as.double(c(t(M))), as.double(c(t(S))), 
-#            G=as.integer(G), w=double(G), m=double(G*P), s=double(G*P*P),
-#            label=as.integer(label), logLike=double(3), 
-#            history=as.integer(1:G),
-#            as.integer(B), as.double(tol), 
-#            as.integer(method), as.double(bias), 
-#            as.double(alpha), as.integer(min.class),
-#            package="immunoClust")
     
     obj <- .Call("immunoC_metaME",
             as.integer(sum(K)), as.integer(P), as.integer(G),
@@ -178,7 +126,22 @@ bias=0.25, alpha=0.5, min.class=0
     
     if( sum(is.na(z)) > 0 ) {
         warning("meta.ME: N/As in Z\n")
+        for(row in 1:nrow(z) ) {
+            if( sum(is.na(z[row,])) > 0 ) {
+                cat("N/As in Z[", row, ",]:", which(is.na(z[row,])), "\n")
+            }
+        }
         z[is.na(z)] <- 0
+    }
+    if( sum( z > 1) > 0 ) {
+        warning("meta.ME: above 1 in Z\n")
+        for(row in 1:nrow(z) ) {
+            if( sum(z[row,]>1) > 0 ) {
+                cat("above 1 in Z[", row, ",]:", which(z[row,]>1), "\n")
+            }
+        }
+        z[z > 1] <- 1
+
     }
     
 # output BIC & ICL
@@ -208,28 +171,34 @@ bias=0.25, alpha=0.5, min.class=0
 meta.Clustering <- function(
 P, N, K, W, M, S, I.iter=10, B=500, tol=1e-5, 
 bias=0.25, alpha=0.5, EM.method=20, 
-normalize=FALSE, norm.degree=1, norm.minG=10
+norm.method=0, norm.blur=2, norm.minG=10
 ) {
-    
+
     totK <- sum(K)
+
     tM <- M
     tS <- S
-    if( normalize ) {
-        d <- meta.Scale(P, N, K, W, M, S, method=5)
-        tM <- d$M
-        tS <- d$S
-    }
     
     label <- rep(1, totK)
     G <- 1
     for( i in 1:(I.iter) ) {
-        if( normalize && G >= norm.minG) {
-            d <- meta.Normalize(P, N, K, W, M, S, 
-                                res@K, res@z, degree=norm.degree)
-            tM <- d$M
-            tS <- d$S
+        if( norm.method > 0 ) {
+            if( G >= norm.minG) {
+                message("meta.Normalize ", i, " of ", I.iter, " with ", res@K,
+                        " clusters (blur=", norm.blur, ")")
+                nS <- (1+norm.blur) * tS
+                n.res <- meta.ME(P, N, K, W, tM, nS, res@label, B=B, tol=tol, 
+                                bias=bias, alpha=alpha, method=10 ) 
+                d <- meta.Normalize(P, N, K, W, M, S, 
+                                n.res@K, n.res@z, method=norm.method)
+                tM <- d$M
+                tS <- d$S
+            }
+#            tM <- nM
+#blur <- max(0, (I.iter-2*i)/(I.iter-1) * 4)
+#           cat("iter", i, "normalize blur:", blur, "\n")
+#            tS <- (1+blur) * nS
         }
-        
         
         if( G < 10 ) 
         label <- meta.SubClustering(P, totK, W, tM, tS, label, tol=tol, 
@@ -240,7 +209,8 @@ normalize=FALSE, norm.degree=1, norm.minG=10
                                     bias=bias, alpha=alpha,
                                     EM.method=EM.method)
         
-        message("meta.Clustering ", i, " of ", I.iter)
+        message("Fit Model ", i, " of ", I.iter, " with ", max(label), 
+                " clusters")
         res <- meta.ME(P, N, K, W, tM, tS, label, B=B, tol=tol, 
                         bias=bias, alpha=alpha, method=EM.method)
         
@@ -270,7 +240,6 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
         
         inc <- which(label==k)
         if( length(inc) > 1 ) {
-            message("cluster ", k, " of ", K, ": TestSubCluster")
             res <- meta.TestSubCluster(P, length(inc), 
                                     W[inc], M[inc,], S[inc,], 
                                     J=min(length(inc),J), tol=tol, 
@@ -290,7 +259,7 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
             icl_l[k] <- max(icl)
             l <- which.max(icl)
             tst_l[k] <- l
-            
+##cat( l, ":", icl, "\n")
             if( res[[l]]@K == 1 ) {
                 message("cluster ", k, " of ", K, " is OK")
             }
@@ -310,7 +279,7 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
     off <- 0
     ins <- vector("list",K)
     sK <- 0
-    J <- max(8,2*K)
+    J <- max(16,2*K)
     
     while( J > sK ) {
         k <- which.max(icl_l)
@@ -323,10 +292,10 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
             break
         }
         
-        if( res[[l]]@K > 1 ) {
-            message("cluster ", k, " has ", res[[l]]@K, " sub-clusters at ", 
-                l, ", ICL=", format(icl, digits=2))
-        }
+#if( res[[l]]@K > 1 ) {
+#           message("cluster ", k, " has ", res[[l]]@K, " sub-clusters at ", 
+#               l, ", ICL=", format(icl, digits=2))
+#       }
         
         icl_l[k] <- cutoff
         
@@ -346,7 +315,7 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
     }
     
     for( k in 1:K) if( !is.null(ins[[k]]) ) {
-        message("split cluster ", k, " into ", (ins[[k]])@K, " sub-clusters")
+#message("split cluster ", k, " into ", (ins[[k]])@K, " sub-clusters")
         label[label==k] <- ins[[k]]@label + max(label)
     }  
     
@@ -358,8 +327,8 @@ meta.TestSubCluster<-
 function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0, 
         EM.method=2, HC.samples=2000) 
 {
-    message("meta.TestSubCluster: ", "N=", N, " J=", J, 
-            " dim=", paste(sep="", dim(M), collapes=","))
+#message("meta.TestSubCluster: ", "N=", N, " J=", J, 
+#           " dim=", paste(sep="", dim(M), collapes=","))
     if( J > N ) {
         message("\t???", J, "sub >", N, "clusters")
     }
@@ -373,26 +342,12 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
 
         label <- rep(1, N)
 
-#        obj <- .C("metaME", 
-#                as.integer(P), as.integer(1), as.integer(N),
-#                as.double(W), as.double(c(t(M))), as.double(c(t(S))), 
-#                G=as.integer(1), w=double(1), m=double(1*P), s=double(1*P*P),
-#                label=as.integer(label), logLike=double(3), 
-#                history=as.integer(1),
-#                as.integer(B), as.double(tol), as.integer(EM.method), 
-#                as.double(bias), as.double(alpha), as.integer(0),
-#                package="immunoClust")
-#        
-#        if( obj$G < 1 ) return(NULL)
-#        
-#        L <- obj$G
-
         obj <- .Call("immunoC_metaME", 
                 as.integer(N), as.integer(P), as.integer(1),
                 as.double(W), as.double(c(t(M))), as.double(c(t(S))), 
                 label=as.integer(label),
                 as.integer(B), as.double(tol), as.integer(EM.method), 
-                as.double(bias), as.double(alpha), as.integer(0))
+                as.double(bias), as.double(alpha), as.integer(1))
 
         if( obj$L < 1 ) return(NULL)
 
@@ -441,37 +396,28 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
                 
                 label[samples.set] <- .clust.hclass(hcPairs, k)
                 
-#                obj <- .C("metaME", 
-#                        as.integer(P), as.integer(1), as.integer(N),
-#                        as.double(W), as.double(c(t(M))), as.double(c(t(S))), 
-#                        G=as.integer(k), w=double(k), 
-#                        m=double(k*P), s=double(k*P*P),
-#                        label=as.integer(label), logLike=double(3), 
-#                        history=1:k,
-#                        as.integer(B), as.double(tol), as.integer(EM.method), 
-#                        as.double(bias), as.double(alpha), as.integer(0),
-#                        package="immunoClust")
-#                                
-#                L <- obj$G
-
                 obj <- .Call("immunoC_metaME", 
                         as.integer(N), as.integer(P), as.integer(k),
                         as.double(W), as.double(c(t(M))), as.double(c(t(S))), 
                         label=as.integer(label), 
                         as.integer(B), as.double(tol), as.integer(EM.method), 
-                        as.double(bias), as.double(alpha), as.integer(0))
+                        as.double(bias), as.double(alpha), as.integer(1))
 
                 L <- obj$L
 
 # output obj$s to sigma
                 sigma <- array(0, c(L, P, P))
                 s <- matrix(obj$s, k, P * P, byrow=TRUE)
-                for (l in 1:L)
-                sigma[l,,] <- matrix(s[l,], P, P, byrow = TRUE)
-                
-                mu <- matrix(obj$m, k, P, byrow=TRUE)[1:L,]
-                dim(mu) <- c(L,P)
-                
+                if( L > 0 ) {
+                    for (l in 1:L)
+                        sigma[l,,] <- matrix(s[l,], P, P, byrow = TRUE)
+
+                    mu <- matrix(obj$m, k, P, byrow=TRUE)[1:L,]
+                    dim(mu) <- c(L,P)
+                }   
+                else {
+                    mu <- matrix(0, nrow=0, ncol=P)
+                }
 # output BIC & ICL
                 BIC <- obj$logLike[1]
                 ICL <- obj$logLike[3] - logLike

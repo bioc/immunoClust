@@ -138,14 +138,28 @@ mvn_dendro::join_nodes(int i, int j)
 }
 
 double
-mvn_dendro::logdet_invS(const double* S)
+mvn_dendro::logdet_invS(const double* S, int& status)
 {
 	if( S != tmpS ) {
 		cblas_dcopy(P*P, S, 1, tmpS, 1);
 	}
-	mat::cholesky_decomp(P, tmpS);
-	mat::invert(P, tmpS, tmpPxP);
-	mat::cholesky_decomp(P, tmpS);
+	status = mat::cholesky_decomp(P, tmpS);
+    if( status ) {
+        return NAN;
+    }
+    
+    mat::invert(P, tmpS, tmpPxP);
+    status = mat::cholesky_decomp(P, tmpS);
+    if( status ) {
+        status = 2;
+        return NAN;
+    }
+    for(int p=0; p<P; ++p) {
+		if( *(tmpPxP + p*P + p) <= 0.0 ) {
+			status = 3;
+		}
+	}
+ 
 	return mat::logdet(P,tmpS);
 }
 
@@ -174,12 +188,16 @@ mvn_dendro::hellinger(int* li, int* lj, double* crit)
 	
 	int i, j, k, l, oi, oj; //, cls;
 	
+    const double zero = 0.0;
 	const double *M_i, *M_j, *S_i, *S_j;
 		
 	double detS, detS_i, detS_j, logD, od;
-	// int status = 0;
+	int status = 0;
+    int diag_j, diag_i;
+    
 	
 	// init D
+    // dbg::printf("init D");
 	double* dij;
 	dij = D;
 	for(j=1; j<K;++j) {
@@ -187,27 +205,60 @@ mvn_dendro::hellinger(int* li, int* lj, double* crit)
 		M_j = M+j*P;
 		
 		// calc logdet(S_j^-1)
-		detS_j = 0.5 * logdet_invS(S_j);
-		
-		for( i=0; i<j;++i) {
-			S_i = S+i*P*P;
-			M_i = M+i*P;
+		detS_j = 0.5 * logdet_invS(S_j, diag_j);
+        if( diag_j ) {
+            //dbg::printf("meta-HC logdet %d, status=%d", j, diag_j); 
+            // use only diagonal elements
+            detS_j = 0.0;
+            for( int p=0; p<P; ++p ) {
+                detS_j += log(*(S_j+p*P+p));
+            }
+            detS_j *= -0.5;
+        }
 
-			// calc logdet(S_i^-1)
-			detS_i = 0.5 * logdet_invS(S_i);
+        for( i=0; i<j;++i) {
+                S_i = S+i*P*P;
+                M_i = M+i*P;
+
+                // calc logdet(S_i^-1)
+                detS_i = 0.5 * logdet_invS(S_i, diag_i);
+                if( diag_i ) {
+                    //dbg::printf("meta-HC logdet %d: status=%d", i, diag_i); 
+                    // use only diagonal elements
+                    detS_i = 0.0;
+                    for( int p=0; p<P; ++p ) {
+                        detS_i += log(*(S_i+p*P+p));
+                    }
+                    detS_i *= -0.5;
+                }
 			
-			// calc 
-			mat::sum(P, tmpS, S_i, S_j, 0.5, 0.5);
-			detS = logdet_invS(tmpS);
-			// remember tmpS in now inverted
+                // calc 
+                mat::sum(P, tmpS, S_i, S_j, 0.5, 0.5);
+                detS = logdet_invS(tmpS, status);
+                if( status ) {
+                    //dbg::printf("meta-HC: logdet <%d,%d>: status=%d", i, j, status);
+                    // use only diagonal elements
+                    cblas_dcopy(P*P, &zero, 0, tmpS, 1);
+                    detS = 0.0;
+                    for( int p=0; p<P; ++p ) {
+                        // invert
+                        *(tmpS+p*P+p) = 1.0/(*(S_j+p*P+p) + *(S_i+p*P+p));
+                        // log det
+                        detS += log(*(tmpS+p*P+p));
+                        // sqrt
+                        *(tmpS+p*P+p) = sqrt(*(tmpS+p*P+p));
+                    }
+                    
+                }
+                // remember tmpS in now inverted
 			
-			logD = detS - (detS_i+detS_j);
-			logD -= 0.25*gsl_pow_2(mvn::mahalanobis(P, M_i, M_j, tmpS, tmpP));
+                logD = detS - (detS_i+detS_j);
+                logD -= 0.25*gsl_pow_2(mvn::mahalanobis(P, M_i, M_j, tmpS, tmpP));
 						
-			// *dij++ = sqrt(1. - exp(logD));
-			*dij++ = 1. - exp(0.5*logD);
-			// *dij++ = 1. - exp(logD);
-		}
+                // *dij++ = sqrt(1. - exp(logD));
+                *dij++ = 1. - exp(0.5*logD);
+                // *dij++ = 1. - exp(logD);
+        }
 	}
 		
 	if( K<=1 ) {
@@ -221,6 +272,7 @@ mvn_dendro::hellinger(int* li, int* lj, double* crit)
 		return 0;
 	}	
 	
+    //dbg::printf("join D");
 	// do cluster
 	
 	for(l=K-1, k=0; l>0; --l, ++k) {
@@ -259,7 +311,17 @@ mvn_dendro::hellinger(int* li, int* lj, double* crit)
 		//W_j = W[oi];
 		//W_j = 0.5;
 		
-		detS_j = 0.5 * logdet_invS(S_j);
+		detS_j = 0.5 * logdet_invS(S_j, diag_j);
+        if( diag_j ) {
+            //dbg::printf("meta-HC logdet %d: status=%d", oi, diag_j); 
+            // use only diagonal elements
+            detS_j = 0.0;
+            for( int p=0; p<P; ++p ) {
+                detS_j += log(*(S_j+p*P+p));
+            }
+            detS_j *= -0.5;
+        }
+        
 				
 		dij = D + (oi*(oi-1))/2;	// = d<0,oi>
 		for(i=0; i<oi; ++i) {
@@ -268,44 +330,91 @@ mvn_dendro::hellinger(int* li, int* lj, double* crit)
 			//W_i = W[i];
 			// W_i = 0.5;
 			// w = W_i + W_j;
-			detS_i = 0.5 * logdet_invS(S_i);
+			detS_i = 0.5 * logdet_invS(S_i, diag_i);
+            if( diag_i ) {
+                //dbg::printf("meta-HC logdet %d: status=%d", i, diag_i); 
+                // use only diagonal elements
+                detS_i = 0.0;
+                for( int p=0; p<P; ++p ) {
+                    detS_i += log(*(S_i+p*P+p));
+                }
+                detS_i *= -0.5;
+                
+            }
+            
 			
 			mat::sum(P, tmpS, S_i, S_j, 0.5, 0.5);
-			detS = logdet_invS(tmpS);
-			// tmpS is inverted now
+			detS = logdet_invS(tmpS, status);
+            if( status ) {
+                //dbg::printf("meta-HC logdet <%d,%d>: status=%d", i, oi, status); 
+                // use only diagonal elements
+                cblas_dcopy(P*P, &zero, 0, tmpS, 1);
+                detS = 0.0;
+                for( int p=0; p<P; ++p ) {
+                    // invert
+                    *(tmpS+p*P+p) = 1.0/(*(S_j+p*P+p) + *(S_i+p*P+p));
+                    // log det
+                    detS += log(*(tmpS+p*P+p));
+                    // sqrt
+                    *(tmpS+p*P+p) = sqrt(*(tmpS+p*P+p));
+                }
+            }
+            
+			// tmpS is inverted and cholesky decomposed now
 			
 			logD = detS - (detS_i+detS_j);
 			logD -= 0.25 * gsl_pow_2(mvn::mahalanobis(P, M_i, M_j, tmpS, tmpP));
 			
-			// *dij = sqrt(1. - exp(logD));
 			*dij = 1. - exp(0.5*logD);
-			// *dij = 1. - exp(logD);
 			++dij;
 		}
 		S_i = S_j;
 		M_i = M_j;
 		//W_i = W_j;
 		detS_i = detS_j;
+        diag_i = diag_j;
 		dij += oi;
 		for(j=oi+1; j<l; ++j) {
 			
 			S_j = S+j*P*P;
 			M_j = M+j*P;
-			//W_j = W[j];
-			//W_j = 0.5;
-			//w = W_i + W_j;
-			detS_j = 0.5 * logdet_invS(S_j);
+	
+            detS_j = 0.5 * logdet_invS(S_j, diag_j);
+            if( diag_j ) {
+                //dbg::printf("meta-HC logdet %d: status=%d", j, diag_j);
+                // use only diagonal elements
+                detS_j = 0.0;
+                for( int p=0; p<P; ++p ) {
+                    detS_j += log(*(S_j+p*P+p));
+                }
+                detS_j *= -0.5;
+            }
+            
 			
 			mat::sum(P, tmpS, S_i, S_j, 0.5, 0.5);
-			detS = logdet_invS(tmpS);
-			// tmpS is inverted now
+			detS = logdet_invS(tmpS, status);
+            if( status ) {
+                //dbg::printf("meta-HC logdet <%d,%d>: status=%d", oi, j, status);
+                // use only diagonal elements
+                cblas_dcopy(P*P, &zero, 0, tmpS, 1);
+                detS = 0.0;
+                for( int p=0; p<P; ++p ) {
+                    // invert
+                    *(tmpS+p*P+p) = 1.0/(*(S_j+p*P+p) + *(S_i+p*P+p));
+                    // log det
+                    detS += log(*(tmpS+p*P+p));
+                    // sqrt
+                    *(tmpS+p*P+p) = sqrt(*(tmpS+p*P+p));
+                }
+                
+            }
+            
+			// tmpS is inverted and cholesky decomposed now
 			
 			logD = detS - (detS_i+detS_j);
 			logD -= 0.25 * gsl_pow_2(mvn::mahalanobis(P, M_i, M_j, tmpS, tmpP));
 			
-			// *dij = sqrt(1. - exp(logD));
 			*dij = 1. - exp(0.5*logD);
-			// *dij = 1. - exp(logD);
 			dij += j;
 		}
 		
@@ -325,7 +434,7 @@ mvn_dendro::hellinger_w(int* li, int* lj, double* crit)
 	double W_i, W_j;
 	
 	double detS, detS_i, detS_j, logD, od;
-	// int status = 0;
+	int status = 0;
 	
 	// init D
 	double* dij;
@@ -336,7 +445,7 @@ mvn_dendro::hellinger_w(int* li, int* lj, double* crit)
 //		W_j = W[j];
 		
 		// calc logdet(S_j^-1)
-		detS_j = logdet_invS(S_j);
+		detS_j = logdet_invS(S_j, status);
 		
 		for( i=0; i<j;++i) {
 		
@@ -349,12 +458,12 @@ mvn_dendro::hellinger_w(int* li, int* lj, double* crit)
 			M_i = M+i*P;
 			
 			// calc logdet(S_i^-1)
-			detS_i = logdet_invS(S_i);
+			detS_i = logdet_invS(S_i, status);
 			
 			// calc 
 			mat::sum(P, tmpS, S_i, S_j, W_i, W_j);
 			// joined_ij(i, j, tmpP, tmpS);
-			detS = logdet_invS(tmpS);
+			detS = logdet_invS(tmpS, status);
 			// remember tmpS in now inverted
 			
 			logD = detS - W_i*detS_i - W_j*detS_j;
@@ -412,7 +521,7 @@ mvn_dendro::hellinger_w(int* li, int* lj, double* crit)
 		M_j = M+oi*P;
 	//	W_j = W[oi];
 		
-		detS_j = logdet_invS(S_j);
+		detS_j = logdet_invS(S_j, status);
 		
 		dij = D + (oi*(oi-1))/2;	// = d<0,oi>
 		for(i=0; i<oi; ++i) {
@@ -423,11 +532,11 @@ mvn_dendro::hellinger_w(int* li, int* lj, double* crit)
 			S_i = S+i*P*P;
 			M_i = M+i*P;
 			// w = W_i + W_j;
-			detS_i = logdet_invS(S_i);
+			detS_i = logdet_invS(S_i, status);
 			
 			mat::sum(P, tmpS, S_i, S_j, W_i, W_j);
 			// joined_ij(i,j, tmpP, tmpS);
-			detS = logdet_invS(tmpS);
+			detS = logdet_invS(tmpS, status);
 			// tmpS is inverted now
 			
 			logD = detS - W_i*detS_i - W_j*detS_j;
@@ -449,11 +558,11 @@ mvn_dendro::hellinger_w(int* li, int* lj, double* crit)
 			S_j = S+j*P*P;
 			M_j = M+j*P;
 
-			detS_j = logdet_invS(S_j);
+			detS_j = logdet_invS(S_j, status);
 			
 			mat::sum(P, tmpS, S_i, S_j, W_i, W_j);
 			// joined_ij(i,j, tmpP, tmpS);
-			detS = logdet_invS(tmpS);
+			detS = logdet_invS(tmpS, status);
 			// tmpS is inverted now
 			
 			logD = detS - W_i*detS_i - W_j*detS_j;
@@ -547,7 +656,7 @@ mvn_dendro::hellinger_d(int* li, int* lj, double* crit)
 	const double *M_i, *M_j, *S_i, *S_j;
 	
 	double detS, detS_i, detS_j, logD; //, od;
-	// int status = 0;
+	int status = 0;
 	
 	// init D
 	double* dij;
@@ -557,18 +666,18 @@ mvn_dendro::hellinger_d(int* li, int* lj, double* crit)
 		M_j = M+j*P;
 		
 		// calc logdet(S_j^-1)
-		detS_j = 0.5 * logdet_invS(S_j);
+		detS_j = 0.5 * logdet_invS(S_j, status);
 		
 		for( i=0; i<j;++i) {
 			S_i = S+i*P*P;
 			M_i = M+i*P;
 			
 			// calc logdet(S_i^-1)
-			detS_i = 0.5 * logdet_invS(S_i);
+			detS_i = 0.5 * logdet_invS(S_i, status);
 			
 			// calc 
 			mat::sum(P, tmpS, S_i, S_j, 0.5, 0.5);
-			detS = logdet_invS(tmpS);
+			detS = logdet_invS(tmpS, status);
 			// remember tmpS in now inverted
 			
 			logD = detS - (detS_i+detS_j);

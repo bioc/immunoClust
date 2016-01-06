@@ -9,6 +9,7 @@
 
 #include "em_meta.h"
 #include "hc_meta.h"
+#include "dist_mvn.h"
 
 #include "meta_scale.h"
 #include "meta_gpa.h"
@@ -103,9 +104,9 @@ extern "C" {
     
     
 	//metaNormalize
-	void metaNormalize(int* p, int* n, int* k, double* w, double* m, double* s, int* g, double* z, int* degree)
+	void metaNormalize(int* p, int* n, int* k, double* w, double* m, double* s, int* l, double* z, int* method)
 	{
-		normalize normalizer(*p, *n, k, w, m, s, *g, z, 0, *degree);
+		normalize normalizer(*p, *n, k, w, m, s, *l, z, *method);
 		normalizer.process();
 	}
 	
@@ -227,9 +228,9 @@ extern "C" {
 		INTEGER(VECTOR_ELT(ret,0))[0] = em.final(INTEGER(VECTOR_ELT(ret,5)), 
                                                  REAL(VECTOR_ELT(ret,6)), 
                                                  INTEGER(VECTOR_ELT(ret,7)) );
-		Rprintf("The EM (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",
+		Rprintf("The EM (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g (%g)\n",
                 status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, 
-                tolerance, REAL(VECTOR_ELT(ret,6))[0]);	
+                tolerance, REAL(VECTOR_ELT(ret,6))[0], REAL(VECTOR_ELT(ret,6))[2]);	
                                                  
         Rf_unprotect(1);	// unprocted ret
                                                  
@@ -237,6 +238,25 @@ extern "C" {
         
 	}
     
+    // dist_mvn
+    SEXP call_mvnDist(SEXP P, SEXP K, SEXP W, SEXP M, SEXP S)
+    {
+        int k = INTEGER(K)[0];
+        SEXP ret = Rf_protect(allocVector(VECSXP, k*(k-1)/2));
+        
+        dist_mvn dist(INTEGER(P)[0], INTEGER(K)[0],
+                 REAL(W), REAL(M), REAL(S));
+        
+        dist.hellinger(REAL(ret));
+        Rf_setAttrib(ret,install("Size"), Rf_duplicate(K));
+        Rf_setAttrib(ret,install("Diag"), Rf_ScalarLogical(0));
+        Rf_setAttrib(ret,install("Upper"), Rf_ScalarLogical(0));
+        Rf_setAttrib(ret,R_ClassSymbol, Rf_mkString("dist"));
+        Rf_unprotect(1);
+        
+        return ret;
+                 
+    }
 	
 	
 #ifdef __cplusplus

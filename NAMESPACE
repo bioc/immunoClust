@@ -3,7 +3,7 @@ useDynLib(immunoClust)
 import(methods)
 
 
-importFrom(stats, density)
+importFrom(stats, density, mahalanobis, qt, quantile, sd, qchisq)
 importFrom(graphics, plot, pairs, points, hist)
 importFrom(grid, get.gpar, grid.points, current.viewport)
 importFrom(lattice, panel.points, splom)

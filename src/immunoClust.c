@@ -15,7 +15,9 @@ extern "C" {
 
 int print_text(const char* txt) 
 {
-//	Rprintf("%s\n", txt);
+#ifdef DEBUG
+	Rprintf("%s\n", txt);
+#endif    
 	return 0;
 }
 	
@@ -56,6 +58,7 @@ int print_text(const char* txt)
         
         /* meta */
         {"immunoC_metaME", (DL_FUNC)(&call_metaME), 13},
+        {"immunoC_mvnDist", (DL_FUNC)(&call_mvnDist), 5},
 		{NULL, NULL, 0}
 	};
 	

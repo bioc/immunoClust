@@ -1,14 +1,19 @@
+immuniClust 1.3.1
+    CHANGES
+    * The normalization step within the meta.clusering proces is improved
+      and extended which is also effects the related  parameter settings
+
 immunoClust 1.1.1.
-  NEW FEATRUES:
+    NEW FEATRUES:
     * A normalization step which the sample cell-clusters to the common
       meta-cluster model is included an optionally activated during the
       major meta-clustering process.
 
-  CHANGES:
+    CHANGES:
     * The meta.ME C-binding and return value was modified in a way that the
       A-Posterior probability matrix Z for a cell-cluster belonging to a
       meta-cluster is also calculated and returned.
-  BUFIXES:
+    BUFIXES:
     * Ellipse position were not correct when ploting a parameter subset
 
 immunoClust 1.0.0:
@@ -19,7 +24,7 @@ immunoClust 1.0.0:
     immunophenotypic signatures in high-dimensional cytometric datasets. 
     Cytometry A (accepted)."
 
-  CHANGES:
+    CHANGES:
     * The code was cleaned and modified in the C-binding calls to make
       it runable on R 3.1.2.
     * A bug in the cell.hclust function was fixed, which does not effect

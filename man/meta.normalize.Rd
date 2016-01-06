@@ -1,7 +1,5 @@
-\name{meta.Normalize}
+\name{meta.normalize}
 \alias{meta.Normalize}
-\alias{meta.GPA}
-\alias{meta.Scale}
 
 \encoding{utf8}
 
@@ -10,18 +8,12 @@ immunoClust normalization step with the meta.clustering process
 }
 
 \description{
-Performs a normalization vio linear or quadratic regression of the
-cell-cluster samples to the meta-clustering model. The meta.GPA function
-is in an experimental state and processes procrustes analysis instead of
-linear regression.
+Performs a normalization via linear regression of the
+cell-cluster samples to the meta-clustering model. 
 }
 
 \usage{
-meta.Scale(P, N, K, W, M, S, method=5)
-
-meta.GPA(P, N, K, W, M, S, G, Z)
-
-meta.Normalize(P, N, K, W, M, S, G, Z, degree=1)
+meta.Normalize(P, N, K, W, M, S, G, Z, method=3)
 }
 
 \arguments{
@@ -36,36 +28,32 @@ events, of all clusters.}
 \item{S}{The \eqn{totK x P x P}-dimensional matrix of all cluster covariance
 matrices.}
 \item{G}{The number of meta-clusters.}
-\item{Z}{The \eqn{totK x G}-dimensiona matrix with the A-Posterior 
+\item{Z}{The \eqn{totK x G}-dimensionail matrix with the A-Posterior 
 probabilities for a cell-cluster belonging to a meta-cluster.}
-\item{method}{Experimental alternative methods used for the scaling routine:
+\item{method}{
+Alternative methods used for the normalization routine. Let \eqn{Y} denote 
+the consensus meta-model build from all cell-event clusters of all experiments
+using the A-posterior \eqn{Z} and \eqn{X} the cell-event clusters in each
+experiment.
 
-0   = sample median absolute deviation to average median absolute deviation
+0   = no normalization
 
-1   = sample trimed sd (mean=0) to average trimed sd (mean=0)
+1   = \eqn{ Y = a x X }
 
-2   = sample trimed mean/sd to average trimed mean/sd
+2   = \eqn{ Y = a x X + b }
 
-3   = sample trimed mean/sd to mean=0, sd=1
+3   = \eqn{ X = a x Y }
 
-4   = sample weighted mean/sd to average weighted mean/sd
+4   = \eqn{ X = a x Y + b }
 
-5   = 0.9-quantile of sample means to average 0.9-quantiles of sample means
 }
-\item{degree}{The degree of the regression ploynom used for the normalization.}
 }
 
 \details{
-The normalization performs a weighted regression through the origin. Thus, 
-only a scaling without a translation for the cell-clusters in one sample is 
-applied.
 The regression used the cell-cluster and meta-cluster means weighted by the 
-probabilities for a cell-cluster belonging to the meta-cluster.
-
-The meta.Scale function is used only for the first sample cell-clusters 
-scaling within the normalization iteration in the meta.clustering process.
-
-The meta.GPA function is experimental and not used for normalization jet.
+probabilities for a cell-cluster belonging to the meta-cluster. It builds
+a consensus meta-model from all cell-clusters using the A-posterior 
+probabilities \eqn{Z}. 
 }
 
 \value{

@@ -17,6 +17,9 @@ meta.plotClusters <- function( meta, include=c() )
 
 meta.plotScatter <- function(meta)
 {
+    if( ncol(meta$dat.scatter$M) == 2 )
+    plot(meta$res.scatter, data=meta$dat.scatter$M, ellipse=TRUE)
+    else
     splom(meta$res.scatter, meta$dat.scatter$M, ellipse=TRUE)
 }
 
@@ -37,8 +40,8 @@ png.size=1024, filter=0)
     N <- length(pattern)
 
     if( N == 0 ) {
-        png(filename=paste(sep="", pre, name, ".png"), 
-            width=png.size, height=png.size)
+        png(filename=paste(sep="", pre, name, ".png"), width=png.size, 
+            height=png.size)
         if( filter > 0 ) {
             inc <- c()
             for( c in gating$clusters ) {

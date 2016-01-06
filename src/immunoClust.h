@@ -7,6 +7,8 @@
  *
  */
 
+#define DEBUG 1
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -88,6 +90,7 @@ extern "C" {
                      SEXP(label), SEXP(max_iter), SEXP(max_tol), SEXP(method),
                      SEXP(bias), SEXP(alpha), SEXP(min_g));
 	
+    SEXP call_mvnDist(SEXP P, SEXP K, SEXP W, SEXP M, SEXP S);
 
 #ifdef __cplusplus
 }

@@ -44,7 +44,7 @@ private:
 	double	joined_ij(int i, int j, double* M_ij, double* S_ij) const;
 	void	joined_invS(int i, int j);
 	
-	double	logdet_invS(const double* S);
+	double	logdet_invS(const double* S, int& status);
 	void	inv_sumS(const double* S_i, const double* S_j);
 	int		weighted_linkage(int* li, int* lj, double* crit);
 

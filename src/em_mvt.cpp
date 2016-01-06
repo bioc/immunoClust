@@ -820,7 +820,7 @@ em_mvt::m_step_diag_k(int k)
 		y += P;
 	}
 
-	// variance -> precision
+	// co-variance -> precision
 
 	for(p=0; p<P; ++p) {
 		if( (*(s+p*P+p) /= z_sum) <= EPSMIN ) {
@@ -1147,7 +1147,7 @@ em_mvt::final(double logLike[3], int* label, int* history)
 	logLike[2] = icLike + icl::sum(L, tmpK);
 	
 	/*
-	 output S to be the covariance matrix
+	 output S to be the co-variance matrix
 	 */
 	for(k=0; k<L; k++) {
 		double* s = S + k*P*P;

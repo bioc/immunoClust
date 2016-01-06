@@ -191,7 +191,7 @@ definition=function(x, data, include=1:(x@K), ...)
     
     gp <- list(...)[["par.settings"]]
     
-    ellipse.frame <- list(K=(x@K), P=length(param), sigma=(x@sigma), mu=(x@mu) )
+    ellipse.frame <- list(K=(x@K), P=length(param), sigma=(x@sigma), mu=(x@mu))
     
     splom(x=y, data=NULL, pscales=NULL, panel=.ellipse.panel.splom, 
         frame=ellipse.frame, gp=gp, include=include,...)
@@ -213,11 +213,13 @@ N=NULL,label=NULL, desc=NULL,...
     range <- range(data)[inc]
     
     if( is.null(label) ){
-        clust.frame <- list(K=(x@K), P=length(params), sigma=(x@sigma[,subset,subset]), 
+        clust.frame <- list(K=(x@K), P=length(params), 
+                            sigma=(x@sigma[,subset,subset]), 
                             mu=(x@mu[,subset]), range=range, label=x@label)
     }
     else {
-        clust.frame <- list(K=(x@K), P=length(params), sigma=(x@sigma[,subset,subset]), 
+        clust.frame <- list(K=(x@K), P=length(params), 
+                            sigma=(x@sigma[,subset,subset]), 
                             mu=(x@mu[,subset]), range=range, label=label)
     }
     

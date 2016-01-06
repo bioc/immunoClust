@@ -189,6 +189,7 @@
         history=paste(obj$history), state=rep(0,L))
     
 }
+## .immunoClust2
 
 
 ##########

@@ -1,5 +1,6 @@
 \name{cell.removed}
 \alias{removed.above}
+\alias{removed.below}
 
 \encoding{utf8}
 
@@ -14,6 +15,7 @@ a FCS-file.
 
 \usage{
 removed.above(fcs, parameters=NULL, N=NULL, max.count=10, max=NULL)
+removed.below(fcs, parameters=NULL, N=NULL, min.count=10, min=NULL)
 }
 
 
@@ -34,6 +36,8 @@ parameter will be used. To suppress filtering, it is set to -1.}
 \item{max}{The upper limit set for data filtering. Note that it is a vector of 
 length equal to the number of parameters (columns), implying that a different 
 value can be set for each parameter.}
+\item{min.count}{analoguous to \code{max.count}.}
+\item{min}{analoguous to \code{min}.}
 }
 
 \value{

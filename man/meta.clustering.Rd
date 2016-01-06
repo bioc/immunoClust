@@ -17,7 +17,7 @@ returns the fitted mixture model parameter in an object of class immunoClust.
 \usage{
 meta.Clustering(P, N, K, W, M, S, I.iter=10, B=500, tol=1e-5,
                 bias=0.25, alpha=0.5, EM.method=20,
-                normalize=FALSE, norm.degree=1, norm.minG=10)
+                norm.method=0, norm.blur=2, norm.minG=10)
 }
 
 \arguments{
@@ -56,11 +56,14 @@ complete covariance matrices are applied. A reasonable value for alpha is 0.5.}
 
 20  = EMt-classification weighted
 }
-\item{normalize}{Activates a normalization step within the major 
-meta-clustering iteration loop.}
-\item{norm.degree}{The degree of the normalization regression polynom.}
+\item{norm.method}{Normalization function; see \code{\link{meta.Normalize}} for
+details.}
+\item{norm.blur}{For the normalization step the A-posterior probabilites of the
+cell-clusters belonging to a meta.clusters a used. In order to capture narrow 
+cell-clusters reasonable the co-variance of the cell-clusters is blured for the
+A-posterior probabilities in the normalization step.}
 \item{norm.minG}{Minimum number of obtained meta-clusters required to process 
-the normalization step in the majo iteration loop.}
+the normalization step in the major iteration loop.}
 }
 
 \details{
