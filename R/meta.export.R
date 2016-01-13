@@ -9,7 +9,8 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
 ## meta.numEvents: 
 ##        number of events in meta-clusters for cell-event samples
 ###
-.meta.numGate <- function(meta, gating, name, out.linage=TRUE, out.all=TRUE)
+.meta.numGate <- function(meta, gating, name, 
+    out.linage=TRUE, out.all=TRUE, out.unclassified=TRUE)
 {
     N <- meta$dat.clusters$N
     P <- meta$dat.clusters$P
@@ -25,7 +26,7 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
         }
 
         clusters <- c()        
-        if( out.linage && length(gating$clusters)>0 ) {
+        if( out.linage && length(gating$clusters)>=0 ) {
             M  <- rep(0, P)
             inc <- c() 
             for( i in gating$clusters ) {
@@ -34,11 +35,15 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
                         sum(meta$dat.clusters$clsEvents[j])
                 inc <- c(inc, j )
             }
-            M <- M / sum(meta$dat.clusters$clsEvents[inc])
-            
             numEvents <- matrix(NA, nrow=1, ncol=N+P)
-            for( p in 1:P ) {
-                numEvents[,N+p] <- M[p]
+            if( length(inc) > 0 ) {
+                M <- M / sum(meta$dat.clusters$clsEvents[inc])
+            
+            
+
+                for( p in 1:P ) {
+                    numEvents[,N+p] <- M[p]
+                }
             }
             
 ## get numEvents for all experiment
@@ -72,13 +77,14 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
             for( i in 1:length(gating$childs) ) {
                 clusters <- c(clusters, gating$childs[[i]]$clusters)
                 tbl <- rbind(tbl, .meta.numGate(meta, gating$childs[[i]], name, 
-                                        out.linage=c>1, out.all=out.all))
+                                        out.linage=c>1, out.all=out.all,
+                                        out.unclassified=out.unclassified))
             }
             
         }
         clusters <- gating$clusters[ is.na(match(gating$clusters, clusters)) ]
         
-        if( length(clusters) > 0 ) {
+        if( out.unclassified && length(clusters) > 0 ) {
             rn <- rownames(tbl)
             
             for( cls in clusters ) {
@@ -106,7 +112,7 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
 }
 ##    meta.numGate
 
-meta.numEvents <- function(meta, out.all=TRUE)
+meta.numEvents <- function(meta, out.all=TRUE, out.unclassified=TRUE)
 {
     N <- meta$dat.clusters$N
     P <- meta$dat.clusters$P
@@ -128,7 +134,9 @@ meta.numEvents <- function(meta, out.all=TRUE)
         rownames(tbl) <- parNames
     }
     
-    tbl <- rbind(tbl, .meta.numGate(meta, meta$gating, NULL, out.all=out.all))
+    tbl <- rbind(tbl, .meta.numGate(meta, meta$gating, NULL, 
+                                    out.all=out.all, 
+                                    out.unclassified=out.unclassified))
     
     
     colnames(tbl) <- c(meta$dat.clusters$expNames, parDesc)
@@ -816,7 +824,8 @@ meta.parMFI <- function(meta, par, out.all=TRUE)
                 
                 for( j in 1:nrow(parEvents) ) {                
                     freqs[j,1:N] <- numEvents[1,] / parEvents[j,]
-                    rn <- c(rn, paste(sep=".", name, cls, .cls_colors()[cls%%8+1], 
+                    rn <- c(rn, paste(sep=".", name, cls, 
+                                    .cls_colors()[cls%%8+1], 
                                     "/", rownames(parEvents)[j]))
                 }
                 

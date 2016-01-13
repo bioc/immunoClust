@@ -28,7 +28,7 @@ events, of all clusters.}
 \item{S}{The \eqn{totK x P x P}-dimensional matrix of all cluster covariance
 matrices.}
 \item{G}{The number of meta-clusters.}
-\item{Z}{The \eqn{totK x G}-dimensionail matrix with the A-Posterior 
+\item{Z}{The \eqn{totK x G}-dimensional matrix with the A-Posterior 
 probabilities for a cell-cluster belonging to a meta-cluster.}
 \item{method}{
 Alternative methods used for the normalization routine. Let \eqn{Y} denote 
@@ -38,13 +38,13 @@ experiment.
 
 0   = no normalization
 
-1   = \eqn{ Y = a x X }
+1   = \eqn{Y = a \times X}{ Y = a x X }
 
-2   = \eqn{ Y = a x X + b }
+2   = \eqn{Y = a \times X + b}{ Y = a x X + b }
 
-3   = \eqn{ X = a x Y }
+3   = \eqn{X = a \times Y}{ X = a x Y }
 
-4   = \eqn{ X = a x Y + b }
+4   = \eqn{X = a \times Y + b}{ X = a x Y + b }
 
 }
 }

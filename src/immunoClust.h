@@ -7,7 +7,7 @@
  *
  */
 
-#define DEBUG 1
+#define NDEBUG 1
 
 #ifdef __cplusplus
 extern "C" {

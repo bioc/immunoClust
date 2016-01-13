@@ -10,7 +10,7 @@ scatter.subset=c(1,2), scatter.bias=0.25,scatter.prior=6
     
     res <- meta.Clustering(dat$P, dat$N, dat$K, 
                         dat$clsEvents, dat$M, dat$S, 
-                        bias=meta.bias, I.iter=meta.iter, EM.method=20, 
+                        bias=meta.bias, I.iter=meta.iter, B=50, EM.method=20, 
                         alpha=meta.alpha, norm.method=norm.method, 
                         norm.blur=norm.blur)
 
@@ -98,7 +98,7 @@ meta.Normalize <- function(P, N, K, W, M, S, G, Z, method=3)
 #   meta.ME
 ##
 meta.ME <- function(
-P, N, K, W, M, S, label, B=500, tol=1e-5, method=20, 
+P, N, K, W, M, S, label, B=100, tol=1e-5, method=20, 
 bias=0.25, alpha=0.5, min.class=0
 ) {
     G <- max(label)
@@ -187,7 +187,7 @@ norm.method=0, norm.blur=2, norm.minG=10
                 message("meta.Normalize ", i, " of ", I.iter, " with ", res@K,
                         " clusters (blur=", norm.blur, ")")
                 nS <- (1+norm.blur) * tS
-                n.res <- meta.ME(P, N, K, W, tM, nS, res@label, B=B, tol=tol, 
+                n.res <- meta.ME(P, N, K, W, tM, nS, res@label, B=10, tol=tol, 
                                 bias=bias, alpha=alpha, method=10 ) 
                 d <- meta.Normalize(P, N, K, W, M, S, 
                                 n.res@K, n.res@z, method=norm.method)
