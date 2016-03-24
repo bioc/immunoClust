@@ -151,12 +151,12 @@ mvn_dendro::logdet_invS(const double* S, int& status)
     mat::invert(P, tmpS, tmpPxP);
     status = mat::cholesky_decomp(P, tmpS);
     if( status ) {
-        status = 2;
+        status = 3;
         return NAN;
     }
     for(int p=0; p<P; ++p) {
 		if( *(tmpPxP + p*P + p) <= 0.0 ) {
-			status = 3;
+			status = 4;
 		}
 	}
  

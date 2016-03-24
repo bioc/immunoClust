@@ -1,4 +1,11 @@
-immuniClust 1.3.1
+immunoClust 1.3.3
+    CHANGES
+    * Optional plotting of additional parameter in FCS files
+    * Minor changes in export meta-cluster features
+    BUGFIXES
+    * Problems with clustering of 1-D data sets
+
+immunoClust 1.3.1
     CHANGES
     * The normalization step within the meta.clusering proces is improved
       and extended which is also effects the related  parameter settings

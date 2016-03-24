@@ -57,7 +57,7 @@ col=include+1, ecol=col, elty=1, eqtl=0.9, npoints=501, add=FALSE, ...)
 col=include+1, pch=".",cex=0.6, 
 ellipse=FALSE, ellipse.force=FALSE, ellipse.quantile=0.9, ecol=col, elty=1,
 show.rm=FALSE, col.rm=1, pch.rm=1, cex.rm=0.6, 
-npoints=501, add=FALSE, gates=NULL, lda=NULL, ...)
+npoints=501, add=FALSE, gates=NULL, lda=NULL, mean=NULL, sigma=NULL, ...)
 {
     
     label <- frame$label
@@ -112,6 +112,16 @@ npoints=501, add=FALSE, gates=NULL, lda=NULL, ...)
                         type="l", lty=elty[j], col=ecol[j])
             
         }  
+        if( !is.null(mean) && !is.null(sigma) ) {
+            eigenPair <- eigen(sigma[subset,subset])
+            l1 <- sqrt(eigenPair$values[1]) * sqrt(cc)
+            l2 <- sqrt(eigenPair$values[2]) * sqrt(cc)
+            angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1]) 
+            angle <- angle * 180/pi
+            panel.points(.ellipsePoints(a=l1[i], b=l2[i], alpha=angle, 
+                                        loc=mean[subset], n=npoints), 
+                        type="l", lty=1, col="black")
+        }
     }
     
 # plot gates    
@@ -151,12 +161,6 @@ npoints=501, add=FALSE, gates=NULL, lda=NULL, ...)
                         / vector[1] *vector[2] )
                 panel.points(x.limits, y, type="l", col="green")
                 
-# center <- l1$center[subset]
-# vector <- l1$vector[subset]
-# y <- y.limits
-# x <- c(center[1] - (y.limits[1]-center[2]) / vector[1] * vector[2],
-#        center[1] - (y.limits[2]-center[2]) / vector[1] *vector[2])
-# panel.points(x, y.limits, type="l", col="green")
             }
         }
     }
@@ -200,9 +204,9 @@ definition=function(x, data, include=1:(x@K), ...)
 setMethod("splom", 
 signature=signature(x="immunoClust",data="flowFrame"),definition=function(
 x, data, include=1:(x@K), subset=1:length(attributes(x)$param), 
-N=NULL,label=NULL, desc=NULL,...
+N=NULL,label=NULL, desc=NULL, add.param=c(), ...
 ) {
-    params <- attributes(x)$param[subset]
+    params <- c(attributes(x)$param[subset], add.param)
     
     y <- .exprs(data, params)
     

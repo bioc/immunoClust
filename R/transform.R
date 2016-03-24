@@ -7,7 +7,8 @@
 
 ### trans.ApplyToData
 trans.ApplyToData <- function(
-x, data, max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale") 
+x, data, add.param=c(), 
+max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale") 
 ) {
     
     ret <- data
@@ -28,10 +29,10 @@ x, data, max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale")
     
     if( class(data) == "flowFrame" ) {
         
-        mat <- as.matrix(exprs(data))[,param]
+        mat <- as.matrix(exprs(data))[,c(param, add.param)]
         
         par <- parameters(data)
-        range <- range(data)[param]
+        range <- range(data)[c(param,add.param)]
         P <- length(param)
         for( i in 1:P ) {
             if( x@trans.a[i] > 0.0 ) {
@@ -58,7 +59,7 @@ x, data, max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale")
         }
         
         
-        inc <- match(param, par@data[,'name'])
+        inc <- match(c(param,add.param), par@data[,'name'])
         par@data <- par@data[inc,]
         attr(mat, "ranges") <- NULL
         

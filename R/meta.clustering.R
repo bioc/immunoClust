@@ -2,7 +2,7 @@
 # meta.process
 ####
 meta.process <- function(
-exp, dat.subset=c(), meta.iter=10, meta.bias=0.2, 
+exp, dat.subset=c(), meta.iter=10, tol=1e-5, meta.bias=0.2, 
 meta.alpha=.5, norm.method=0, norm.blur=2,
 scatter.subset=c(1,2), scatter.bias=0.25,scatter.prior=6
 ) {
@@ -10,9 +10,9 @@ scatter.subset=c(1,2), scatter.bias=0.25,scatter.prior=6
     
     res <- meta.Clustering(dat$P, dat$N, dat$K, 
                         dat$clsEvents, dat$M, dat$S, 
-                        bias=meta.bias, I.iter=meta.iter, B=50, EM.method=20, 
-                        alpha=meta.alpha, norm.method=norm.method, 
-                        norm.blur=norm.blur)
+                        bias=meta.bias, I.iter=meta.iter, B=50, tol=tol, 
+                        EM.method=20, alpha=meta.alpha, 
+                        norm.method=norm.method, norm.blur=norm.blur)
 
     dat.norm <- dat
     if( norm.method > 0 ) {
@@ -380,14 +380,31 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
         
 # to perform the cluster analysis via EM for each specific number of clusters
         if( J > 1 ) {
-            samples.set = 1:N
-            if( N > HC.samples ) {
-                samples.set = sample(1:N, HC.samples)
+##            samples.set = 1:N
+## 2016.03-21
+            samples.set <- which( apply(S, 1, function(s)
+                                    { 
+                                    dim(s) <- c(P,P)
+                                    d <- det(s)
+                                    if( d <= 0 ) return (-300)
+                                        log(d)
+                                    }) > -100)
+            if( length(samples.set) < N ) {
+                cat(length(samples.set), "of", N, "clusters used\n")
+            }
+            
+            if( J > length(samples.set) ) {
+                return (NULL)
+            }
+            if( length(samples.set) > HC.samples ) {
+                samples.set = sample(samples.set, HC.samples)
                 hcPairs <- meta.hclust(P, HC.samples, W[samples.set], 
                                         M[samples.set,], S[samples.set,])
             }
             else {
-                hcPairs <- meta.hclust(P, N, W, M, S)
+                HC.samples <- length(samples.set)
+                hcPairs <- meta.hclust(P, HC.samples, W[samples.set], 
+                                        M[samples.set,], S[samples.set,])
             }
             
             for (k in 2:J) {

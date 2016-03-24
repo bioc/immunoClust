@@ -532,9 +532,12 @@ em_gaussian::wc_step()
 int
 em_gaussian::t_step()
 {
-//	const double THRES = 0.0;	// <-> ratio > 1
 	const double THRES = BIAS;
 
+    // icl::model_cost = 0.5*K*mvn::costs(P)*log(N) - icl::costs(T_sum, K, tmpNk, -1)
+    
+    // deltaCosts = icl::costs(T_sum, K, tmpNK, -1) - 0.5*mvn::costs(P)*log(N)  - icl::costs(T_Sum, L, unNk,k)
+    
 	// likelihood
 	double testCosts = icl::model_costs(T_sum, P, K, tmpNk, -1);
 	double* unNk = tmpNk + K;
@@ -709,6 +712,7 @@ em_gaussian::m_step()
 			/* update precision matrices
 			 */
 			
+            // switch m_step_sigma_k and m_step_diag_k for model vvv or vvi
 			if( m_step_sigma_k(k) ) {
 				W[k] = 0.0;
 				status = 1;

@@ -391,7 +391,8 @@ namespace mat {
 }
 
 namespace mvn {
-	
+
+      
 	double 
 	pdf(const int P, const double* Y, const double* M, const double* S, double* tmpT)
 	{

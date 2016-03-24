@@ -118,6 +118,34 @@
 ###
 
 ###
+## 
+.clust.mergedClusters <- function(x, cls)
+{
+    P <- ncol(x@mu)
+    M <- rep(0, P)
+    S <- matrix(0, nrow=P, ncol=P)
+    
+    if( length(cls) > 1 ) {
+        M <- colSums(x@w[cls] * x@mu[cls,]) / sum(x@w[cls])
+    }
+    else {
+        M <- x@mu[cls,]
+    }
+    
+    for( i in cls ) {
+        for( p in 1:P ) {
+            for( q in 1:P ) {
+                S[p,q] <- S[p,q] + (x@w[i]) * ( x@sigma[i, p, q] + 
+                                    (x@mu[i,p]-M[p])*(x@mu[i,q]-M[q]) ) 
+            }
+        }
+    }    
+    S <- S/sum(x@w[cls])
+    
+    list("mu"=M,"sigma"=S)
+}
+
+###
 ##
 .immunoClust2 <- function(obj, K, P, N, expName="", parameters=c(), inc=c())
 {

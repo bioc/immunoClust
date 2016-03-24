@@ -21,7 +21,8 @@ This method generates scatterplot matrix revealing the cluster assignment.
 \S4method{splom}{immunoClust,missing}(x, data, include=1:(x@K), \dots)
 
 \S4method{splom}{immunoClust,flowFrame}(x, data, include=1:(x@K), 
-subset=1:length(attributes(x)$param), N=NULL,label=NULL, desc=NULL, \dots)
+subset=1:length(attributes(x)$param), N=NULL,label=NULL, desc=NULL, 
+add.param=c(), \dots)
 
 \S4method{splom}{immunoClust,matrix}(x, data, include=1:(x@K), 
 subset=1:length(attributes(x)$param), N=NULL,label=NULL, desc=NULL, \dots)
@@ -43,6 +44,8 @@ default all observations are plotted.}
 \item{label}{A integer vector for the cluster mebership of the observations. By
 default this is \code{x@label}.}
 \item{desc}{A character vector for the parameter description. }
+\item{add.param}{ A list of additional parameters to plot, which are not used 
+for clustering.}
 \item{\dots}{Further graphical parameters passed to the generic function 
 \code{splom}.}
 }

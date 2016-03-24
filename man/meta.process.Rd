@@ -19,7 +19,7 @@ algorithms of the reference.
 }
 
 \usage{
-meta.process(exp, dat.subset=c(), meta.iter=10, meta.bias=0.2,
+meta.process(exp, dat.subset=c(), meta.iter=10, tol=1e-05, meta.bias=0.2,
             meta.alpha=.5, norm.method=0, norm.blur=2,
             scatter.subset=c(1,2), scatter.bias=0.25, 
             scatter.prior=6)}
@@ -33,6 +33,8 @@ which are used for data output and plot routines.}
 meta-clustering. If unset, all parameters in the cell-clustering results are 
 used.}
 \item{meta.iter}{The number of major iterations.}
+\item{tol}{The tolerance used to assess the convergence of the 
+EM(t)-algorithms.}
 \item{meta.bias}{The ICL-bias used in the EMt-iteration of the meta-clustering.}
 \item{meta.alpha}{A value between 0 and 1 used to balance the bhattacharrya 
 probabilities calculated with either the full covariance matrices or using only

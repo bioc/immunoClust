@@ -245,6 +245,9 @@ em_meta::bc_diag(int i, int j)
 double	
 em_meta::bc_measure(int i, int j)
 {
+    if( ALPHA == 0 ) {
+        return bc_diag(i,j);
+    }
 	if( ALPHA < 1.0 ) {
 		//return ALPHA*bhattacharryya(i,j) + (1.0-ALPHA)*bc_diag(i,j);
         double a = bhattacharryya(i,j);
@@ -372,6 +375,13 @@ em_meta::bc_step()
 			double tmpLike = 0.0;
 			if( gw > 0.0 ) {
 				tmpPDF = bc_measure(i,j);
+                // 2016.03.21:                
+                int pc = fpclassify( tmpPDF );
+				if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
+					//dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+					tmpPDF = 0.0;
+				}
+                
 				tmpLike = gw*tmpPDF;
 			}
 	
@@ -442,7 +452,13 @@ em_meta::bt_step()
 			double tmpLike = 0.0;
 			if( gw > 0.0 ) {
 				tmpPDF = bc_measure(i,j);
-				//tmpPDF = bc_measure(i,j);
+                // 2016.03.21:                
+                int pc = fpclassify( tmpPDF );
+				if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
+					//dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+					tmpPDF = 0.0;
+				}
+                
 				tmpLike = gw*tmpPDF;
 			}
 			
@@ -1114,7 +1130,13 @@ em_meta::final(int* label, double logLike[3], int* history)
 			double tmpPDF = 0.0;
 			if( gw > 0.0 ){
 				tmpPDF = bc_measure(i,j);
-
+// 2016.03.21:                
+                int pc = fpclassify( tmpPDF );
+				if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
+					//dbg::printf("%d: NaN (%d) for PDF (%d) ", j, pc, i);
+					tmpPDF = 0.0;
+				}
+                
 // 2015.03.05: has to be pdf w/o mixture weight                
 				//tmpLike = gw * tmpPDF;
 				tmpLike = tmpPDF;

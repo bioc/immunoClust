@@ -13,7 +13,7 @@ raw observed FC dataset.
 }
 
 \usage{
-trans.ApplyToData(x, data, max.decade=attr(x,"trans.decade"), 
+trans.ApplyToData(x, data, add.param=c(), max.decade=attr(x,"trans.decade"), 
     lin.scale=attr(x,"trans.scale") )
 }
 
@@ -22,6 +22,9 @@ trans.ApplyToData(x, data, max.decade=attr(x,"trans.decade"),
 transformation \code{trans.a} and \code{trans.b}.}
 \item{data}{The numeric matrix, data frame of observations, or object of class 
 \code{flowFrame}.}
+\item{add.param}{A list of additional parameters in the \code{flowFrame}, which
+are not used for clustering but should be included in the final transformed
+resulting \code{flowFrame}.}
 \item{max.decade}{A numeric scale for the maximum transformed observation value;
 if missing or below 0, no scaling of the transformed values is apllied, which 
 is the default in \emph{immuno}Clust.}

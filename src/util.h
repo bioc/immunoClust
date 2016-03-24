@@ -45,6 +45,15 @@ namespace mvn {
 	/* mahalanobis requires S to be cholesky decomposed */
 	double mahalanobis(const int P, const double* Y, const double* M, const double* S, double* tmp);
 	double lambda(double N, int P, int K);
+    
+    inline double lambda_vvi(int P) {    // number of free parameters in one cluster 
+		return (P+P);
+    }
+    
+    inline double lambda_vvv(int P) {
+		return ((P*(P+1))/2+P);
+    }
+    
 }
 
 namespace mvt {

@@ -23,7 +23,7 @@ table.
 }
 
 \usage{
-meta.numEvents(meta, out.all=TRUE, out.unclassified=TRUE)
+meta.numEvents(meta, out.all=TRUE, out.removed=FALSE,  out.unclassified=TRUE)
 meta.relEvents(meta, out.all=TRUE)
 
 meta.parMFI(meta, par, out.all=TRUE)
@@ -44,6 +44,8 @@ meta.majorEvents(meta, major=1:6, out.events=TRUE)
 \item{par}{An integer index to the specific parameter. }
 \item{out.all}{A numeric indicator whether the event numbers of all 
 hierarchical gating levels are obtained or only the meta-clusters themselves.}
+\item{out.removed}{A numeric indcator whether the number of removed events,
+which are not used for clustering are exported.}
 \item{out.unclassified}{A numeric indicator whether the event numbers of the 
 hierarchical gating levels or all meta-clusters are exported.}
 \item{out.events}{Switch between cell event numbers and relative cell 

@@ -9,7 +9,7 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
 ## meta.numEvents: 
 ##        number of events in meta-clusters for cell-event samples
 ###
-.meta.numGate <- function(meta, gating, name, 
+.meta.numGate <- function(meta, gating, pre, name, 
     out.linage=TRUE, out.all=TRUE, out.unclassified=TRUE)
 {
     N <- meta$dat.clusters$N
@@ -38,9 +38,6 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
             numEvents <- matrix(NA, nrow=1, ncol=N+P)
             if( length(inc) > 0 ) {
                 M <- M / sum(meta$dat.clusters$clsEvents[inc])
-            
-            
-
                 for( p in 1:P ) {
                     numEvents[,N+p] <- M[p]
                 }
@@ -60,13 +57,12 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
                 if( length(gating$clusters) == 1 )
                 name <- paste(sep=".", name, gating$clusters, 
                             .cls_colors()[(gating$clusters%%8)+1])
-                rownames(tbl) <- name
+                rownames(tbl) <- paste(sep=".", pre, name)
+#rownames(tbl) <- name
             }
             if( length(gating$clusters) == 1 )
                 clusters <- c(clusters, gating$clusters)
         }
-        
-
 
         if( length(gating$childs) > 0 ) {
             c <- 0 
@@ -76,7 +72,12 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
             
             for( i in 1:length(gating$childs) ) {
                 clusters <- c(clusters, gating$childs[[i]]$clusters)
-                tbl <- rbind(tbl, .meta.numGate(meta, gating$childs[[i]], name, 
+                if( is.null(pre) )
+                pre_pos <- paste(sep="", i)
+                else
+                pre_pos <- paste(sep=".", pre, i)
+                tbl <- rbind(tbl, .meta.numGate(meta, gating$childs[[i]], 
+                                        pre_pos, name, 
                                         out.linage=c>1, out.all=out.all,
                                         out.unclassified=out.unclassified))
             }
@@ -102,7 +103,8 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
                 }
                 
                 
-                rn <- c(rn, paste(sep=".", name, cls, .cls_colors()[cls%%8+1]))
+                rn <- c(rn, paste(sep=".", pre, name, cls, 
+                                    .cls_colors()[cls%%8+1]))
                 tbl <- rbind(tbl, numEvents)
             }
             rownames(tbl) <- rn
@@ -112,7 +114,8 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
 }
 ##    meta.numGate
 
-meta.numEvents <- function(meta, out.all=TRUE, out.unclassified=TRUE)
+meta.numEvents <- function(meta, out.all=TRUE, out.removed=FALSE, 
+                    out.unclassified=TRUE)
 {
     N <- meta$dat.clusters$N
     P <- meta$dat.clusters$P
@@ -122,22 +125,30 @@ meta.numEvents <- function(meta, out.all=TRUE, out.unclassified=TRUE)
     parDesc <- gsub("\n", ":", meta$res.clusters@parameters)
     
     
-## all
-    parEvents <- matrix(NA, nrow=1,ncol=N+P)
-    
-    parEvents[1,1:N] <- meta$dat.clusters$expEvents
-    
-    parNames <- c("total")
-    
+    if( out.removed ) {
+        parEvents <- matrix(NA, nrow=2,ncol=N+P)
+        parEvents[1,1:N] <- meta$dat.clusters$expEvents + 
+                            meta$dat.clusters$removedEvents
+        parEvents[2,1:N] <- meta$dat.clusters$removedEvents
+        parNames <- c("measured", "removed")
+        tbl <- rbind(tbl, parEvents)
+        rownames(tbl) <- parNames
+    }
+    else
     if( out.all ) {
+## all
+        parEvents <- matrix(NA, nrow=1,ncol=N+P)    
+        parEvents[1,1:N] <- meta$dat.clusters$expEvents
+    
+        parNames <- c("total")
+    
         tbl <- rbind(tbl, parEvents)
         rownames(tbl) <- parNames
     }
     
-    tbl <- rbind(tbl, .meta.numGate(meta, meta$gating, NULL, 
+    tbl <- rbind(tbl, .meta.numGate(meta, meta$gating, NULL, NULL,
                                     out.all=out.all, 
                                     out.unclassified=out.unclassified))
-    
     
     colnames(tbl) <- c(meta$dat.clusters$expNames, parDesc)
     tbl
@@ -166,7 +177,7 @@ meta.numEvents <- function(meta, out.all=TRUE, out.unclassified=TRUE)
         }
 
         clusters <- c()        
-        if( out.linage && length(gating$clusters)>0 ) {
+        if( out.linage && length(gating$clusters)>=0 ) {
             
             numClusters <- matrix(NA, nrow=1, ncol=N)
             
@@ -288,7 +299,8 @@ meta.relEvents <- function(meta, out.all=TRUE)
         rownames(tbl) <- parNames
     }
     
-    tbl <- rbind(tbl, .meta.numGate(meta, meta$gating, NULL, out.all=out.all))
+    tbl <- rbind(tbl, .meta.numGate(meta, meta$gating, NULL, NULL, 
+                                    out.all=out.all))
     
     if( nrow(tbl) > 0 ) {
         for( i in 1:nrow(tbl) ) {
@@ -354,7 +366,8 @@ meta.relEvents2 <- function(meta, major=1:5, out.all=TRUE)
         }
         
         for( g in major ) 
-        tbl <- rbind(tbl, .meta.numGate(meta, gating$childs[[g]], NULL, 
+        tbl <- rbind(tbl, .meta.numGate(meta, gating$childs[[g]], 
+                                    NULL, NULL, 
                                     out.linage=c>1, out.all=out.all))
         
     }
@@ -441,7 +454,7 @@ meta.relEvents3 <- function(meta, major=1:5, out.all=TRUE)
                 sum(meta$dat.clusters$clsEvents[ine])
             }
             
-            .gbl <- .meta.numGate(meta, gating$childs[[g]], NULL, 
+            .gbl <- .meta.numGate(meta, gating$childs[[g]], NULL, NULL,
                                 out.linage=c>1, out.all=out.all)
             gbl <- matrix(NA, nrow=2*nrow(.gbl), ncol=ncol(.gbl))
             if( nrow(.gbl) > 0 ) {
@@ -568,10 +581,8 @@ meta.majorEvents <- function(meta, major=1:6, out.events=TRUE)
 ## meta.parMFI: 
 ###
 .meta.parGate <- 
-function(meta, gating, par, name, out.linage=TRUE, out.all=TRUE)
-{
-    
-#    cat("num events\n")
+function(meta, gating, par, pre, name, out.linage=TRUE, out.all=TRUE)
+{    
     N <- meta$dat.clusters$N
     P <- meta$dat.clusters$P
     K <- meta$dat.clusters$K
@@ -586,7 +597,7 @@ function(meta, gating, par, name, out.linage=TRUE, out.all=TRUE)
         }
 
         clusters <- c() 
-        if( out.linage && length(gating$clusters)>0 ) {
+        if( out.linage && length(gating$clusters)>=0 ) {
             M  <- rep(0, P)
             inc <- c() 
             for( i in gating$clusters ) {
@@ -596,23 +607,27 @@ function(meta, gating, par, name, out.linage=TRUE, out.all=TRUE)
                 
                 inc <- c(inc, j )
             }
-            M <- M / sum(meta$dat.clusters$clsEvents[inc])
-            
             numEvents <- matrix(NA, nrow=1, ncol=N+P)
-            for( p in 1:P ) {
-                numEvents[,N+p] <- M[p]
-            }
+            
+            if( length(inc) > 0 ) {
+                M <- M / sum(meta$dat.clusters$clsEvents[inc])
+            
+                for( p in 1:P ) {
+                    numEvents[,N+p] <- M[p]
+                }
+            
             
 ## get numEvents for all experiment
-            k <- 0
-            for( i in 1:N ) {
+                k <- 0
+                for( i in 1:N ) {
                 l <- k+1
                 k <- k+K[i]
                 ine <- inc[(inc>=l) & (inc<=k)]
-## weighte MFI center
+## weighted MFI center
                 numEvents[1,i] <- sum(meta$dat.clusters$clsEvents[ine]*
                                     meta$dat.clusters$M[ine,par])/
                                     sum(meta$dat.clusters$clsEvents[ine])
+                }
             }
             
             if( out.all || length(gating$clusters) == 1 ) {
@@ -620,7 +635,7 @@ function(meta, gating, par, name, out.linage=TRUE, out.all=TRUE)
                 if( length(gating$clusters) == 1 )
                 name <- paste(sep=".", name, gating$clusters, 
                             .cls_colors()[(gating$clusters%%8)+1])
-                rownames(tbl) <- name
+                rownames(tbl) <- paste(sep=".", pre, name)
                 if( length(gating$clusters) == 1 ) 
                     clusters <- c(clusters, gating$clusters)
             }
@@ -635,8 +650,13 @@ function(meta, gating, par, name, out.linage=TRUE, out.all=TRUE)
             
             for( i in 1:length(gating$childs) ) {
                 clusters <- c(clusters, gating$childs[[i]]$clusters)
+                if( is.null(pre) )
+                pre_pos <- paste(sep="", i)
+                else 
+                pre_pos <- paste(sep=".", pre, i)
+                
                 tbl <- rbind(tbl, .meta.parGate(meta, gating$childs[[i]], 
-                                        par, name, 
+                                        par, pre_pos, name, 
                                         out.linage=c>1, out.all=out.all))
             }
             
@@ -645,7 +665,7 @@ function(meta, gating, par, name, out.linage=TRUE, out.all=TRUE)
         
         if( length(clusters) > 0 ) {
             rn <- rownames(tbl)
-            
+
             for( cls in clusters ) {
                 inc <- which(meta$res.clusters@label==cls)
                 numEvents <- matrix(NA, nrow=1, ncol=N+P) 
@@ -663,8 +683,9 @@ function(meta, gating, par, name, out.linage=TRUE, out.all=TRUE)
                     numEvents[,N+p] <- meta$res.clusters@mu[cls,p]
                 }
                 
-                
-                rn <- c(rn, paste(sep=".", name, cls, .cls_colors()[cls%%8+1]))
+                cls_name <- paste(sep=".", pre, name, cls, 
+                                    .cls_colors()[cls%%8+1])
+                rn <- c(rn, cls_name)
                 tbl <- rbind(tbl, numEvents)
             }
             rownames(tbl) <- rn
@@ -704,7 +725,7 @@ meta.parMFI <- function(meta, par, out.all=TRUE)
         rownames(tbl) <- c("total")
     }
     
-    tbl <- rbind(tbl, .meta.parGate(meta, meta$gating, par, NULL, 
+    tbl <- rbind(tbl, .meta.parGate(meta, meta$gating, par, NULL, NULL, 
                                 out.all=out.all))
     
     colnames(tbl) <- c(meta$dat.clusters$expNames, parDesc)
