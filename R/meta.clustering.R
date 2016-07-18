@@ -3,8 +3,8 @@
 ####
 meta.process <- function(
 exp, dat.subset=c(), meta.iter=10, tol=1e-5, meta.bias=0.2, 
-meta.alpha=.5, norm.method=0, norm.blur=2,
-scatter.subset=c(1,2), scatter.bias=0.25,scatter.prior=6
+meta.alpha=.5, norm.method=0, norm.blur=2, norm.minG=10,
+scatter.subset=c(), scatter.bias=0.25,scatter.prior=6
 ) {
     dat <- meta.exprs(exp, sub=dat.subset)
     
@@ -12,7 +12,8 @@ scatter.subset=c(1,2), scatter.bias=0.25,scatter.prior=6
                         dat$clsEvents, dat$M, dat$S, 
                         bias=meta.bias, I.iter=meta.iter, B=50, tol=tol, 
                         EM.method=20, alpha=meta.alpha, 
-                        norm.method=norm.method, norm.blur=norm.blur)
+                        norm.method=norm.method, norm.blur=norm.blur, 
+                        norm.minG=norm.minG)
 
     dat.norm <- dat
     if( norm.method > 0 ) {
@@ -56,18 +57,44 @@ scatter.subset=c(1,2), scatter.bias=0.25,scatter.prior=6
     else {
         meta <- list("dat.scatter"=NULL, "res.scatter"=NULL,  
                     "dat.clusters"=dat, "res.clusters"=res)
-        
-        childs <- vector("list", 1)
-        childs[[1]] <- list("desc"="P1", "clusters"=1:(res@K))
-        meta$gating <- list("par"=scatter.subset, "desc"=NULL, "childs"=childs)
-        
-        meta$gating <- .meta.gating(meta$res.clusters, meta$gating, 
-                                "P1", 1:(dat$P), c(), iFilter=0)
+        meta$gating <- list("clusters"=1:res@K, "childs"=c(), 
+                    "desc"="all", "partition"=TRUE)
+
     }
     
     meta
 }
 ## meta.process
+
+##
+#   meta.Regression
+meta.RegNorm <- function(y, x, method=1)
+{
+    P <- length(y@parameters)
+    if( length(x@parameters) != P )
+    stop("dimension missmatch")
+    
+    ys <- y@sigma
+    dim(ys) <- c(nrow(y@mu), P*P)
+    xs <- x@sigma
+    dim(xs) <- c(nrow(x@mu), P*P)
+    
+    obj <- .C("metaRegNorm",
+            as.integer(P), 
+            as.integer(y@K), as.double(t(y@mu)), as.double(t(ys)),
+            K=as.integer(x@K), M=as.double(t(x@mu)), S=as.double(t(xs)),
+            as.integer(method),
+            package="immunoClust")
+    tM <- matrix(obj$M, nrow=obj$K, ncol=P, byrow=TRUE)
+    tS <- matrix(obj$S, nrow=obj$K, ncol=(P*P), byrow=TRUE)
+    
+#colnames(tM) <- colnames(M)
+#rownames(tM) <- rownames(M)
+    
+    list("P"=P, "N"=1, "K"=obj$K, "M"=tM,"S"=tS)
+
+}
+##
 
 ##
 #   meta.Normalize
@@ -133,16 +160,16 @@ bias=0.25, alpha=0.5, min.class=0
         }
         z[is.na(z)] <- 0
     }
-    if( sum( z > 1) > 0 ) {
-        warning("meta.ME: above 1 in Z\n")
-        for(row in 1:nrow(z) ) {
-            if( sum(z[row,]>1) > 0 ) {
-                cat("above 1 in Z[", row, ",]:", which(z[row,]>1), "\n")
-            }
-        }
-        z[z > 1] <- 1
-
-    }
+#    if( sum( z > 1) > 0 ) {
+#        warning("meta.ME: above 1 in Z\n")
+#        for(row in 1:nrow(z) ) {
+#            if( sum(z[row,]>1) > 0 ) {
+#                cat("above 1 in Z[", row, ",]:", which(z[row,]>1), "\n")
+#            }
+#       }
+#       z[z > 1] <- 1
+#
+#    }
     
 # output BIC & ICL
     BIC <- obj$logLike[1]
@@ -194,10 +221,6 @@ norm.method=0, norm.blur=2, norm.minG=10
                 tM <- d$M
                 tS <- d$S
             }
-#            tM <- nM
-#blur <- max(0, (I.iter-2*i)/(I.iter-1) * 4)
-#           cat("iter", i, "normalize blur:", blur, "\n")
-#            tS <- (1+blur) * nS
         }
         
         if( G < 10 ) 
@@ -249,7 +272,7 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
             res <- NULL
         }
         res_l[[k]] <- res
-        
+
         if( !is.null(res) && length(res) > 1 ) {
             
             icl <- rep(0, length(res))
@@ -259,15 +282,15 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
             icl_l[k] <- max(icl)
             l <- which.max(icl)
             tst_l[k] <- l
-##cat( l, ":", icl, "\n")
-            if( res[[l]]@K == 1 ) {
-                message("cluster ", k, " of ", K, " is OK")
-            }
-            else {
-                message("cluster ", k, " of ", K, ": max. ICL ", 
-                    format(icl_l[k], digits=2), " at ", l, 
-                    " with ", res[[l]]@K, " sub-clusters")
-            }
+
+#            if( res[[l]]@K == 1 ) {
+#                message("cluster ", k, " of ", K, " is OK")
+#            }
+#            else {
+#                message("cluster ", k, " of ", K, ": max. ICL ", 
+#                    format(icl_l[k], digits=2), " at ", l, 
+#                    " with ", res[[l]]@K, " sub-clusters")
+#            }
         }
         else {
             icl_l[k] <- cutoff
@@ -349,7 +372,9 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
                 as.integer(B), as.double(tol), as.integer(EM.method), 
                 as.double(bias), as.double(alpha), as.integer(1))
 
-        if( obj$L < 1 ) return(NULL)
+        if( obj$L < 1 ) {
+            return(NULL)
+        }
 
         L <- obj$L
 

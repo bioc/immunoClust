@@ -170,7 +170,7 @@ function.
 
 <<stage2data, echo=TRUE>>=
 data(dat.exp)
-meta<-meta.process(dat.exp, meta.bias=0.3)
+meta<-meta.process(dat.exp, meta.bias=0.3, scatter.subset=c(1,2))
 @
 The obtained \Robject{list}-object contains the meta-clustering result in 
 \Rcode{\$res.clusters}, and the used cell-clusters information in 

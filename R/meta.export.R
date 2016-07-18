@@ -54,14 +54,27 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
             
             if( out.all || length(gating$clusters) == 1 ) {
                 tbl <- rbind(tbl, numEvents)
-                if( length(gating$clusters) == 1 )
+                if( out.unclassified && length(gating$clusters) == 1 )
                 name <- paste(sep=".", name, gating$clusters, 
                             .cls_colors()[(gating$clusters%%8)+1])
                 rownames(tbl) <- paste(sep=".", pre, name)
-#rownames(tbl) <- name
             }
             if( length(gating$clusters) == 1 )
                 clusters <- c(clusters, gating$clusters)
+            
+            if( !is.null(gating$out_events) && nrow(gating$out_events) > 0 ) {
+                numEvents <- matrix(NA, nrow=nrow(gating$out_events), 
+                                        ncol=N+P)
+                for( i in 1:N ) {
+                    for( j in 1:nrow(gating$out_events) ) {
+                        numEvents[j,i] <- gating$out_events[j,i]
+                    }
+                }
+                rownames(numEvents) <- paste(sep="_", 
+                                        paste(sep=".", pre, name), 
+                                        rownames(gating$out_events))
+                tbl <- rbind(tbl, numEvents)
+            }
         }
 
         if( length(gating$childs) > 0 ) {

@@ -270,6 +270,7 @@ sub.standardize=TRUE, seed=1
         
         res <- NULL
         gc(verbose=FALSE, reset=TRUE)
+        
         res <- cell.FitModel(model, dat_t, 
                             B=100, tol=tol, bias=bias, modelName=modelName)
         

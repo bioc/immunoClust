@@ -36,8 +36,9 @@ state=NULL, K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt"
                 as.double(t(y)), double(0), 
                 as.double(w), as.double(M), as.double(S),
                 as.integer(B), as.double(tol), as.double(bias) )
-    
-    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters)
+
+    .immunoClust2(obj, K, P, N, state=state,
+                    expName=expName, parameters=parameters)
 }
 ### cell.EM
 
@@ -196,7 +197,7 @@ B=50, tol=1e-5, modelName="mvt"
 # to perform the cluster analysis via EM for each specific number of clusters
     if (K==1) { 
         label <- rep(1, N)
-    } 
+    }
     else {
         if ( (P==1) ) {
             q <- quantile(y, seq(from=0, to=1, by=1/K))
@@ -238,21 +239,6 @@ B=50, tol=1e-5, modelName="mvt"
 ### cell.ClustData
 
 
-### cell.ClusterCost
-###
-##  cost for one cluster
-###
-#cell.ClusterCost <- function(x) {
-# 
-# N <- length(x@label)
-# P <- length(x@parameters)
-# 
-# log(N) * ((P+1)*P/2 + P) * 0.5
-#}
-### cell.ClusterCost
-
-
-
 ###
 ### cell.SubClustering
 ###
@@ -290,8 +276,8 @@ B=50, tol=1e-5, modelName="mvt"
             if( !is.null(x@state) ) {
                 state[i] <- x@state[i]
             }
-        } 
-    } 
+        }
+    }
     if( k<K ) {
         for( i in (k+1):K ) {
             W[L+i-1] = x@w[i]
@@ -369,6 +355,7 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
     icl_l <- rep(0, K)
     tst_l <- rep(1, K)
     
+    state = model@state
     for( k in 1:K ) {
         
         message("Test cluster ", k, " for sub-clustering")
@@ -392,10 +379,12 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
         ke <- strptime(date(), "%a %b %d %H:%M:%S %Y")
         message("EM takes ", format(difftime(ke,ks,units="min"), digits=2), 
                 " minutes")
+
+#cat("cluster", k, "(", length(cinc), ")", "state", model@state[k])
         
         res_l[[k]] <- res
         if( !is.null(res) && length(res) > 1 ) {
-            
+        
             icl <- rep(0, length(res)-1)
 
             for( l in 2:length(res) )
@@ -404,23 +393,46 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
             icl_l[k] <- max(icl)
             l <- 1+which.max(icl)
             tst_l[k] <- l
+
             
-            if( icl_l[k] < -icl_OK || res[[l]]@K == 1 ) {
-                model@state[k] <- 1
-            }
-            else {
-                model@state[k] <- 0
-            }
+            model@state[k] <- icl_l[k]
+#           if( icl_l[k] < -icl_OK && res[[l]]@K==1 ) {
+#               model@state[k] <- 5
+#           }
+#           else
+#           if( icl_l[k]*res[[l]]@K < -icl_OK ) {
+#               model@state[k] <- 5
+#           }
+#           else
+#           if( icl_l[k] < -icl_OK ) {
+#               model@state[k] <- 4
+#           }
+#           else
+#           if( res[[l]]@K == 1 ) {
+#               model@state[k] <- 3
+#           }
+#           else
+#           if( icl_l[k] < icl_thres ) {
+#               model@state[k] <- 1
+#           }
+#           else {
+#               model@state[k] <- 0
+#           }
             
-            if( res[[2]]@ICL < -2*bias ) {
-                model@state[k] <- 1
-            }
+#if( res[[2]]@ICL < -2*bias ) {
+#cat("cluster", k, "state", model@state[k], "=> 1\n")
+#               model@state[k] <- 1
+#            }
         }
         else {
 ## state already > 0
+#     model@state[k] <- 2
             icl_l[k] <- 0
             tst_l[k] <- 1
         }
+
+#cat("=>", model@state[k], "\n")
+        
     } ## for cluster k
     
     
@@ -438,7 +450,7 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
         
         if( is.null(res) ) {
             break
-        }
+        } 
         
         if( res[[l]]@K > 1 ) {
             message("cluster ", k, " has ", res[[l]]@K, " sub-cluster at ", l, 
@@ -466,7 +478,8 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
     
     
     for( k in 1:K) if( !is.null(ins[[k]]) ) {
-        message("split cluster ", k, " into ", (ins[[k]])@K, " sub-cluster")
+#        message("split cluster ", k, " into ", (ins[[k]])@K, " sub-cluster")
+#cat("split cluster", k, "state:", state[k], "=>", model@state[k+off], "\n")
         model <- .mergeModel(model, ins[[k]], k+off)
         off <- off + (ins[[k]]@K) - 1
     }  
@@ -570,7 +583,6 @@ modelName="mvt"
     prob <- NULL  
     
     if( J > N ) {
-##    message("\t???", N, "(", sumT, ") events\n")
         return(NULL)
     }
     
@@ -616,8 +628,9 @@ modelName="mvt"
                             x@sigma[cluster, use_p, use_p]) )
         
         if( is.null(maha) ) {
-            warning(" singularity:", det(x@sigma[cluster,,]), 
-                    diag(x@sigma[cluster,,]), "use", use_p, "\n") 
+#warning(" singularity:", det(x@sigma[cluster,,]), 
+#                   diag(x@sigma[cluster,,]), "use", use_p, "\n") 
+            warning(" singularity in cluster", cluster, "\n")
         }
         else {
             abv <- qchisq(0.95,P)^2
@@ -690,7 +703,6 @@ modelName="mvt"
         
 ## 2012.12.12: singularity problems   
         if( obj$L < 1 || obj$logLike[3] == Inf || obj$tolerance > tol) {
-##      warning("singularity in test", k, "(", obj$L, ")\n")
             res_t = vector("list", k-1)
             for( l in 1:(k-1) )
             res_t[[l]] <- result[[l]]
@@ -714,16 +726,16 @@ modelName="mvt"
         BIC <- obj$logLike[1]
         
 ## 2012.11.07: use sumT not total N
-## 2012.12.13: use obj$L and not k    
+## 2012.12.13: use obj$L and not k  
         ICL <- obj$logLike[3] - logLike - .icl_delta(sumT, P, K, L)*bias
-        
-        if( L > result[[k-1]]@K ) {
-            DCL <- obj$logLike[3] - result[[k-1]]@logLike[3] - 
-                    .icl_delta(sumT, P, K, L)*bias
-            if( DCL > 0 && DCL > ICL ) {
-                ICL <- DCL
-            }
-        }
+## 2016.06.28: skip below, is a bit unpredictable      
+#        if( L > result[[k-1]]@K ) {
+#            DCL <- obj$logLike[3] - result[[k-1]]@logLike[3] - 
+#                    .icl_delta(sumT, P, K, L)*bias
+#            if( DCL > 0 && DCL > ICL ) {
+#                ICL <- DCL
+#            }
+#        }
         
 # outp    
         result[[k]] <- new("immunoClust", parameters=x@parameters, 

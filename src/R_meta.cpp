@@ -14,6 +14,7 @@
 #include "meta_scale.h"
 #include "meta_gpa.h"
 #include "normalize.h"
+#include "meta_norm.h"
 
 
 #include <R.h>
@@ -109,7 +110,15 @@ extern "C" {
 		normalize normalizer(*p, *n, k, w, m, s, *l, z, *method);
 		normalizer.process();
 	}
-	
+
+    //metaRegNorm
+	void metaRegNorm(int* p, int* gk, double* gm, double* gs, int* k, double* m, double* s, int* method)
+	{
+    	meta_norm normalizer(*p, *gk, gm, gs, *k, m, s, *method);
+		normalizer.build();
+        normalizer.transform(*k, m, s);
+	}
+    
 	void metaHC(int* li, int* lj, double* crit, int* k, int* p, double* w, double* m, double* s)
 	{
 		mvn_dendro dendro(*k, *p, w, m, s);
@@ -228,9 +237,9 @@ extern "C" {
 		INTEGER(VECTOR_ELT(ret,0))[0] = em.final(INTEGER(VECTOR_ELT(ret,5)), 
                                                  REAL(VECTOR_ELT(ret,6)), 
                                                  INTEGER(VECTOR_ELT(ret,7)) );
-		Rprintf("The EM (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g (%g)\n",
-                status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, 
-                tolerance, REAL(VECTOR_ELT(ret,6))[0], REAL(VECTOR_ELT(ret,6))[2]);	
+		//Rprintf("The EM (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g (%g)\n",
+        //        status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, 
+        //        tolerance, REAL(VECTOR_ELT(ret,6))[0], REAL(VECTOR_ELT(ret,6))[2]);	
                                                  
         Rf_unprotect(1);	// unprocted ret
                                                  

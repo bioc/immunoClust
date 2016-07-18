@@ -20,8 +20,8 @@ algorithms of the reference.
 
 \usage{
 meta.process(exp, dat.subset=c(), meta.iter=10, tol=1e-05, meta.bias=0.2,
-            meta.alpha=.5, norm.method=0, norm.blur=2,
-            scatter.subset=c(1,2), scatter.bias=0.25, 
+            meta.alpha=.5, norm.method=0, norm.blur=2, norm.minG=10,
+            scatter.subset=c(), scatter.bias=0.25, 
             scatter.prior=6)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -49,6 +49,8 @@ covariance matrices are applied. A reasonable value for alpha is 0.5.}
 performed during the major iteration.} 
 \item{norm.blur}{The bluring constant by which the cell-clusters co-variance 
 matrices are increased within the normalization step.} 
+\item{norm.minG}{Minimum number of meta-clusters required before processing
+the normalization step.}
 \item{scatter.subset}{A numeric vector, giving the indices for the scatter 
 parameter. If the scatter.subset is empty, scatter clustering was not 
 performed.}

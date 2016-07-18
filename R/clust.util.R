@@ -147,7 +147,8 @@
 
 ###
 ##
-.immunoClust2 <- function(obj, K, P, N, expName="", parameters=c(), inc=c())
+.immunoClust2 <- function(obj, K, P, N, state=NULL,
+expName="", parameters=c(), inc=c())
 {
     L <- obj$L
     
@@ -191,30 +192,21 @@
     dim(z) <- c(N,L)
     
     
-#    if( !is.null(history) ) {
-##    for( k in 1:L ) {
-##      history[k] <- history[ obj$history[k] ]
-##    }
-#        history <- paste(sep="", history[1:L], ",", 1:L)
-#    }
-#    else {
-#        history <- paste(1:L)
-#    }
-#    if( !is.null(state) ) {
-##    for( k in 1:L ) {
-##      state[k] <- state[ obj$history[k] ]
-##    }
-#        state <- state[1:L]
-#    }
-#    else {
-#        state <- rep(0, L)
-#    }
+    if( !is.null(state) ) {
+        for( k in 1:L ) {
+            state[k] <- state[ obj$history[k] ]
+        }
+        state <- state[1:L]
+    }
+    else {
+        state <- rep(0, L)
+    }
     
     new("immunoClust", expName=expName, parameters=parameters,
         K=L, P=P, N=N, w=obj$w[1:L], mu=mu, sigma=sigma,
         z=z, label=label, 
         logLike=obj$logLike, BIC=obj$logLike[1], ICL=obj$logLike[2],
-        history=paste(obj$history), state=rep(0,L))
+        history=paste(obj$history), state=state)
     
 }
 ## .immunoClust2

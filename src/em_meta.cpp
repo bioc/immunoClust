@@ -48,7 +48,7 @@ em_meta::em_meta(int n, int p, int g,
 	T_inc = 0;
 	T_sum = N;
 
-	dbg::printf("meta.EM P=%d, N=%d, G=%d (alpha=%.2lf)", P, N, G, ALPHA);
+	//dbg::printf("meta.EM P=%d, N=%d, G=%d (alpha=%.2lf)", P, N, G, ALPHA);
 	
 }
 
@@ -146,14 +146,10 @@ em_meta::bhattacharryya(int i, int j)
 	const double wj = 0.5; 
 	double det_i = logdet(S+i*P*P, status);  // =0.5*logdet_invS for w1=0.5
     if( status ) {
-        //double r = bc_diag(i,j);
-        //dbg::printf("cell-cluster %d (%d): logdet status=%d => %g", i, j, status, r);
-        //return r;
         return bc_diag(i,j);
     }
 	double det_j = logdet(gS+j*P*P, status); // =0.5*logdet_invS for w2=0.5
 	if( status ) {
-        //dbg::printf("meta-cluster (%d) %d: logdet status=%d", i, j, status);
         return bc_diag(i,j);
     }
 	
@@ -162,18 +158,15 @@ em_meta::bhattacharryya(int i, int j)
 	// covariance matrix -> precision matrix 
 	status = mat::cholesky_decomp(P, tmpS);
 	if( status ) {
-        //dbg::printf("bhattacharryya %d %d: cholesky status %d", i, j, status);
         return bc_diag(i,j);
     }
 	mat::invert(P, tmpS, tmpPxP);
 	double det = logdet(tmpS, status);
     if( status ) {
-        //dbg::printf("bhattacharryya %d %d: logdet status=%d", i, j, status);
         return bc_diag(i,j);
     }
 	status = mat::cholesky_decomp(P, tmpS);
 	if( status ) {
-        //dbg::printf("bhattacharryya %d %d: cholesky status %d", i, j, status);  
         return bc_diag(i,j);
     }
 	double logD = det + wi*det_i + wj*det_j;
@@ -252,14 +245,16 @@ em_meta::bc_measure(int i, int j)
 		//return ALPHA*bhattacharryya(i,j) + (1.0-ALPHA)*bc_diag(i,j);
         double a = bhattacharryya(i,j);
         double b = bc_diag(i,j);
-        int pc = fpclassify( a );
-        if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL ) {
-            dbg::printf("BC %d %d: bhatt NaN (%d)  ", i, j, pc);
-        }
-        pc = fpclassify( b );
-        if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL ) {
-            dbg::printf("BC %d %d: diag NaN (%d)  ", i, j, pc);
-        }
+        //int pc = fpclassify( a );
+        //if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL ) {
+            //dbg::printf("BC %d %d: bhatt NaN (%d)  ", i, j, pc);
+            //a = 0.0;
+        //}
+        //pc = fpclassify( b );
+        //if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL ) {
+            //dbg::printf("BC %d %d: diag NaN (%d)  ", i, j, pc);
+        //    b = 0.0;
+        //}
         
         return ALPHA*a + (1.0-ALPHA)*b;
 	}
@@ -378,7 +373,7 @@ em_meta::bc_step()
                 // 2016.03.21:                
                 int pc = fpclassify( tmpPDF );
 				if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
-					//dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+					dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
 					tmpPDF = 0.0;
 				}
                 
@@ -455,7 +450,7 @@ em_meta::bt_step()
                 // 2016.03.21:                
                 int pc = fpclassify( tmpPDF );
 				if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
-					//dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+					dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
 					tmpPDF = 0.0;
 				}
                 
@@ -744,7 +739,11 @@ em_meta::m_init()
 			if( status!=0 ) {
 				dbg::printf("init: singularity in cluster %d (%.2lf / %.1lf)", j, z_sum, T_sum);
 //				return status;
-			}	
+			}
+            else
+                if( gW[j] == 0.0 ) {
+                    dbg::printf("init: cluster %d removed", j);
+                }
 		}	
 	}
 		
@@ -870,7 +869,7 @@ em_meta::m_step_sigma_g(int j)
 int
 em_meta::start(int* label, bool weighted)
 {
-	dbg::printf("meta.EM start %s (%s)", label? "ME" : "EM", weighted? "weighted": "straight" );
+	//dbg::printf("meta.EM start %s (%s)", label? "ME" : "EM", weighted? "weighted": "straight" );
 	int status = 0;
 	
 	if( weighted ) {
@@ -916,7 +915,7 @@ em_meta::start(int* label, bool weighted)
 int 
 em_meta::kl_minimize(int& iterations, double& tolerance)
 {		
-	dbg::printf("EM-KL minimization: %d, %g", iterations, tolerance );
+	//dbg::printf("EM-KL minimization: %d, %g", iterations, tolerance );
 	return _iterate(iterations,tolerance, &em_meta::kl_step);
 } // em_meta::do_iterate
 
@@ -924,7 +923,7 @@ em_meta::kl_minimize(int& iterations, double& tolerance)
 int
 em_meta::bc_maximize(int& iterations, double& tolerance)
 {
-	dbg::printf("EM-BC maximization: %d, %g", iterations, tolerance );	
+	//dbg::printf("EM-BC maximization: %d, %g", iterations, tolerance );	
 	return _iterate(iterations, tolerance, &em_meta::bc_step);
 }
 
@@ -932,7 +931,7 @@ int
 em_meta::do_classify(int& iterations, double& tolerance, int min_g)
 {
 	minG = min_g;
-	dbg::printf("EM-BC classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );	
+	//dbg::printf("EM-BC classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );	
 	return _iterate(iterations, tolerance, &em_meta::bc_step, &em_meta::bt_step);
 //	return _iterate(iterations, tolerance, &em_meta::kl_step, &em_meta::kt_step);
 }
@@ -1133,7 +1132,7 @@ em_meta::final(int* label, double logLike[3], int* history)
 // 2016.03.21:                
                 int pc = fpclassify( tmpPDF );
 				if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
-					//dbg::printf("%d: NaN (%d) for PDF (%d) ", j, pc, i);
+					dbg::printf("%d: NaN (%d) for PDF (%d) ", j, pc, i);
 					tmpPDF = 0.0;
 				}
                 
@@ -1157,6 +1156,8 @@ em_meta::final(int* label, double logLike[3], int* history)
 		if( maxClust > -1 )
 			tmpG[maxClust] += (*t);
 		
+        /* 2016.06.29: output absolut propabiliies ant not relative propabilities
+         // does not effect cluster assignment, which is only max
     	if( sumLike > 0.0 ) {
             cblas_dscal(L, 1./sumLike, z, 1);
             // 2015.10.16: should not happen but does!?
@@ -1167,6 +1168,7 @@ em_meta::final(int* label, double logLike[3], int* history)
                 }
             }
         }
+         */
     	// !!! weights ???	include weights likelihood sum, only parts of event
 		obLike += (sumLike>0.0)? (*t) * log(sumLike) : 0.0;
 		//clLike += (minLike>0.0)? log(minLike) : 0.0;

@@ -109,7 +109,7 @@ npoints=501, add=FALSE, ...)
         cc <- qt(0.9, 5)
         
         j <- 0
-        cc <- rep(cc, length.out=x@K)
+## cc <- rep(cc, length.out=x@K)
         for (i in include) {
             eigenPair <- eigen(x@sigma[i,subset,subset])
             l1 <- sqrt(eigenPair$values[1]) * sqrt(cc)
@@ -117,18 +117,20 @@ npoints=501, add=FALSE, ...)
             angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1]) 
             angle <- angle * 180/pi
             
-            points(.ellipsePoints(a=l1[i], b=l2[i], alpha=angle, 
-                                loc=x@mu[i,subset], n=npoints), 
+            points(.ellipsePoints(a=l1, b=l2, alpha=angle, 
+                    loc=x@mu[i,subset], n=npoints), 
                     type="l", lty=elty[j <- j+1], col=ecol[j])
         }
+        
+        cc <- qt(0.95, 5)
         merged <- .clust.mergedClusters(x, include)
         eigenPair <- eigen(merged$sigma[subset,subset])
-        l1 <- sqrt(eigenPair$values[1]) * sqrt(cc)
-        l2 <- sqrt(eigenPair$values[2]) * sqrt(cc)
+        l1 <- sqrt(eigenPair$values[1]) * (cc)
+        l2 <- sqrt(eigenPair$values[2]) * (cc)
         angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1]) 
         angle <- angle * 180/pi
         
-        points(.ellipsePoints(a=l1[i], b=l2[i], alpha=angle, 
+        points(.ellipsePoints(a=l1, b=l2, alpha=angle, 
                 loc=merged$mu[subset], n=npoints), 
                 type="l", lty=1, col="black")
         
