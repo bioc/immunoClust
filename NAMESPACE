@@ -4,9 +4,11 @@ import(methods)
 
 
 importFrom(stats, density, mahalanobis, qt, quantile, sd, qchisq)
-importFrom(graphics, plot, pairs, points, hist)
+importFrom(graphics, plot, pairs, points, hist, title)
+
 importFrom(grid, get.gpar, grid.points, current.viewport)
 importFrom(lattice, panel.points, splom)
+importFrom(grDevices, dev.off, png)
 
 importClassesFrom(flowCore, flowFrame)
 importMethodsFrom(flowCore, exprs, "exprs<-", description, "description<-", 
@@ -18,4 +20,5 @@ exportPattern("^[^\\.]")
 
 exportClasses(immunoClust)
 exportMethods(show, summary, plot, splom)
+
 

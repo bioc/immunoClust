@@ -62,6 +62,7 @@ public:
 	em_gaussian(int n, int p, int k, const double* y, double* z, double* w, double* m, double* s, const double* t=0, double bias=0.5);
 	~em_gaussian();
 	
+    int build(const int* label, double loglike[3], int* history=0);
 	int start(const int* label);
 	int	do_iterate(int& max_iteration, double& max_tolerance);
 	// int do_classify(int& max_iteration, double& max_tolerance);

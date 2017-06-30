@@ -90,9 +90,10 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
                 else
                 pre_pos <- paste(sep=".", pre, i)
                 tbl <- rbind(tbl, .meta.numGate(meta, gating$childs[[i]], 
-                                        pre_pos, name, 
-                                        out.linage=c>1, out.all=out.all,
-                                        out.unclassified=out.unclassified))
+                                    pre_pos, name, 
+                                    out.linage=(c>1||out.unclassified==FALSE), 
+                                    out.all=out.all,
+                                    out.unclassified=out.unclassified))
             }
             
         }

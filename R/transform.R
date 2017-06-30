@@ -45,14 +45,14 @@ max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale")
                 }
                 mat[,i] <- C * asinh(a * mat[,i] + b )
                 j <- match(param[i], colnames(data))
-                par$maxRange[[j]] <- C * asinh(a*range[2,i] + b)
-                par$minRange[[j]] <- min(mat[,i])
+                par$maxRange[j] <- C * asinh(a*range[2,i] + b)
+                par$minRange[j] <- min(mat[,i])
             }
             else {
                 mat[,i] <- mat[,i]/lin.scale
                 j <- match(param[i], colnames(data))
-                par$maxRange[[j]] <- range[2,i]/lin.scale
-                par$minRange[[j]] <- range[1,i]/lin.scale
+                par$maxRange[j] <- range[2,i]/lin.scale
+                par$minRange[j] <- range[1,i]/lin.scale
                 
             }
             
@@ -62,7 +62,7 @@ max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale")
         inc <- match(c(param,add.param), par@data[,'name'])
         par@data <- par@data[inc,]
         attr(mat, "ranges") <- NULL
-        
+#2016.09.20: parameters and description do not fit together ATTENTION! 
         ret <- new("flowFrame", exprs=mat, parameters=par,
                 description=description(data))
     }

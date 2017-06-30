@@ -39,6 +39,8 @@ extern "C" {
     
 	SEXP call_mvnE(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t, 
                    SEXP w, SEXP m, SEXP s);
+    SEXP call_mvnM(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t, 
+                   SEXP label);
 
 	
 	/* mvt events */

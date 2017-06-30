@@ -112,9 +112,9 @@ extern "C" {
 	}
 
     //metaRegNorm
-	void metaRegNorm(int* p, int* gk, double* gm, double* gs, int* k, double* m, double* s, int* method)
+	void metaRegNorm(int* p, int* gk, double* gm, double* gs, int* k, double* m, double* s, int* method, double* alpha)
 	{
-    	meta_norm normalizer(*p, *gk, gm, gs, *k, m, s, *method);
+    	meta_norm normalizer(*p, *gk, gm, gs, *k, m, s, *method, *alpha);
 		normalizer.build();
         normalizer.transform(*k, m, s);
 	}

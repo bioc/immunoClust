@@ -25,6 +25,7 @@ protected:
 	const double	two;
 
     const int   METHOD;
+    const double ALPHA;
     
 	// data: in
 	const int	P;	// number of parameter
@@ -54,7 +55,7 @@ protected:
 public:
     meta_norm(int p, 
               int g, const double* gm, const double* gs, 
-              int k, const double* km, const double* ks, int method=1);
+              int k, const double* km, const double* ks, int method=1, double alpha = 0.5);
     
 	~meta_norm();
 	
@@ -72,8 +73,8 @@ private:
     void        init_props();
         
     double	bhattacharryya(int i, int j);
-	//double	bc_diag(int i, int j);
-	//double	bc_measure(int i, int j);
+  	double	bc_diag(int i, int j);
+	double	bc_measure(int i, int j);
 	
 	double	logdet(const double* a, int& status);
 

@@ -88,7 +88,44 @@ extern "C" {
 		        
 		setAttrib(ret, R_NamesSymbol, names);
 		
-		Rf_unprotect(1);	// unproctedt names
+		Rf_unprotect(1);	// unproctect names
+		
+		return ret;
+		
+	}
+    
+    static SEXP _M_ret(int n, int p, int k, SEXP label) 
+	{
+		SEXP ret = Rf_protect(allocVector(VECSXP, 11));
+		SEXP names = Rf_protect(allocVector(STRSXP, 11));
+		
+		SET_STRING_ELT(names, 0, mkChar("L"));
+		SET_STRING_ELT(names, 1, mkChar("z"));
+		SET_STRING_ELT(names, 2, mkChar("w"));
+		SET_STRING_ELT(names, 3, mkChar("m"));
+		SET_STRING_ELT(names, 4, mkChar("s"));
+		SET_STRING_ELT(names, 5, mkChar("label"));
+		SET_STRING_ELT(names, 6, mkChar("logLike"));
+		SET_STRING_ELT(names, 7, mkChar("history"));
+		SET_STRING_ELT(names, 8, mkChar("status"));
+		SET_STRING_ELT(names, 9, mkChar("iterations"));
+		SET_STRING_ELT(names, 10, mkChar("tolerance"));
+		
+		SET_VECTOR_ELT(ret, 0, allocVector(INTSXP, 1));		// out L
+		SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, 0));	// out z (=NULL)
+		SET_VECTOR_ELT(ret, 2, allocVector(REALSXP, k));	// out w
+		SET_VECTOR_ELT(ret, 3, allocVector(REALSXP, k*p));	// out m
+		SET_VECTOR_ELT(ret, 4, allocVector(REALSXP, k*p*p));// out s
+		SET_VECTOR_ELT(ret, 5, Rf_duplicate(label));		// out label
+		SET_VECTOR_ELT(ret, 6, allocVector(REALSXP, 3));	// out logLike
+		SET_VECTOR_ELT(ret, 7, allocVector(INTSXP, k));     // out history
+		SET_VECTOR_ELT(ret, 8, allocVector(INTSXP, 1));		// out status
+		SET_VECTOR_ELT(ret, 9, allocVector(INTSXP, 1));		// out iteratioms
+		SET_VECTOR_ELT(ret, 10, allocVector(REALSXP, 1));	// out tollerance
+        
+		setAttrib(ret, R_NamesSymbol, names);
+		
+		Rf_unprotect(1);	// unproctect names
 		
 		return ret;
 		
@@ -149,7 +186,6 @@ extern "C" {
                        REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
                        (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, 0.0);
 		
-		// Rprintf("ME weighted=%s\n", t!=0? "true" : "false");
 		status = em.start(INTEGER(label));
 		if( status == 0 ) {
 			status = em.em(iterations, tolerance);
@@ -167,6 +203,28 @@ extern "C" {
 		
 		return ret;
 	}	 
+    
+    // only maximizing according to label
+	SEXP call_mvnM(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+				   SEXP label)
+	{
+		int status;		
+               
+   	SEXP ret = _M_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], label);
+  		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
+					   0, REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
+					   (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);	
+		
+  		status = em.build(INTEGER(label), REAL(VECTOR_ELT(ret,6)),INTEGER(VECTOR_ELT(ret,7)));
+        INTEGER(VECTOR_ELT(ret,0))[0] =  INTEGER(K)[0];
+        INTEGER(VECTOR_ELT(ret,8))[0] = status;	
+        INTEGER(VECTOR_ELT(ret,9))[0] = 0;
+		REAL(VECTOR_ELT(ret,10))[0] = 0.0;
+ 		Rf_unprotect(1);
+      	
+		return ret;
+	}
+    
 	
 	// em-t algorithm with start estimation of cluster labeling
 	SEXP call_mvnMEt(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
@@ -297,6 +355,7 @@ extern "C" {
 		return ret;
 	}
 	
+    // mvn
 		
 	/*
 	 mvt..	t mixture

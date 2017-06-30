@@ -99,18 +99,7 @@ private:
      */
 	void		linear_transform(int kb, int kn);
 
-	/*
-    void        process_logreg();
-    int         log_regression(int kb, int kn);
-	void		log_transform(int kb, int kn);
-    
-    void        process_hreg();
-    int         h_regression(int kb, int kn);
-    double      h_reg_0(int kb, int kn, int p);
-    double      h_reg_1(int kb, int kn, int p);
-    
-	void		h_transform(int kb, int kn);   
-    */ 
+	
 };
 
 #endif

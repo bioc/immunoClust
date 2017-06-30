@@ -13,7 +13,7 @@ sample clusters in x to the clusters in y.
 }
 
 \usage{
-meta.RegNorm(y, x, method=1)
+meta.RegNorm(y, x, method=1, alpha=0.5)
 }
 
 \arguments{
@@ -26,6 +26,9 @@ Alternative methods used for the normalization routine.
 
 2   = \eqn{X = a \times Y + b}{ X = a x Y + b }
 }
+\item{alpha}{A value between 0 and 1 used to balance the bhattacharrya 
+probabilities calculated with either the full covariance matrices or using only
+the diagonal elements of it.}
 }
 
 \value{

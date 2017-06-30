@@ -438,97 +438,6 @@ em_gaussian::wet_step()
 	return obLike;
 }	// em_gaussian::wet_step
 
-
-/*
- weighted c-step (t!=0)
-
-double 
-em_gaussian::wc_step()
-{
-	int i, k;
-	
-	double clLike = 0;
-	
-	
-	cblas_dcopy(K, &zero, 0, tmpK, 1);
-	//	Initialize Z_sum elements to zero
-	cblas_dcopy(K, &zero, 0, Z_sum, 1);
-	
-	const double* y = Y;
-	const double* t = T;
-	double* z = Z;
-	
-	for(i=0;i<N;i++) {        
-		double sumLike=0.0;
-		double maxLike;
-		int maxClust = -1;
-		
-		for(k=0;k<K;k++) {
-			double* m = M + k*P;
-			double* s = S + k*P*P;
-			double w = W[k];
-			double tmpLike = 0.0;
-			if( w > 0.0 ) {
-				tmpLike = w * mvn::pdf(P, y, m, s, tmpP); 
-			}
-			
-			z[k] = (*t) * tmpLike;
-			sumLike += tmpLike;
-			
-			if( tmpLike > maxLike ) {
-				maxLike = tmpLike;
-				maxClust = k;
-			}
-			
-		} // for k
-		
-		if( sumLike > 0.0 ) {
-			// Scale the Z's so that they sum to t[i]
-			cblas_dscal(K, 1.0/sumLike, z, 1);
-		}
-		
-		if( maxLike > 0.0 ) {
-			clLike += (*t)*log(maxLike);
-			tmpK[maxClust] += (*t);
-		}
-			
-		for(k=0;k<K;k++) {
-			Z_sum[k] += z[k];
-		}
-		
-		t += T_inc;
-		z += K;
-		y += P;
-	}	// for i<N
-	
-	clLike -= icl::model_costs(T_sum, P, K, tmpK, -1);
-	
-	return clLike;
-} // em_gaussian::wc_step
-*/
-
-/*
-	t_step:	test cluster relevance
-		der aktuelle test gegen die clusterCosts ist unsinning
-		stattdessen kann gegen 0 getestet werden
-		delta ICL < 0	=> es ist besser den Cluster wegzulassen und die
-			events auf die anderen cluster zu verteilen
- 
-		um dem Ueberlappungsproblem zu begegnen vielleicht auch
-		delta_ICL[k] < thres * n[k]
-		thres==0:
-			mehrheitlich sind die p_max(event) > p_snd(event) 
-			sum{ log(p_max(event)) - log(p_snd(event)) } > 0
-				<=> p_max(event)/p_snd(event) > 1 mehrheitlich
- 
-		thres==1:
-			sum{ log(p_max(event)) - log(p_snd(event)) } > nk (anzahl cluster events)
-				<=> p_max(event)/p_snd(event) > e = 2.7182	mehrheitlich
- 
-		thres zwichen 0 und 1 scheint deshalb sinnvoll zu sein
-		thres allgemein
-				<=> p_max(event)/p_snd(event) > exp(thres) mehrheitlich
- */
 int
 em_gaussian::t_step()
 {
@@ -679,6 +588,83 @@ em_gaussian::m_init()
 	return 0;
 	
 } // em_gaussian::m_init
+
+int
+em_gaussian::build(const int* label, double logLike[3], int* history)
+{
+	int i, k, p, q, status = 0;
+	
+
+	// mu
+    const int* l = label;
+    const double* y = Y;
+    cblas_dcopy(K, &zero, 0, Z_sum, 1);
+    cblas_dcopy(P*K, &zero, 0, M, 1);
+	for( i=0; i<N; ++i ) {
+        k = (*l++) - 1;
+        Z_sum[k]++;
+        //M[k,] += Y[i,]
+        cblas_daxpy(P, 1.0, y, 1, M+k*P, 1);
+        y += P;
+    }
+		
+	for(k=0;k<K;k++)
+	{
+		double z_sum = Z_sum[k];
+		// initialize mixture proportions
+		W[k] = z_sum/T_sum;
+		//dbg::printf("sigma step %d (%.2lf, %.2lf)", k, z_sum, W[k]);
+		if( z_sum > 0.0 ) {
+			cblas_dscal(P, 1./z_sum, M+k*P, 1);  
+        }
+    }
+    
+    // sigma
+    l = label;
+    y = Y;
+    // zero S
+    cblas_dcopy(K*P*P, &zero, 0, S, 1);
+ 
+    for( i=0; i<N; ++i ) {
+        k = (*l++) - 1;
+       
+        double* m = M + k*P;
+        double* s = S + k*P*P;
+            
+        for(p=0; p<P;++p){
+            double yp = y[p];
+            double mp = m[p];
+            for(q=0; q<P;++q){
+                double yq = y[q];
+                double mq = m[q];
+                *(s+p*P+q) += (yp-mp) * (yq-mq);
+            }
+        }
+        
+        y += P;
+        
+    }
+  
+    for( k=0; k<K; ++k ) {
+        double z_sum = Z_sum[k];
+        if( history )
+            history[k] = k+1;
+        if( z_sum > 0 ) {
+            double* s = S + k*P*P;
+            for(p=0; p<P;++p){
+                for(q=0; q<P;++q){
+                    *(s+p*P+q) /= z_sum;
+                }
+            }
+        }
+  	}
+    
+    logLike[0] = logLike[1] = logLike[2] = 0;
+	
+ 	return 0;
+	
+} // em_gaussian::l_init
+
 
 /*
 	m_step:
@@ -1062,7 +1048,6 @@ em_gaussian::final(double logLike[3], int* label, int* history)
 				W[l] = W[k];
 				cblas_dcopy(P, M+k*P, 1, M+l*P, 1);
 				cblas_dcopy(P*P, S+k*P*P, 1, S+l*P*P, 1);
-//				cblas_dcopy(N, Z+k, K, Z+l, K);
 			}
 			if( history ) {
 				history[l] = k+1;
@@ -1122,7 +1107,7 @@ em_gaussian::final(double logLike[3], int* label, int* history)
 					maxPDF = tmpPDF;
 				}	
 			}	
-			z[k] = (*t)*tmpLike;
+            z[k] = (*t)*tmpLike;
 	
 		} // for k
 		
@@ -1139,7 +1124,7 @@ em_gaussian::final(double logLike[3], int* label, int* history)
 		
 		t += T_inc;
 		y += P;
-		z += K;
+        z += K;
 	
 	}
 
@@ -1161,20 +1146,19 @@ em_gaussian::final(double logLike[3], int* label, int* history)
 	/*
 	 do cluster labeling
 	 */
-	z = Z;
-	for(i=0; i<N; ++i) {
-		double z_max = z[0];
-		l = 0;
-		for( k=1;k<L; ++k) {
-			if( z[k] > z_max ) {
-				z_max = z[k];
-				l = k;
-			}
-		}
-		label[i] = l+1;
-		z += K;
-	}
-	
+    z = Z;
+    for(i=0; i<N; ++i) {
+        double z_max = z[0];
+        l = 0;
+        for( k=1;k<L; ++k) {
+            if( z[k] > z_max ) {
+                z_max = z[k];
+                l = k;
+            }
+        }
+        label[i] = l+1;
+        z += K;
+    }
 	
 	return L;
 	

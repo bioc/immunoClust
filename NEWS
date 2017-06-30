@@ -1,3 +1,8 @@
+immunoClust 1.9.1
+   CHANGES
+    * Minor improvements and additional option in plot and splom methods
+    * Introduce of ALPHA option also for normalization precedures
+    
 immunoClust 1.3.3
     CHANGES
     * Optional plotting of additional parameter in FCS files

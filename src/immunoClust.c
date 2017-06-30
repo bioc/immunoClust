@@ -34,6 +34,7 @@ int print_text(const char* txt)
 		{"immunoC_mvnEM", (DL_FUNC)(&call_mvnEM), 10},
 		{"immunoC_mvnEMt", (DL_FUNC)(&call_mvnEMt), 11},
 		{"immunoC_mvnE", (DL_FUNC)(&call_mvnE), 8},
+		{"immunoC_mvnM", (DL_FUNC)(&call_mvnM), 6},
 		{"immunoC_mvnHC", (DL_FUNC)(&call_mvnHC), 4},
 		
 		/* mvt */

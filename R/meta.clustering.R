@@ -68,7 +68,7 @@ scatter.subset=c(), scatter.bias=0.25,scatter.prior=6
 
 ##
 #   meta.Regression
-meta.RegNorm <- function(y, x, method=1)
+meta.RegNorm <- function(y, x, method=1, alpha=0.5)
 {
     P <- length(y@parameters)
     if( length(x@parameters) != P )
@@ -83,7 +83,7 @@ meta.RegNorm <- function(y, x, method=1)
             as.integer(P), 
             as.integer(y@K), as.double(t(y@mu)), as.double(t(ys)),
             K=as.integer(x@K), M=as.double(t(x@mu)), S=as.double(t(xs)),
-            as.integer(method),
+            as.integer(method),as.double(alpha),
             package="immunoClust")
     tM <- matrix(obj$M, nrow=obj$K, ncol=P, byrow=TRUE)
     tS <- matrix(obj$S, nrow=obj$K, ncol=(P*P), byrow=TRUE)
@@ -387,6 +387,10 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
         mu <- matrix(obj$m, L, P, byrow=TRUE)[1:L,]
         dim(mu) <- c(L,P)
         
+# output obj$z to Z
+        z <- matrix(obj$z, N, 1, byrow=TRUE)
+        z <- as.matrix(z[,1:L])
+        
 # output BIC & ICL
         BIC <- obj$logLike[1]
         ICL <- 0
@@ -406,7 +410,10 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
 # to perform the cluster analysis via EM for each specific number of clusters
         if( J > 1 ) {
 ##            samples.set = 1:N
-## 2016.03-21
+## 2016.03.21
+## 2016.11.14: till TODO use probability based samples
+## probabilities=rowMax( z )
+## probes <- 1/(probabilities=rowMax( z ))
             samples.set <- which( apply(S, 1, function(s)
                                     { 
                                     dim(s) <- c(P,P)

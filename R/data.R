@@ -138,7 +138,7 @@ meta.exprs <- function(exp, sub=c())
         sel <- cols %in% parameters
         spill[which(!sel),] <- 0
         spill[,which(!sel)] <- 0
-        spill[which(!sel),which(!sel)] <- 1
+        diag(spill) <- 1
     }
     e <- exprs(x)
     e[, cols] <- t(solve(t(spill))%*%t(e[,cols]))

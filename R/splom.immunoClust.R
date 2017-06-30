@@ -57,7 +57,7 @@ col=include+1, ecol=col, elty=1, eqtl=0.9, npoints=501, add=FALSE, ...)
 col=include+1, pch=".",cex=0.6, 
 ellipse=FALSE, ellipse.force=FALSE, ellipse.quantile=0.9, ecol=col, elty=1,
 show.rm=FALSE, col.rm=1, pch.rm=1, cex.rm=0.6, 
-npoints=501, add=FALSE, gates=NULL, lda=NULL, mean=NULL, sigma=NULL, ...)
+npoints=501, add=FALSE, gates=NULL, mean=NULL, sigma=NULL, ...)
 {
     
     label <- frame$label
@@ -132,35 +132,13 @@ npoints=501, add=FALSE, gates=NULL, lda=NULL, mean=NULL, sigma=NULL, ...)
         for( j in 1:length(thres[1,]) ) {   
             if( !is.na(thres[1,j]) ) {
                 panel.points(c(thres[1,j],thres[1,j]), y.limits, 
-                            type="l", col="red")
+                            type="l", col=j+1)
             }
         }
         for( j in 1:length(thres[2,]) ) {   
             if( !is.na(thres[2,j]) ) {
                 panel.points(x.limits, c(thres[2,j],thres[2,j]), 
-                            type="l", col="red")
-            }
-        }
-    }
-    
-# plot LDA
-    if( !is.null(lda) ) {
-        l1 <- lda[[ subset[1] ]]
-## l2 <- lda[[ subset[2] ]]
-        if( !is.null(l1) ) {
-            x.limits = c(min(x[!flagFiltered],-1), max(x[!flagFiltered],10))
-            y.limits = c(min(y[!flagFiltered],-1), max(y[!flagFiltered],10))
-            
-            center <- l1$center[subset]
-            vector <- l1$vector[subset]
-            if( sum(is.na(vector))== 0 ) {
-                x <- x.limits
-                y <- c( center[2] + (x.limits[1]-center[1]) 
-                        / vector[1] * vector[2],
-                        center[2] + (x.limits[2]-center[1]) 
-                        / vector[1] *vector[2] )
-                panel.points(x.limits, y, type="l", col="green")
-                
+                            type="l", col=j+1)
             }
         }
     }
@@ -247,7 +225,7 @@ N=NULL,label=NULL, desc=NULL, add.param=c(), ...
     }
     varnames <- paste(sep="\n", name, desc)
     
-    splom(x=y, data=NULL, pscales=NULL, varnames=varnames, 
+    splom(x=y, data=NULL, varnames=varnames, 
         panel=.clust.panel.splom, frame=clust.frame, gp=gp, 
         include=include, ...)
 })
@@ -289,7 +267,7 @@ N=NULL,label=NULL, desc=NULL,...
         varnames <- paste(sep="\n", params, desc)
     }
     
-    splom(x=y, data=NULL, pscales=NULL, varnames=varnames, 
+    splom(x=y, data=NULL, varnames=varnames, 
         panel=.clust.panel.splom, frame=clust.frame, gp=gp, 
         include=include, ...)
 })

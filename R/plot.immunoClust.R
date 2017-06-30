@@ -40,12 +40,13 @@
 }
 
 
+setGeneric("plot")
 
 setMethod("plot", signature(x="immunoClust", y="missing"),
 function(x, data, subset=c(1,2), ellipse=TRUE, show.rm=FALSE, include=1:(x@K), 
 main=NULL, col=include+1, pch=".", cex=0.6, 
 col.rm=1, pch.rm=1, cex.rm=0.6, ecol=col, elty=1, 
-npoints=501, add=FALSE, ...)
+npoints=501, add=FALSE, gates=NULL, ...)
 {
     
     if (!is.numeric(subset)) subset <- match(subset, x@parameters)
@@ -135,6 +136,27 @@ npoints=501, add=FALSE, ...)
                 type="l", lty=1, col="black")
         
     }
+# plot gates    
+    if( !is.null(gates) ) {
+        x.limits = c(min(data[!flagFiltered,1],-1), 
+                    max(data[!flagFiltered,1],10))
+        y.limits = c(min(data[!flagFiltered,2],-1), 
+                    max(data[!flagFiltered,2],10))
+        thres <- gates[subset,]
+        for( j in 1:length(thres[1,]) ) {   
+            if( !is.na(thres[1,j]) ) {
+                points(c(thres[1,j],thres[1,j]), y.limits, 
+                            type="l", col=j+1)
+            }
+        }
+        for( j in 1:length(thres[2,]) ) {   
+            if( !is.na(thres[2,j]) ) {
+                points(x.limits, c(thres[2,j],thres[2,j]), 
+                            type="l", col=j+1)
+            }
+        }
+    }
+    
     
 }
 )

@@ -27,9 +27,9 @@ extern void dbg_vec( const int P, const double* V);
 meta_norm::meta_norm(int p, 
                      int g, const double* gm, const double* gs, 
                      int k, const double* km, const double* ks, 
-                     int method): 
+                     int method, double alpha): 
 FLTMAX(1.7976931348623157e308), EPSMIN(2.2204460492503131e-16), zero(0.0), one(1.0), two(2.0),
- METHOD(method), P(p), gK(g), gM(gm), gS(gs), cK(k), cM(km), cS(ks),COEFF(2)
+ METHOD(method), ALPHA(alpha), P(p), gK(g), gM(gm), gS(gs), cK(k), cM(km), cS(ks),COEFF(2)
 {	
     
 	A = new double[P*COEFF];
@@ -63,7 +63,8 @@ meta_norm::init_props()
     double* z = Z;
     for( int k=0; k < cK; ++k ) {
         for( int j=0; j < gK; ++j ) {
-            *z++ = bhattacharryya(k,j);
+       //     *z++ = bhattacharryya(k,j);
+            *z++ = bc_measure(k,j);
         }
     }
 }
@@ -120,6 +121,65 @@ meta_norm::bhattacharryya(int i, int j)
 	logD -= 0.25*det_j;
 	
 	return exp(0.5*logD);
+}
+
+double	
+meta_norm::bc_diag(int i, int j)
+{
+	int /*status,*/ p;
+
+    const double* cs = cS + i*P*P;
+	const double* gs = gS + j*P*P;
+	
+	
+	double det_i = 0;
+	double det_j = 0;
+	
+	cblas_dcopy(P*P, &zero, 0, tmpS, 1);
+	for( p=0; p<P; ++p ) {
+		// log det
+		det_i += log(*(cs+p*P+p));
+		det_j += log(*(gs+p*P+p));
+		// sum
+		*(tmpS+p*P+p) = 0.5*(*(cs+p*P+p) + *(gs+p*P+p));
+	}
+	//  
+	// covariance matrix -> precision matrix 
+
+	double det = 0;
+	for( p=0; p<P; ++p ) {
+		// invert
+		*(tmpS+p*P+p) = 1.0/(*(tmpS+p*P+p));
+		// log det
+		det += log(*(tmpS+p*P+p));
+		// sqrt
+		*(tmpS+p*P+p) = sqrt(*(tmpS+p*P+p));
+	}
+	double logD = det + 0.5*det_i + 0.5*det_j;
+	logD -= 0.25*sqr(mvn::mahalanobis(P, cM+i*P, gM+j*P, tmpS, tmpP));
+	
+	// normalization factor
+	logD -= 0.25*det_j;
+	
+	return exp(0.5*logD);
+}
+
+// meta_norm::bc_diag
+
+double	
+meta_norm::bc_measure(int i, int j)
+{
+    if( ALPHA == 0 ) {
+        return bc_diag(i,j);
+    }
+	if( ALPHA < 1.0 ) {
+        double a = bhattacharryya(i,j);
+        double b = bc_diag(i,j);
+        
+        return ALPHA*a + (1.0-ALPHA)*b;
+	}
+	
+	return bhattacharryya(i,j);
 }
 
 
