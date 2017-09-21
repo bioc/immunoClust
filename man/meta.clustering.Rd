@@ -15,7 +15,7 @@ returns the fitted mixture model parameter in an object of class immunoClust.
 }
 
 \usage{
-meta.Clustering(P, N, K, W, M, S, I.iter=10, B=500, tol=1e-5,
+meta.Clustering(P, N, K, W, M, S, label=NULL, I.iter=10, B=500, tol=1e-5,
                 bias=0.25, alpha=0.5, EM.method=20,
                 norm.method=0, norm.blur=2, norm.minG=10)
 }
@@ -30,6 +30,8 @@ clusters in each experiment. The total number of clusters is
 \item{M}{The \eqn{totK x P}-dimensional matrix of all cluster means.}
 \item{S}{The \eqn{totK x P x P}-dimensional matrix of all cluster covariance 
 matrices.} 
+\item{label}{Optional initial cluster assignment. If label equla NULL all
+clusters are assigned in one cluster in the initial clustering step.}
 \item{I.iter}{The maximum number of major iteration steps.}
 \item{B}{The \eqn{totK x P x P}-dimensional matrix of all cluster covariance 
 matrices.}
