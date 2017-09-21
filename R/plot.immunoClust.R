@@ -46,7 +46,7 @@ setMethod("plot", signature(x="immunoClust", y="missing"),
 function(x, data, subset=c(1,2), ellipse=TRUE, show.rm=FALSE, include=1:(x@K), 
 main=NULL, col=include+1, pch=".", cex=0.6, 
 col.rm=1, pch.rm=1, cex.rm=0.6, ecol=col, elty=1, 
-npoints=501, add=FALSE, gates=NULL, ...)
+npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
 {
     
     if (!is.numeric(subset)) subset <- match(subset, x@parameters)
@@ -72,7 +72,7 @@ npoints=501, add=FALSE, gates=NULL, ...)
         data <- exprs(data)[,x@parameters] 
     else
     if (is(data, "matrix")) 
-        (if (length(x@parameters)>0) data <- as.matrix(data[,x@parameters]))  
+        (if (length(x@parameters)>0) data <- as.matrix(data[,x@parameters]))
     else
     if (is(data, "data.frame")) data <- as.matrix(data[,x@parameters])
     
@@ -81,10 +81,30 @@ npoints=501, add=FALSE, gates=NULL, ...)
     data <- data[,subset]
     label <- x@label
     
-    if (!add) 
-        plot(data, type="n", main=main, xlab=lab[1], ylab=lab[2], ...)  
-    else 
+    if (!add) {
+        if( !is.null(pscales) ) {
+
+            plot(data, type="n", main=main,
+                xlab=lab[1], xlim=pscales[[ subset[1] ]]$limits,
+                ylab=lab[2], ylim=pscales[[ subset[2] ]]$limits,
+                xaxt="n", yaxt="n", ...)
+            axis(1, at=pscales[[ subset[1] ]]$at,
+                labels=pscales[[ subset[1] ]]$labels, ...)
+            axis(2, at=pscales[[ subset[2] ]]$at,
+                labels=pscales[[ subset[2] ]]$labels, ...)
+            
+            
+            cex.axis <- par("cex.axis")
+            mtext(pscales[[ subset[1] ]]$unit, 1, line=3, adj=1, cex=cex.axis)
+            mtext(pscales[[ subset[2] ]]$unit, 2, line=3, adj=1, cex=cex.axis)
+        }
+        else {
+            plot(data, type="n", main=main, xlab=lab[1], ylab=lab[2], ...)
+        }
+    }
+    else {
         title(main)
+    }
     
     flagFiltered <- is.na(label)
 # plot points with different colors/symbols corr. to cluster assignment
@@ -96,7 +116,7 @@ npoints=501, add=FALSE, gates=NULL, ...)
     
     for (i in include)  
         points(data[!flagFiltered & label==i,], 
-                pch=pch[j <- j+1], col=col[j], cex=cex[j])  
+                pch=pch[j <- j+1], col=col[j], cex=cex[j])
     
 # plot filtered points (from above or below)
     if (show.rm) 
@@ -115,11 +135,11 @@ npoints=501, add=FALSE, gates=NULL, ...)
             eigenPair <- eigen(x@sigma[i,subset,subset])
             l1 <- sqrt(eigenPair$values[1]) * sqrt(cc)
             l2 <- sqrt(eigenPair$values[2]) * sqrt(cc)
-            angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1]) 
+            angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1])
             angle <- angle * 180/pi
             
-            points(.ellipsePoints(a=l1, b=l2, alpha=angle, 
-                    loc=x@mu[i,subset], n=npoints), 
+            points(.ellipsePoints(a=l1, b=l2, alpha=angle,
+                    loc=x@mu[i,subset], n=npoints),
                     type="l", lty=elty[j <- j+1], col=ecol[j])
         }
         
@@ -128,30 +148,30 @@ npoints=501, add=FALSE, gates=NULL, ...)
         eigenPair <- eigen(merged$sigma[subset,subset])
         l1 <- sqrt(eigenPair$values[1]) * (cc)
         l2 <- sqrt(eigenPair$values[2]) * (cc)
-        angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1]) 
+        angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1])
         angle <- angle * 180/pi
         
-        points(.ellipsePoints(a=l1, b=l2, alpha=angle, 
-                loc=merged$mu[subset], n=npoints), 
+        points(.ellipsePoints(a=l1, b=l2, alpha=angle,
+                loc=merged$mu[subset], n=npoints),
                 type="l", lty=1, col="black")
         
     }
 # plot gates    
     if( !is.null(gates) ) {
-        x.limits = c(min(data[!flagFiltered,1],-1), 
+        x.limits = c(min(data[!flagFiltered,1],-1),
                     max(data[!flagFiltered,1],10))
-        y.limits = c(min(data[!flagFiltered,2],-1), 
+        y.limits = c(min(data[!flagFiltered,2],-1),
                     max(data[!flagFiltered,2],10))
         thres <- gates[subset,]
         for( j in 1:length(thres[1,]) ) {   
             if( !is.na(thres[1,j]) ) {
-                points(c(thres[1,j],thres[1,j]), y.limits, 
+                points(c(thres[1,j],thres[1,j]), y.limits,
                             type="l", col=j+1)
             }
         }
         for( j in 1:length(thres[2,]) ) {   
             if( !is.na(thres[2,j]) ) {
-                points(x.limits, c(thres[2,j],thres[2,j]), 
+                points(x.limits, c(thres[2,j],thres[2,j]),
                             type="l", col=j+1)
             }
         }

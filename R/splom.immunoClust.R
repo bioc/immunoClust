@@ -35,24 +35,6 @@ col=include+1, ecol=col, elty=1, eqtl=0.9, npoints=501, add=FALSE, ...)
     .ellipse.panel.xyplot(x=x, y=y, frame=frame, subset=c(dims[1],dims[2]), ...)
 }
 
-.clust.prepanel <- function(x, y, frame, subset,...)
-{
-    range <- frame$range[subset]
-    
-    xlim <- c(range[1,1], range[2,1])
-    ylim <- c(range[1,2], range[2,2])
-    
-    if( subset[1] > 2 ) {
-        xlim <- c(-0.5, 5)
-    }
-    if( subset[2] > 2 ) {
-        ylim <- c(-0.5, 5)
-    }
-    
-    list("xlim"=xlim, "ylim"=ylim)
-}
-
-
 .clust.panel.xyplot <- function(x, y, frame, subset, include, 
 col=include+1, pch=".",cex=0.6, 
 ellipse=FALSE, ellipse.force=FALSE, ellipse.quantile=0.9, ecol=col, elty=1,
@@ -162,6 +144,13 @@ npoints=501, add=FALSE, gates=NULL, mean=NULL, sigma=NULL, ...)
     .clust.panel.xyplot(x=x, y=y, frame=frame, subset=c(dims[1],dims[2]), ...)
 }
 
+#.clust.panel.diag <- function(x=NULL, ...)
+#{
+#    gp <- list(...)
+#    diag.panel.splom(x, ...)
+#}
+
+
 setMethod("splom", 
 signature=signature(x="immunoClust", data="missing"),
 definition=function(x, data, include=1:(x@K), ...)
@@ -226,7 +215,8 @@ N=NULL,label=NULL, desc=NULL, add.param=c(), ...
     varnames <- paste(sep="\n", name, desc)
     
     splom(x=y, data=NULL, varnames=varnames, 
-        panel=.clust.panel.splom, frame=clust.frame, gp=gp, 
+        panel=.clust.panel.splom,
+        frame=clust.frame, gp=gp, 
         include=include, ...)
 })
 

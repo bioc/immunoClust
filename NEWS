@@ -1,3 +1,8 @@
+immunoClust 1.9.2
+   CHANGES
+    * Optional label parameter in meta-clustering to continue the 
+    meta-clustering with an initial cluster to meta-cluster assignment
+
 immunoClust 1.9.1
    CHANGES
     * Minor improvements and additional option in plot and splom methods
@@ -13,7 +18,7 @@ immunoClust 1.3.3
 immunoClust 1.3.1
     CHANGES
     * The normalization step within the meta.clusering proces is improved
-      and extended which is also effects the related  parameter settings
+      and extended which also effects the related  parameter settings
 
 immunoClust 1.1.1.
     NEW FEATRUES:

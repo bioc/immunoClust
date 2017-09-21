@@ -196,7 +196,7 @@ bias=0.25, alpha=0.5, min.class=0
 ##  meta.Clustering: major iteration loop
 ###
 meta.Clustering <- function(
-P, N, K, W, M, S, I.iter=10, B=500, tol=1e-5, 
+P, N, K, W, M, S, label=NULL, I.iter=10, B=500, tol=1e-5, 
 bias=0.25, alpha=0.5, EM.method=20, 
 norm.method=0, norm.blur=2, norm.minG=10
 ) {
@@ -206,8 +206,13 @@ norm.method=0, norm.blur=2, norm.minG=10
     tM <- M
     tS <- S
     
-    label <- rep(1, totK)
-    G <- 1
+    if( is.null(label) ) {
+        label <- rep(1, totK)
+        G <- 1
+    }
+    else {
+        G <- max(label)
+    }
     for( i in 1:(I.iter) ) {
         if( norm.method > 0 ) {
             if( G >= norm.minG) {
@@ -242,7 +247,7 @@ norm.method=0, norm.blur=2, norm.minG=10
         if( res@K == G ) break
         G <- res@K
     }
-    
+    attr(res, "bias") <- bias
     res
 }
 

@@ -68,7 +68,8 @@ function(object)
     cat("htrans-B:  ",formatC(attr(object,"trans.b"),format="f",digits=6),"\n")
     cat("htrans-decade:  ", attr(object, "trans.decade"),"\n")
     
-    cat("\n** Clustering Summary ** \n")  
+    cat("\n** Clustering Summary ** \n")
+    cat("ICL bias:", formatC(attr(object,"bias"),format="f",digits=2),"\n")
     cat("Number of clusters:",object@K,"\n")
     
     cat("Cluster     Proportion  Observations\n")

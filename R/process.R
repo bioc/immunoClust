@@ -134,6 +134,7 @@ trans.parameters=NULL
         }
     }
     
+    attr(res, "bias") <- bias
     attr(res, "call") <- match.call()
     attr(res, "fcsName") <- description(dat)$`FILENAME`
     par <- parameters(dat)

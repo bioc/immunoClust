@@ -4,10 +4,10 @@ import(methods)
 
 
 importFrom(stats, density, mahalanobis, qt, quantile, sd, qchisq)
-importFrom(graphics, plot, pairs, points, hist, title)
+importFrom(graphics, plot, pairs, points, hist, title, axis, mtext)
 
 importFrom(grid, get.gpar, grid.points, current.viewport)
-importFrom(lattice, panel.points, splom)
+importFrom(lattice, panel.points, splom, diag.panel.splom)
 importFrom(grDevices, dev.off, png)
 
 importClassesFrom(flowCore, flowFrame)
