@@ -1,3 +1,8 @@
+immunoClust 1.9.3
+   CHANGES
+    * acccedentially change in cell-clustering corrected
+    * minor changes in plot and splom methods
+
 immunoClust 1.9.2
    CHANGES
     * Optional label parameter in meta-clustering to continue the 

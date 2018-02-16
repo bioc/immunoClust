@@ -305,7 +305,6 @@ meta.relEvents <- function(meta, out.all=TRUE)
     parEvents <- matrix(NA, nrow=1,ncol=N+P)
     
     parEvents[1,1:N] <- meta$dat.clusters$expEvents
-    
     parNames <- c("total")
     
     if( out.all ) {
@@ -316,6 +315,8 @@ meta.relEvents <- function(meta, out.all=TRUE)
     tbl <- rbind(tbl, .meta.numGate(meta, meta$gating, NULL, NULL, 
                                     out.all=out.all))
     
+    parEvents[1,1:N] <- meta$dat.clusters$expEvents +
+                            meta$dat.clusters$removedEvents
     if( nrow(tbl) > 0 ) {
         for( i in 1:nrow(tbl) ) {
             for( j in 1:N ) {

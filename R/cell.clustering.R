@@ -728,14 +728,15 @@ modelName="mvt"
 ## 2012.11.07: use sumT not total N
 ## 2012.12.13: use obj$L and not k  
         ICL <- obj$logLike[3] - logLike - .icl_delta(sumT, P, K, L)*bias
-## 2016.06.28: skip below, is a bit unpredictable      
-#        if( L > result[[k-1]]@K ) {
-#            DCL <- obj$logLike[3] - result[[k-1]]@logLike[3] - 
-#                    .icl_delta(sumT, P, K, L)*bias
-#            if( DCL > 0 && DCL > ICL ) {
-#                ICL <- DCL
-#            }
-#        }
+## 2016.06.28: skip below, is a bit unpredictable
+## 2018.02.14: reactivate again
+        if( L > result[[k-1]]@K ) {
+            DCL <- obj$logLike[3] - result[[k-1]]@logLike[3] -
+                    .icl_delta(sumT, P, K, L)*bias
+            if( DCL > 0 && DCL > ICL ) {
+                ICL <- DCL
+            }
+        }
         
 # outp    
         result[[k]] <- new("immunoClust", parameters=x@parameters, 

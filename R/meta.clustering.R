@@ -61,7 +61,7 @@ scatter.subset=c(), scatter.bias=0.25,scatter.prior=6
                     "desc"="all", "partition"=TRUE)
 
     }
-    
+    class(meta) <- "immunoMeta"
     meta
 }
 ## meta.process

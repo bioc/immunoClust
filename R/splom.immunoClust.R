@@ -102,7 +102,7 @@ npoints=501, add=FALSE, gates=NULL, mean=NULL, sigma=NULL, ...)
             angle <- angle * 180/pi
             panel.points(.ellipsePoints(a=l1[i], b=l2[i], alpha=angle, 
                                         loc=mean[subset], n=npoints), 
-                        type="l", lty=1, col="black")
+                        type="l", lty=3, col="black")
         }
     }
     
@@ -164,7 +164,7 @@ definition=function(x, data, include=1:(x@K), ...)
     
     ellipse.frame <- list(K=(x@K), P=length(param), sigma=(x@sigma), mu=(x@mu))
     
-    splom(x=y, data=NULL, pscales=NULL, panel=.ellipse.panel.splom, 
+    splom(x=y, data=NULL, panel=.ellipse.panel.splom, 
         frame=ellipse.frame, gp=gp, include=include,...)
 })
 

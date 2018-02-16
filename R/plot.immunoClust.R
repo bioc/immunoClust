@@ -48,7 +48,6 @@ main=NULL, col=include+1, pch=".", cex=0.6,
 col.rm=1, pch.rm=1, cex.rm=0.6, ecol=col, elty=1, 
 npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
 {
-    
     if (!is.numeric(subset)) subset <- match(subset, x@parameters)
     
     if( !is.null(attr(x, "desc")) ) {
@@ -114,10 +113,15 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
     
     j <- 0
     
-    for (i in include)  
-        points(data[!flagFiltered & label==i,], 
-                pch=pch[j <- j+1], col=col[j], cex=cex[j])
-    
+    for (i in include) { 
+        pts <- data[!flagFiltered & label==i,]
+        if( is(pts, "matrix") ) {
+        points(pts, pch=pch[j <- j+1], col=col[j], cex=cex[j])
+        }
+        else {
+        points(pts[1],pts[2], pch=pch[j <- j+1], col=col[j], cex=cex[j])
+        }
+    }
 # plot filtered points (from above or below)
     if (show.rm) 
         points(data[flagFiltered,], pch=pch.rm, col=col.rm, cex=cex.rm)
@@ -142,7 +146,8 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
                     loc=x@mu[i,subset], n=npoints),
                     type="l", lty=elty[j <- j+1], col=ecol[j])
         }
-        
+        ellipse.merged <- FALSE
+        if( ellipse.merged ) {
         cc <- qt(0.95, 5)
         merged <- .clust.mergedClusters(x, include)
         eigenPair <- eigen(merged$sigma[subset,subset])
@@ -153,7 +158,8 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
         
         points(.ellipsePoints(a=l1, b=l2, alpha=angle,
                 loc=merged$mu[subset], n=npoints),
-                type="l", lty=1, col="black")
+                type="l", lty=3, col="black")
+        }
         
     }
 # plot gates    
