@@ -133,7 +133,7 @@ function(x, data, B=50, tol=1e-5, bias=0.5, modelName="mvt" )
     attr(res, "trans.scale") <- attr(x,"trans.scale")
     
     e <- strptime(date(), "%a %b %d %H:%M:%S %Y")
-    message("EM takes ", format(difftime(e,s,units="min"), digits=2), 
+    message("EM ", res@K," takes ", format(difftime(e,s,units="min"), digits=2),
             " minutes\n")
     
     res
