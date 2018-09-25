@@ -76,8 +76,11 @@ public:
 	
 	int		start(int* label, bool weighted);
 	int		final(int* label, double* loglike, int* history);
+    int     final21(int* label, double* loglike, int* history);
 	
 	int		do_classify(int& max_iteration, double& max_tolerance, int min_g);
+    int     do_classify21(int& max_iteration, double& max_tolerance, int min_g);
+    
 	int		kl_minimize(int& max_iteration, double& max_tolerance);
 	int		bc_maximize(int& max_iteration, double& max_tolerance);
 	
@@ -85,7 +88,6 @@ protected:
 	int		_iterate(int& max_iteration, double& max_tolerance, em_meta::E_STEP e_step);
 	int		_iterate(int& max_iteration, double& max_tolerance, em_meta::E_STEP e_step, em_meta::E_STEP et_step);
 
-	
 	int		e_init();
 	int		m_init();
 	
@@ -98,25 +100,27 @@ protected:
 	int		wt_step();	// weighted t_step
 
 	// e_step's
-	double		kl_step();	// KL-minimization 
-//	double		kt_step();	// KL-minimization with test calculation
-	double		bc_step();	// BC-maximization
-	double		bt_step();	// BC with test calculation
+	double		kl_step();	// KL-minimization
+	double		bc_step();	// Bhattacharryya-proability-maximization
+	double		bt_step();	// Bhattacharryya-probability with test calculation
+    double      bc21_step(); // Bhattacharryya-coefficient-maximization
+    double      bt21_step(); // Bhattacharryya-coefficient with test calculation
 
+   
 private:
 	
 	double	burg_divergence(int i, int j);
 	double	mahalanobis(int i, int j);
-	
-	/*
-	double	kl_measure(int i, int j);
-	double	kl_diag(int i, int j);
-	 */
-	
+		
 	double	bhattacharryya(int i, int j);
 	double	bc_diag(int i, int j);
 	double	bc_measure(int i, int j);
-	
+    
+    // calculate bhattacharryya coefficient and probability
+    int    bhattacharryya2(int i, int j, double& bc, double& bp);
+    int    bc_diag2(int i, int j, double& bc, double& bp);
+    int    bc_measure2(int i, int j, double& bc, double& bp);
+    
 	double	logdet(const double* a, int& status);
 	
 };
