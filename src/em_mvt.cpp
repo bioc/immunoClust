@@ -57,39 +57,38 @@ em_mvt::init(const double* weights) {
 
 	TRC = new double[P];
 
-	// 2014.09.11: bug set zero! 	
+    // 2014.09.11: bug set zero!
 	cblas_dcopy(P, &zero, 0, TRC, 1); 
-		
 // 2014.04.29: calc trace from total sample co-variance matrix
 	// form mean
 	const double fac = one / T_sum;
 	const double* y = Y;
 	const double* t = T;
 	cblas_dcopy( P, &zero, 0, tmpP, 1);
-	for( int i = 0; i< N; ++i ) {
+    
+    for( int i = 0; i< N; ++i ) {
 		cblas_daxpy( P, (*t)*fac, y, 1, tmpP, 1);
-		y += P;
+    	y += P;
 		t += T_inc;
+
 	}
-	for( int p=0; p<P; ++p ) {
+    
+   for( int p=0; p<P; ++p ) {
 		y = Y + p;
 		double* v = tmpP + p;
 		t = T;
-		for( int i=0; i<N; ++i ) {
+       for( int i=0; i<N; ++i ) {
 			TRC[p] += (*t)*fac * sqr((*y) - (*v));
 			y += P;
 			t += T_inc;
 		}
 	}
-	
+    
 	for( int p=0; p<P; ++p ) {
-//		dbg::printf("\tTRC[%d]=%g", p, TRC[p]);
 		TRC[p] = max(EPSMIN, TRC[p]/T_sum);
 	}
-//	TRC /= P;
-//	
-	
-	dbg::printf("em_mvt %s: K=%d, P=%d, N=%d (T=%.1lf)", weights? "weighted":"straight", K, P, N, T_sum);	
+
+    dbg::printf("em_mvt %s: K=%d, P=%d, N=%d (T=%.1lf)", weights? "weighted":"straight", K, P, N, T_sum);
 }
 
 
@@ -640,7 +639,194 @@ em_mvt::m_init()
 	return 0;
 }	// em_mvt::m_init
 
-
+int
+em_mvt::build(const int* label, double logLike[3], int* history)
+{
+    int i, k, p, q, status = 0;
+    
+    
+    // w and mu
+    const int* l = label;
+    const double* y = Y;
+    const double* t = T;
+    cblas_dcopy(K, &zero, 0, Z_sum, 1);
+    cblas_dcopy(P*K, &zero, 0, M, 1);
+    for( i=0; i<N; ++i ) {
+        k = (*l++) - 1;
+        Z_sum[k]++;
+        //M[k,] += Y[i,]
+        cblas_daxpy(P, 1.0, y, 1, M+k*P, 1);
+        y += P;
+    }
+    
+    for(k=0;k<K;k++)
+    {
+        double z_sum = Z_sum[k];
+        // initialize mixture proportions
+        W[k] = z_sum/T_sum;
+        //dbg::printf("sigma step %d (%.2lf, %.2lf)", k, z_sum, W[k]);
+        if( z_sum > 0.0 ) {
+            cblas_dscal(P, 1./z_sum, M+k*P, 1);
+        }
+    }
+    
+    // sigma
+    l = label;
+    y = Y;
+    // zero S
+    cblas_dcopy(K*P*P, &zero, 0, S, 1);
+    
+    for( i=0; i<N; ++i ) {
+        k = (*l++) - 1;
+        
+        double* m = M + k*P;
+        double* s = S + k*P*P;
+        
+        for(p=0; p<P;++p){
+            double yp = y[p];
+            double mp = m[p];
+            for(q=0; q<P;++q){
+                double yq = y[q];
+                double mq = m[q];
+                *(s+p*P+q) += (yp-mp) * (yq-mq);
+            }
+        }
+        
+        y += P;
+        
+    }
+    cblas_dcopy(P, &zero, 0, TRC, 1);
+    for( k=0; k<K; ++k ) {
+        double z_sum = Z_sum[k];
+        if( history )
+        history[k] = k+1;
+        
+        if( z_sum > 0 ) {
+            double* s = S + k*P*P;
+            for(p=0; p<P;++p){
+                for(q=0; q<P;++q){
+                    *(s+p*P+q) /= z_sum;
+                }
+            }
+            for( p=0; p<P; ++p){
+                /*
+                 if( (*(s+p*P+p) /= z_sum) <= 1e-10 ) {
+                 *(s+p*P+p) += TRC[p]*z_sum;
+                 }
+                 */
+                TRC[p] += *(s+p*P+p);
+            }
+        }
+    }
+    
+    // zero deviation and invert
+    cblas_dscal(P, 1./K, TRC, 1);
+    for( k=0; k<K; ++k ) {
+        double* s = S + k*P*P;
+        for( p=0; p<P; ++p){
+            if( *(s+p*P+p) <= 1e-10 ) {
+                *(s+p*P+p) += TRC[p];
+            }
+        }
+        
+        if( W[k] > 0.0 ) {
+            status = mat::cholesky_decomp(P, s);
+            if( status != 0 ) {
+                mat::set_identity(P,s);
+                W[k] = 0.0;
+            }
+            else {
+                mat::invert(P, s, tmpPxP);
+                status = mat::cholesky_decomp(P, s);
+                if( status != 0 ) {
+                    mat::set_identity(P,s);
+                    W[k] = 0.0;
+                }
+            }
+        }
+        
+    }
+    
+    
+    // 2018.05.04: too lazy
+    logLike[0] = logLike[1] = logLike[2] = 0;
+    
+    /*
+     calc likelihood
+     */
+    double obLike=0.0, icLike=0.0;
+    const int L = K;
+    // tmpK holds number of events in for cluster k
+    //cblas_dcopy(K, &zero, 0, Z_sum, 1);
+    
+    y = Y;
+    t = T;
+    //double* z = Z;
+    
+    for(i=0;i<N;i++)
+    {
+        double sumLike = 0;
+        double maxLike = 0;
+        double maxPDF = 0;
+        int maxClust = -1;
+        
+        for(k=0;k<L;k++) if( Z_sum[k] > 0 )
+        {
+            double* m = M + k*P;
+            double* s = S + k*P*P;
+            
+            // observation likelihood: sumLike += tmpLike
+            // classification likelihood: sumLike = max(tmpLike)
+            // integrated classification likelihood: sumLike = max(tmpLike) without proportion
+            double w = W[k];
+            double tmpLike = 0.0;
+            double tmpPDF = 0.0;
+            if( w > 0.0 ){
+                tmpPDF = mvt::pdf(P, y, m, s, Nu, tmpP);
+                tmpLike = w * tmpPDF;
+                
+                sumLike += tmpLike;
+                
+                if( tmpLike > maxLike ){
+                    maxLike = tmpLike;
+                    maxClust = k;
+                    maxPDF = tmpPDF;
+                }
+            }
+            
+        } // for k
+        
+        obLike += (sumLike>0.0)? (*t) * log(sumLike) : 0.0;
+        icLike += (maxPDF>0.0)? (*t) * log(maxPDF) : 0.0;
+        
+        t += T_inc;
+        y += P;
+        //z += K;
+        
+    }
+    
+    // invert s
+    
+    
+    // BIC: observation likelihood
+    logLike[0] = obLike - log(T_sum) * (L*(P+1)*P/2.0 + L*P + L-1) * 0.5;
+    // ICL: integrated classification likelihood minus cluster costs
+    logLike[1] = icLike - icl::model_costs(T_sum, P, L, Z_sum, -1);
+    // ICL-lambda
+    logLike[2] = icLike + icl::sum(L, Z_sum);
+    //
+    
+    /*
+     output S to be the covariance matrix
+     */
+    for(k=0;k<L;k++) {
+        double* s = S + k*P*P;
+        mat::invert(P, s, tmpPxP);
+    }
+    
+    return 0;
+    
+} // em_mvt::build
 
 
 /*
