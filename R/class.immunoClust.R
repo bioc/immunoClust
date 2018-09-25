@@ -73,7 +73,7 @@ function(object)
     cat("Number of clusters:",object@K,"\n")
     
     cat("Cluster     Proportion  Observations\n")
-    for( k in 1:(object@K) ) {
+    for( k in seq_len(object@K) ) {
         cat( sprintf("%8d    %10.6f  %12d\n", k, object@w[k], 
             sum(!is.na(object@label) & object@label==k) ) )
     }   

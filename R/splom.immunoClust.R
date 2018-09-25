@@ -46,7 +46,8 @@ npoints=501, add=FALSE, gates=NULL, mean=NULL, sigma=NULL, ...)
     
     if( !is.null(frame$range) ) {
         range <- frame$range[subset]
-        flagFiltered <- is.na(label) | (x < range[1,1]) | (y < range[1,2])
+        ##flagFiltered <- is.na(label) | (x < range[1,1]) | (y < range[1,2])
+        flagFiltered <- is.na(label)
         panel.points(c(-0.5, 0,range[2,1],0,range[2,1]), 
                     c(-0.5, 0,0,range[2,2],range[2,2]), 
                     type="p", pch="+", col="gray")

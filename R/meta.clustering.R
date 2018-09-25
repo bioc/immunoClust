@@ -44,7 +44,8 @@ scatter.subset=c(), scatter.bias=0.25,scatter.prior=6
             childs[[g]] <- list("desc"=paste(sep="", "P",g), 
                             "clusters"=.meta.ClustersForScatter(meta,g))
         }
-        meta$gating <- list("par"=scatter.subset, "desc"=NULL, "childs"=childs)
+        meta$gating <- list("clusters"=1:res@K, "plot.childs"=TRUE, 
+            "par"=scatter.subset, "desc"="all", "childs"=childs)
         
         par <- rep(TRUE, dat$P)
         par[scatter.subset] <- FALSE

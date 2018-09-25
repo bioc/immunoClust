@@ -29,6 +29,7 @@ trans.parameters=NULL
 ## filter over/under exposed
     if( is.null(parameters) ) {
         parameters <- colnames(dat)
+        parameters <- parameters[ parameters != "Time" ]
     }
     else {
         parameters <- parameters[!is.na(match(parameters,colnames(fcs)))]
