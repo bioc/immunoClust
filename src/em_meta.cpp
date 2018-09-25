@@ -178,6 +178,52 @@ em_meta::bhattacharryya(int i, int j)
 	return exp(0.5*logD);
 }
 // em_meta::bhattacharrya
+/*
+ bhattacharrya2:
+ bhattacharrya coefficient & probability for cluster i and component j
+ */
+int
+em_meta::bhattacharryya2(int i, int j, double& coef, double& prob)
+{
+    int status;
+    // gS = sigma(component), S = sigma(cluster)
+    const double wi = 0.5;
+    const double wj = 0.5;
+    double det_i = logdet(S+i*P*P, status);  // =0.5*logdet_invS for w1=0.5
+    if( status ) {
+        return bc_diag2(i,j, coef, prob);
+    }
+    double det_j = logdet(gS+j*P*P, status); // =0.5*logdet_invS for w2=0.5
+    if( status ) {
+        return bc_diag2(i,j, coef, prob);
+    }
+    
+    //
+    mat::sum(P, tmpS, S+i*P*P, gS+j*P*P, wi, wj);
+    // covariance matrix -> precision matrix
+    status = mat::cholesky_decomp(P, tmpS);
+    if( status ) {
+        return bc_diag2(i,j, coef, prob);
+    }
+    mat::invert(P, tmpS, tmpPxP);
+    double det = logdet(tmpS, status);
+    if( status ) {
+        return bc_diag2(i,j, coef, prob);
+    }
+    status = mat::cholesky_decomp(P, tmpS);
+    if( status ) {
+        return bc_diag2(i,j, coef, prob);
+    }
+    double logD = det + wi*det_i + wj*det_j;
+    logD -= wi*wj*sqr(mvn::mahalanobis(P, M+i*P, gM+j*P, tmpS, tmpP));
+    
+    coef = exp(0.5*logD);
+    // normalization factor
+    logD -= 0.25*det_j;
+    prob = exp(0.5*logD);
+    return 0;
+}
+// em_meta::bhattacharrya2
 
 /*
 	bc_diag:
@@ -232,8 +278,52 @@ em_meta::bc_diag(int i, int j)
 	
 	return exp(0.5*logD);
 }
-
 // em_meta::bc_diag
+
+/*
+ bc_diag2:
+ bhattacharrya coefficient ignoring co-variance
+ */
+int
+em_meta::bc_diag2(int i, int j, double& coef, double& prob)
+{
+    int /*status,*/ p;
+    // gS = sigma(component), S = sigma(cluster)
+    
+    const double* gs = gS + j*P*P;
+    const double* cs = S + i*P*P;
+    
+    double det_i = 0;
+    double det_j = 0;
+    
+    cblas_dcopy(P*P, &zero, 0, tmpS, 1);
+    for( p=0; p<P; ++p ) {
+        // log det
+        det_i += log(*(cs+p*P+p));
+        det_j += log(*(gs+p*P+p));
+        // sum
+        *(tmpS+p*P+p) = 0.5*(*(cs+p*P+p) + *(gs+p*P+p));
+    }
+    //
+    // covariance matrix -> precision matrix
+    double det = 0;
+    for( p=0; p<P; ++p ) {
+        // invert
+        *(tmpS+p*P+p) = 1.0/(*(tmpS+p*P+p));
+        // log det
+        det += log(*(tmpS+p*P+p));
+        // sqrt
+        *(tmpS+p*P+p) = sqrt(*(tmpS+p*P+p));
+    }
+    double logD = det + 0.5*det_i + 0.5*det_j;
+    logD -= 0.25*sqr(mvn::mahalanobis(P, M+i*P, gM+j*P, tmpS, tmpP));
+    coef = exp(0.5*logD);
+    // normalization factor
+    logD -= 0.25*det_j;
+    prob = exp(0.5*logD);
+    return 0;
+}
+// em_meta::bc_diag2
 
 double	
 em_meta::bc_measure(int i, int j)
@@ -261,7 +351,27 @@ em_meta::bc_measure(int i, int j)
 	
 	return bhattacharryya(i,j);
 }
-
+// em_meta::bc_measure
+int
+em_meta::bc_measure2(int i, int j, double& coef, double& prob)
+{
+    if( ALPHA == 0 ) {
+        return bc_diag2(i,j, coef, prob);
+    }
+    if( ALPHA < 1.0 ) {
+        //return ALPHA*bhattacharryya(i,j) + (1.0-ALPHA)*bc_diag(i,j);
+        double a_coef, a_prob, b_coef, b_prob;
+        bhattacharryya2(i,j, a_coef, a_prob);
+        bc_diag2(i,j, b_coef, b_prob);
+        
+        coef = ALPHA*a_coef + (1.0-ALPHA)*b_coef;
+        prob = ALPHA*a_prob + (1.0-ALPHA)*b_prob;
+        return 0;
+    }
+    
+    return bhattacharryya2(i,j, coef, prob);
+}
+// em_meta::bc_measure2
 
 /*
 	kl_step:
@@ -340,7 +450,7 @@ em_meta::kl_step()
 
 /*
 	bc_step:
-		e_step for bhattacharrya maximization
+		e_step for bhattacharrya probability maximization
  */
 double 
 em_meta::bc_step()
@@ -407,9 +517,165 @@ em_meta::bc_step()
 } 
 // em_meta::bc_step
 
+
+/*
+ bc21_step:
+ e_step for bhattacharrya coefficient maximization
+ 
+double
+em_meta::bc21_step()
+{
+    int i, j;
+    
+    double obLike = 0;
+    
+    // Initialize Z / Z_sum elements to zero
+    cblas_dcopy(G*N, &zero, 0, Z, 1);
+    cblas_dcopy(G, &zero, 0, tmpG, 1);
+    // build prob-matrix => Z
+    const double* t = T;
+    double* z = Z;
+    for( i=0; i<N; ++i ) {
+        double sumLike = 0.0;
+        for( j=0; j<G; ++j ) {
+            double gw = gW[j];
+            double tmpPDF = 0.0;
+            double tmpLike = 0.0;
+            if( gw > 0.0 ){
+                tmpPDF = bc_measure(i,j);
+ 
+                int pc = fpclassify( tmpPDF );
+                if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
+                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+                    tmpPDF = 0.0;
+                }
+                z[j] = tmpPDF;
+                tmpG[j] += tmpPDF;
+                tmpLike = gw*tmpPDF;
+            }
+            sumLike += tmpLike;
+        } // for j
+        
+        if( sumLike > 0.0 ) {
+            obLike +=(*t) * log(sumLike);
+        }
+        
+        z += G;
+        t += T_inc;
+        
+    } // for i
+    
+    // normlize
+    for( j=0; j<G; ++j ) {
+        if( tmpG[j] > 0.0 ) {
+            cblas_dscal(N, 1./tmpG[j], Z+j, G);
+        }
+    }
+    
+    cblas_dcopy(G, &zero, 0, Z_sum, 1);
+    z = Z;
+    t = T;
+    for(i=0; i < N;i++) {
+        
+        double maxLike = 0.0;
+        int maxClust = -1;
+        
+        // for max like for i
+        for(j=0;j<G;j++) {
+            if( z[j] > maxLike ) {
+                maxLike = z[j];
+                maxClust = j;
+            }
+        } // for j
+        
+        cblas_dcopy(G, &zero, 0, z, 1);
+        if( maxClust > -1 ) {
+            z[maxClust] = *t;
+            Z_sum[maxClust] += *t;
+        }
+        z += G;
+        t += T_inc;
+    }    // for i<N
+    
+    
+    return obLike;
+}
+// em_meta::bc21_step
+*/
+/*
+bc21_step:
+e_step for bhattacharrya coefficient maximization
+*/
+double
+em_meta::bc21_step()
+{
+    int i, j;
+    
+    double obLike = 0;
+    
+    //    Initialize Z_sum elements to zero
+    cblas_dcopy(G, &zero, 0, Z_sum, 1);
+    
+    double* z = Z;
+    const double* t = T;
+    for(i=0; i < N; i++) {
+        
+        cblas_dcopy(G, &zero, 0, z, 1);
+        
+        double sumLike = 0.0;
+        //double maxPDF = 0.0;
+        double maxCoeff = 0.0;
+        int maxClust = -1;
+        
+        for(j=0;j<G;j++) {
+            
+            double gw = gW[j];
+            double tmpPDF = 0.0;
+            double tmpCoeff = 0.0;
+            double tmpLike = 0.0;
+            if( gw > 0.0 ) {
+                //tmpPDF = bc_measure(i,j);
+                bc_measure2(i,j, tmpCoeff, tmpPDF);
+                // 2016.03.21:
+                int pc = fpclassify( tmpPDF );
+                if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
+                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+                    tmpPDF = 0.0;
+                    tmpCoeff = 0.0;
+                }
+                
+                tmpLike = gw*tmpPDF;
+            }
+            
+            // z[j] = (*t) * tmpLike;
+            sumLike += tmpLike;
+            
+            if( tmpCoeff > maxCoeff) {
+                maxCoeff = tmpCoeff;
+                maxClust = j;
+            }
+        } // for j
+        
+        if( sumLike > 0.0 ) {
+            //cblas_dscal(G, 1./sumLike, z, 1);
+            obLike +=(*t) * log(sumLike);
+        }
+        
+        if( maxClust > -1 ) {
+            z[maxClust] = *t;
+            Z_sum[maxClust] += *t;
+        }
+        z += G;
+        t += T_inc;
+    }    // for i<N
+    
+    
+    return obLike;
+}
+// em_meta::bc21_step
 /*
 	bt_step:
-		e_step for bhattacharrya maximization with g^ estimation
+		e_step for bhattacharrya probability maximization with g^ estimation
  */
 double 
 em_meta::bt_step()
@@ -517,6 +783,248 @@ em_meta::bt_step()
 } 
 // em_meta::bt_step
 
+
+/*
+ bt21_step:
+ e_step for bhattacharrya coefficient maximization with g^ estimation
+ 
+double
+em_meta::bt21_step()
+{
+    int i, j;
+    
+    double obLike = 0;
+    
+    // Initialize Z / Z_sum elements to zero
+    cblas_dcopy(G*N, &zero, 0, Z, 1);
+    cblas_dcopy(G, &zero, 0, tmpG, 1);
+    // build prob-matrix => Z
+    const double* t = T;
+    double* z = Z;
+    for( i=0; i<N; ++i ) {
+        double sumLike = 0.0;
+        for( j=0; j<G; ++j ) {
+            double gw = gW[j];
+            double tmpPDF = 0.0;
+            double tmpLike = 0.0;
+            if( gw > 0.0 ){
+                tmpPDF = bc_measure(i,j);
+                
+                int pc = fpclassify( tmpPDF );
+                if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
+                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+                    tmpPDF = 0.0;
+                }
+                z[j] = tmpPDF;
+                tmpG[j] += tmpPDF;
+                tmpLike = gw*tmpPDF;
+            }
+            sumLike += tmpLike;
+        } // for j
+        
+        if( sumLike > 0.0 ) {
+            obLike +=(*t) * log(sumLike);
+        }
+        
+        z += G;
+        t += T_inc;
+        
+    } // for i
+    
+    // normlize
+    for( j=0; j<G; ++j ) {
+        if( tmpG[j] > 0.0 ) {
+            cblas_dscal(N, 1./tmpG[j], Z+j, G);
+        }
+    }
+    
+    
+    // tmpG holds unlikelihood for cluster g
+    cblas_dcopy(G+1, &zero, 0, tmpG, 1);
+    // tmpNg hold number of event in cluster g
+    cblas_dcopy((G+1)*G, &zero, 0, tmpNg, 1);
+    
+    
+    //    Initialize Z_sum elements to zero
+    cblas_dcopy(G, &zero, 0, Z_sum, 1);
+    
+    z = Z;
+    t = T;
+    for(i=0; i < N;i++) {
+        
+        cblas_dcopy(G, &zero, 0, z, 1);
+        
+        double maxLike = 0.0;
+        double sndLike = 0.0;
+        
+        int maxClust = -1, sndClust = -1;
+        
+        for(j=0;j<G;j++) {
+            
+            if( z[j] > maxLike) {
+                sndLike = maxLike;
+                sndClust = maxClust;
+                maxLike = z[j];
+                maxClust = j;
+            }
+            else
+            if( z[j] > sndLike ) {
+                sndLike = z[j];
+                sndClust = j;
+            }
+            
+        } // for j
+        
+        
+        if( sndClust > -1 ) {
+            
+            double maxProb = bc_measure(i, maxClust);
+            double sndProb = bc_measure(i, sndClust);
+            // tmpG -> delta likelihood
+            tmpG[maxClust] += (*t)*(log(maxProb) - log(sndProb));
+            
+            tmpNg[maxClust] += (*t);    // events in cluster maxClust
+            
+            double* unNk = tmpNg + G;        // nk for g-unlikelihood
+            
+            for( j=0; j<G; ++j ) {
+                if( j == maxClust ) {
+                    unNk[sndClust] += (*t);    // nk for g-unlikelihood
+                }
+                else {
+                    unNk[maxClust] += (*t);    // nk for g-unlikelihood
+                }
+                unNk += G;
+                
+            } // for j
+            
+        }    // sndClust > -1
+        
+        cblas_dcopy(G, &zero, 0, z, 1);
+        if( maxClust > -1 ) {
+            z[maxClust] = *t;
+            Z_sum[maxClust] += *t;
+        }
+        z += G;
+        t += T_inc;
+    }    // for i<N
+    
+    
+    return obLike;
+}
+// em_meta::bt21_step
+*/
+/*
+bt21_step:
+e_step for bhattacharrya coefficient maximization with g^ estimation
+*/
+double
+em_meta::bt21_step()
+{
+    int i, j;
+    
+    double obLike = 0;
+    
+    // tmpG holds unlikelihood for cluster g
+    cblas_dcopy(G+1, &zero, 0, tmpG, 1);
+    // tmpNg hold number of event in cluster g
+    cblas_dcopy((G+1)*G, &zero, 0, tmpNg, 1);
+    
+    
+    //    Initialize Z_sum elements to zero
+    cblas_dcopy(G, &zero, 0, Z_sum, 1);
+    
+    double* z = Z;
+    const double* t = T;
+    for(i=0; i < N;i++) {
+        
+        cblas_dcopy(G, &zero, 0, z, 1);
+        
+        double sumLike = 0.0;
+        double maxLike = 0.0;
+        double sndLike = 0.0;
+        double maxPDF = 0.0;
+        double sndPDF = 0.0;
+        int maxClust = -1, sndClust = -1;
+        
+        for(j=0;j<G;j++) {
+            
+            double gw = gW[j];
+            double tmpPDF = 0.0;
+            double tmpLike = 0.0;
+            if( gw > 0.0 ) {
+                //tmpPDF = bc_measure(i,j);
+                bc_measure2(i,j, tmpLike, tmpPDF);
+                // 2016.03.21:
+                int pc = fpclassify( tmpPDF );
+                if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
+                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+                    tmpPDF = 0.0;
+                    tmpLike = 0.0;
+                }
+                
+                //tmpLike = gw*tmpPDF;
+            }
+            
+            // z[j] = (*t) * tmpLike;
+            sumLike += gw*tmpPDF;
+            
+            if( tmpLike > maxLike) {
+                sndLike = maxLike;
+                sndPDF = maxPDF;
+                sndClust = maxClust;
+                maxLike = tmpLike;
+                maxPDF = tmpPDF;
+                maxClust = j;
+            }
+            else
+            if( tmpLike > sndLike ) {
+                sndLike = tmpLike;
+                sndPDF = tmpPDF;
+                sndClust = j;
+            }
+            
+        } // for j
+        
+        if( sumLike > 0.0 ) {
+            //cblas_dscal(G, 1./sumLike, z, 1);
+            obLike +=(*t) * log(sumLike);
+        }
+        
+        if( sndClust > -1 ) {
+            
+            // tmpG -> delta likelihood
+            tmpG[maxClust] += (*t)*(log(maxPDF) - log(sndPDF));
+            
+            tmpNg[maxClust] += (*t);    // events in cluster maxClust
+            
+            double* unNk = tmpNg + G;        // nk for g-unlikelihood
+            
+            for( j=0; j<G; ++j ) {
+                if( j == maxClust ) {
+                    unNk[sndClust] += (*t);    // nk for g-unlikelihood
+                }
+                else {
+                    unNk[maxClust] += (*t);    // nk for g-unlikelihood
+                }
+                unNk += G;
+                
+            } // for j
+            
+        }    // sndClust > -1
+        
+        if( maxClust > -1 ) {
+            z[maxClust] = *t;
+            Z_sum[maxClust] += *t;
+        }
+        z += G;
+        t += T_inc;
+    }    // for i<N
+    
+    
+    return obLike;
+}
+// em_meta::bt21_step
 /*
 	wt_step: weighted t_step
 */ 
@@ -917,8 +1425,7 @@ em_meta::kl_minimize(int& iterations, double& tolerance)
 {		
 	//dbg::printf("EM-KL minimization: %d, %g", iterations, tolerance );
 	return _iterate(iterations,tolerance, &em_meta::kl_step);
-} // em_meta::do_iterate
-
+}
 
 int
 em_meta::bc_maximize(int& iterations, double& tolerance)
@@ -933,9 +1440,25 @@ em_meta::do_classify(int& iterations, double& tolerance, int min_g)
 	minG = min_g;
 	//dbg::printf("EM-BC classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );	
 	return _iterate(iterations, tolerance, &em_meta::bc_step, &em_meta::bt_step);
-//	return _iterate(iterations, tolerance, &em_meta::kl_step, &em_meta::kt_step);
 }
 
+int
+em_meta::do_classify21(int& iterations, double& tolerance, int min_g)
+{
+    minG = min_g;
+    //dbg::printf("EM-BCoeff classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );
+    return _iterate(iterations, tolerance, &em_meta::bc21_step, &em_meta::bt21_step);
+}
+
+/*
+int
+em_meta::do_classify22(int& iterations, double& tolerance, int min_g)
+{
+    minG = min_g;
+    //dbg::printf("EM-BCoeff classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );
+    return _iterate(iterations, tolerance, &em_meta::bc22_step, &em_meta::bt22_step);
+}
+*/
 int
 em_meta::_iterate(int& iterations, double& tolerance, em_meta::E_STEP estep)
 {
@@ -1086,8 +1609,8 @@ em_meta::final(int* label, double logLike[3], int* history)
 	}
 	
     /*
-	 do cluster labeling
-	 */
+     do cluster labeling: done below again
+	 
 	z = Z;
  	for(i=0; i<N; ++i) {
 		double z_max = z[0];
@@ -1101,7 +1624,7 @@ em_meta::final(int* label, double logLike[3], int* history)
 		label[i] = l+1;
 		z += G;
 	}
-    
+    */
 	/*
 	 calc likelihood
 	 */
@@ -1115,7 +1638,7 @@ em_meta::final(int* label, double logLike[3], int* history)
 	{   
 		double sumLike = 0;
 		double maxPDF = 0;
-		double maxLike = 0;
+		//double maxLike = 0;
 		int maxClust = -1;
 		
 		for(j=0;j<L;j++)
@@ -1125,7 +1648,7 @@ em_meta::final(int* label, double logLike[3], int* history)
 			// classification likelihood: sumLike = max(tmpLike)
 			// integrated classification likelihood: sumLike = max(tmpLike) without proportion
 			double gw = gW[j];
-			double tmpLike = 0.0;
+			//double tmpLike = 0.0;
 			double tmpPDF = 0.0;
 			if( gw > 0.0 ){
 				tmpPDF = bc_measure(i,j);
@@ -1138,18 +1661,20 @@ em_meta::final(int* label, double logLike[3], int* history)
                 
 // 2015.03.05: has to be pdf w/o mixture weight                
 				//tmpLike = gw * tmpPDF;
-				tmpLike = tmpPDF;
-                
-				sumLike += tmpLike;
+				//tmpLike = tmpPDF;
+// 2018.09.25: correction sumLike has to be with mixture weight
+				//sumLike += tmpLike;
+                sumLike += gw * tmpPDF;
 				//if( tmpLike > maxLike ){
 				if( tmpPDF > maxPDF ) {
-					maxLike = tmpLike;
+					//maxLike = tmpLike;
 					maxPDF = tmpPDF;
 					maxClust = j;
 				}	
 			}	
             
-            z[j] = tmpLike;
+            //z[j] = tmpLike;
+            z[j] = tmpPDF;
 		} // for j
 		
 		
@@ -1202,10 +1727,7 @@ em_meta::final(int* label, double logLike[3], int* history)
 				l = j;
 			}
 		}
-        //if( label[i] != l+1 ) {
-        //    dbg::printf("<%d>: %d <-> %d", i, label[i], l+1 );
-        //    dbg::print_vector(L, z);
-        //}
+        
 		label[i] = l+1;
 		z += G;
 	}
@@ -1214,3 +1736,153 @@ em_meta::final(int* label, double logLike[3], int* history)
 	
 } // em_meta::final
 
+int
+em_meta::final21(int* label, double logLike[3], int* history)
+{
+    int i, j, l;
+    double* z;
+    const double* t;
+    
+    /*
+     remove empty cluster
+     */
+    l = 0;
+    for( j=0; j<G; ++j ) {
+        history[j] = j+1;
+        if( gW[j] > 0.0 ) {
+            if( j > l ) {
+                gW[l] = gW[j];
+                history[l] = history[j];
+                cblas_dcopy(P, gM+j*P, 1, gM+l*P, 1);
+                cblas_dcopy(P*P, gS+j*P*P, 1, gS+l*P*P, 1);
+                cblas_dcopy(P*P, gP+j*P*P, 1, gP+l*P*P, 1);
+                cblas_dcopy(P*P, gL+j*P*P, 1, gL+l*P*P, 1);
+                cblas_dcopy(N, Z+j, G, Z+l, G);
+            }
+            
+            ++l;
+        }
+    }
+    L = l;
+    for( j=L; j<G; ++j ) {
+        gW[j] = 0.0;
+        history[j] = 0;
+        cblas_dcopy(P, &zero, 0, gM+j*P, 1);
+        cblas_dcopy(P*P, &zero, 0, gS+j*P*P, 1);
+        cblas_dcopy(N, &zero, 0, Z+j, G);
+    }
+    
+    /*
+     do cluster labeling: according posterior prob
+    z = Z;
+    for(i=0; i<N; ++i) {
+        double z_max = z[0];
+        l = 0;
+        for( j=1;j<L; ++j) {
+            if( z[j] > z_max ) {
+                z_max = z[j];
+                l = j;
+            }
+        }
+        label[i] = l+1;
+        z += G;
+    }
+    */
+    
+    /*
+     calc likelihood
+     */
+    double obLike=0.0, icLike=0.0;
+    // tmpG holds number of events in for cluster k
+    cblas_dcopy(G, &zero, 0, tmpG, 1);
+    
+    t = T;
+    z = Z;
+    for(i=0;i<N;i++)
+    {
+        double sumLike = 0;
+        double maxPDF = 0;
+        double maxLike = 0;
+        int maxClust = -1;
+        
+        for(j=0;j<L;j++)
+        {
+            
+            // observation likelihood: sumLike += tmpLike
+            // classification likelihood: sumLike = max(tmpLike)
+            // integrated classification likelihood: sumLike = max(tmpLike) without proportion
+            double gw = gW[j];
+            double tmpLike = 0.0;   // bc_coeff
+            double tmpPDF = 0.0;    // bc_prob
+            if( gw > 0.0 ){
+                //tmpPDF = bc_measure(i,j);
+                bc_measure2(i,j, tmpLike, tmpPDF);
+                // 2016.03.21:
+                int pc = fpclassify( tmpPDF );
+                if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
+                    dbg::printf("%d: NaN (%d) for PDF (%d) ", j, pc, i);
+                    tmpPDF = 0.0;
+                    tmpLike = 0.0;
+                }
+                
+                // 2015.03.05: has to be pdf w/o mixture weight
+                // 2018.09.25: ist das so??? ich glaube nicht
+                // hat aber im weiteren intern keine konsequencen
+                // lediglich einflass auf BIC
+                
+                sumLike += gw*tmpPDF;
+                if( tmpLike > maxLike ){
+                //if( tmpPDF > maxPDF ) {
+                    maxLike = tmpLike;
+                    maxPDF = tmpPDF;
+                    maxClust = j;
+                }
+            }
+            
+            z[j] = tmpLike;
+        } // for j
+        
+        
+        if( maxClust > -1 )
+        tmpG[maxClust] += (*t);
+        
+        obLike += (sumLike>0.0)? (*t) * log(sumLike) : 0.0;
+        //clLike += (minLike>0.0)? log(minLike) : 0.0;
+        icLike += (maxPDF>0.0)? (*t) * log(maxPDF) : 0.0;
+        
+        t += T_inc;
+        z += G;
+    }
+    
+    // BIC: observation likelihood
+    logLike[0] = obLike - log(T_sum) * (L*(P+1)*P/2.0 + L*P + L-1) * 0.5;
+    // ICL: integrated classification likelihood minus cluster costs
+    //logLike[1] = icLike - icl::model_costs(T_sum, P, L, tmpG, -1);
+    logLike[1] = icLike - icl::model_costs(T_sum, L, P, tmpG, -1);
+    
+    // ICL: icLike ???? partial icl for complete ICL calculation in total model
+    logLike[2] = icLike + icl::sum(L, tmpG);
+    //logLike[2] = icLike - BIAS * icl::model_costs(T_sum, P, L, tmpG, -1);
+    
+    
+    /*
+     do cluster labeling according bc_coeff
+     */
+    z = Z;
+    for(i=0; i<N; ++i) {
+        double z_max = z[0];
+        l = 0;
+        for( j=1;j<L; ++j) {
+            if( z[j] > z_max ) {
+                z_max = z[j];
+                l = j;
+            }
+        }
+     
+        label[i] = l+1;
+        z += G;
+    }
+
+    return L;
+    
+} // em_meta::final21
