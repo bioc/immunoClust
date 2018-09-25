@@ -12,7 +12,7 @@
 #include "dist_mvn.h"
 
 #include "meta_scale.h"
-#include "meta_gpa.h"
+//#include "meta_gpa.h"
 #include "normalize.h"
 #include "meta_norm.h"
 
@@ -91,6 +91,7 @@ extern "C" {
 		}
 	}
 
+    /*
     //metaGPA
 	void metaGPA(int* p, int* n, int* k, double* w, double* m, double* s, int* g, double* z, int* groups)
 	{
@@ -102,7 +103,7 @@ extern "C" {
 		meta_gpa normalizer(*p, *n, k, w, m, s, label);
 		normalizer.process();
 	}
-    
+    */
     
 	//metaNormalize
 	void metaNormalize(int* p, int* n, int* k, double* w, double* m, double* s, int* l, double* z, int* method)
@@ -225,6 +226,17 @@ extern "C" {
 				em.start(INTEGER(label), true);
 				status = em.do_classify(iterations, tolerance, INTEGER(min_g)[0]);
 				break;
+            // TOPROOF
+            case 21:    // EM-T: classification with weights
+                em.start(INTEGER(label), true);
+                status = em.do_classify21(iterations, tolerance, INTEGER(min_g)[0]);
+                break;
+            /* bug in thinking or implementation
+            case 22:
+                em.start(INTEGER(label), true);
+                status = em.do_classify22(iterations, tolerance, INTEGER(min_g)[0]);
+                break;
+            */
 			default:
 				em.start(INTEGER(label), false);
 				status = em.kl_minimize(iterations, tolerance);
@@ -234,13 +246,17 @@ extern "C" {
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
         
+        if( 21 == INTEGER(method)[0] ) {
+            INTEGER(VECTOR_ELT(ret,0))[0] = em.final21(INTEGER(VECTOR_ELT(ret,5)),
+                                                     REAL(VECTOR_ELT(ret,6)),
+                                                     INTEGER(VECTOR_ELT(ret,7)) );
+        }
+        else {
 		INTEGER(VECTOR_ELT(ret,0))[0] = em.final(INTEGER(VECTOR_ELT(ret,5)), 
                                                  REAL(VECTOR_ELT(ret,6)), 
                                                  INTEGER(VECTOR_ELT(ret,7)) );
-		//Rprintf("The EM (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g (%g)\n",
-        //        status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, 
-        //        tolerance, REAL(VECTOR_ELT(ret,6))[0], REAL(VECTOR_ELT(ret,6))[2]);	
-                                                 
+        }
+        
         Rf_unprotect(1);	// unprocted ret
                                                  
         return ret;
