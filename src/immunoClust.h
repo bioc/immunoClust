@@ -9,6 +9,7 @@
 
 #define NDEBUG 1
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -63,6 +64,31 @@ extern "C" {
 	SEXP call_mvtE(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t, 
                    SEXP w, SEXP m, SEXP s);
 
+    SEXP call_mvtM(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                   SEXP label);
+    
+    /* mvt2 events */
+    SEXP call_mvt2ME(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                    SEXP label,
+                    SEXP max_iter, SEXP max_tol);
+    
+    SEXP call_mvt2MEt(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                     SEXP label,
+                     SEXP max_iter, SEXP max_tol, SEXP bias);
+    
+    SEXP call_mvt2EM(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                    SEXP w, SEXP m, SEXP s,
+                    SEXP max_iter, SEXP max_tol);
+    
+    SEXP call_mvt2EMt(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                     SEXP w, SEXP m, SEXP s,
+                     SEXP max_iter, SEXP max_tol, SEXP bias);
+    
+    SEXP call_mvt2E(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                   SEXP w, SEXP m, SEXP s);
+
+    SEXP call_mvt2M(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                   SEXP label);
 	
 	/* HTrans */
 	SEXP call_vsHtrans_l(SEXP N, SEXP P, SEXP K, SEXP y, SEXP z, SEXP a, SEXP b, 
