@@ -11,6 +11,7 @@
 
 #include "em_mvn.h"
 #include "em_mvt.h"
+#include "em_mvt2.h"
 
 #include "hc_mvn.h"
 #include "vs_htrans.h"
@@ -430,6 +431,26 @@ extern "C" {
 		
 	}	 
 	
+    // only maximizing according to label
+    SEXP call_mvtM(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                   SEXP label)
+    {
+        int status;
+        
+        SEXP ret = _M_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], label);
+        em_mvt em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
+                       0, REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
+                       MVT_Nu, (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);
+        
+        status = em.build(INTEGER(label), REAL(VECTOR_ELT(ret,6)),INTEGER(VECTOR_ELT(ret,7)));
+        INTEGER(VECTOR_ELT(ret,0))[0] =  INTEGER(K)[0];
+        INTEGER(VECTOR_ELT(ret,8))[0] = status;
+        INTEGER(VECTOR_ELT(ret,9))[0] = 0;
+        REAL(VECTOR_ELT(ret,10))[0] = 0.0;
+        Rf_unprotect(1);
+        
+        return ret;
+    }
 
 	// em algorithm with start estimation of model parameter
 	SEXP call_mvtEM(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t, 
@@ -527,6 +548,198 @@ extern "C" {
 	
 	// << mvt 
 	
+    
+    /*
+     mvt2..    t mixture respecting edges
+     */
+    
+    // em algorithm with start estimation of cluster labeling
+    SEXP call_mvt2ME(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                    SEXP label, SEXP max_iter, SEXP max_tol)
+    {
+        int status;
+        
+        int iterations = INTEGER(max_iter)[0];
+        double tolerance = REAL(max_tol)[0];
+        
+        SEXP ret = _ME_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0]);
+        
+        
+        em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
+                  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
+                  MVT_Nu, (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0, 0.0);
+        
+        status = em.start(INTEGER(label));
+        if( status == 0 ) {
+            status = em.em(iterations, tolerance);
+            INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
+        }
+        INTEGER(VECTOR_ELT(ret,8))[0] = status;
+        INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
+        REAL(VECTOR_ELT(ret,10))[0] = tolerance;
+        
+#ifdef DEBUG
+        Rprintf("ME (%d) with %d clusters required %d iterations, tolerance is %g, loglike is %g\n", status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret,6))[0]);
+#endif
+        Rf_unprotect(1);    // unprotect ret
+        
+        return ret;
+    }
+    
+    // em-t algorithm with start estimation of cluster labeling
+    SEXP call_mvt2MEt(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                     SEXP label,
+                     SEXP max_iter, SEXP max_tol, SEXP bias)
+    {
+        
+        int status;
+        
+        int iterations = INTEGER(max_iter)[0];    // in iterations
+        double tolerance = REAL(max_tol)[0];    // in tolelrance
+        
+        SEXP ret = _ME_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0]);
+        
+        em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
+                  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
+                  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, REAL(bias)[0]);
+        
+        status = em.start(INTEGER(label));
+        if( status == 0 ) {
+            status = em.em_t(iterations, tolerance);
+            INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
+        }
+        
+        INTEGER(VECTOR_ELT(ret,8))[0] = status;
+        INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
+        REAL(VECTOR_ELT(ret,10))[0] = tolerance;
+        
+#ifdef DEBUG
+        Rprintf("MEt (%d) with %d clusters required %d iterations, tolerance is %g, loglike is %g\n", status, INTEGER(VECTOR_ELT(ret,0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret, 6))[0]);
+#endif
+        Rf_unprotect(1);    // unprotect ret
+        
+        return ret;
+        
+    }
+    
+    // only maximizing according to label
+    SEXP call_mvt2M(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                   SEXP label)
+    {
+        int status;
+        
+        SEXP ret = _M_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], label);
+        em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
+                  0, REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
+                  MVT_Nu, (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);
+        
+        status = em.build(INTEGER(label), REAL(VECTOR_ELT(ret,6)),INTEGER(VECTOR_ELT(ret,7)));
+        INTEGER(VECTOR_ELT(ret,0))[0] =  INTEGER(K)[0];
+        INTEGER(VECTOR_ELT(ret,8))[0] = status;
+        INTEGER(VECTOR_ELT(ret,9))[0] = 0;
+        REAL(VECTOR_ELT(ret,10))[0] = 0.0;
+        Rf_unprotect(1);
+        
+        return ret;
+    }
+    
+    // em algorithm with start estimation of model parameter
+    SEXP call_mvt2EM(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                    SEXP w, SEXP m, SEXP s,
+                    SEXP max_iter, SEXP max_tol)
+    {
+        int status;
+        
+        int iterations = INTEGER(max_iter)[0];
+        double tolerance = REAL(max_tol)[0];
+        
+        SEXP ret = _EM_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], w, m, s);
+        
+        em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
+                  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
+                  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);
+        
+        status = em.start(0);
+        if( status == 0 ) {
+            status = em.em(iterations, tolerance);
+            INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
+        }
+        
+        INTEGER(VECTOR_ELT(ret,8))[0] = status;
+        INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
+        REAL(VECTOR_ELT(ret,10))[0] = tolerance;
+        
+#ifdef DEBUG
+        Rprintf("EM (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",status, INTEGER(VECTOR_ELT(ret, 0)), iterations, tolerance, REAL(VECTOR_ELT(ret,6))[0]);
+#endif
+        Rf_unprotect(1);
+        
+        return ret;
+    }
+    
+    
+    // em-t algorithm with start estimation of model parameter
+    SEXP call_mvt2EMt(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                     SEXP w, SEXP m, SEXP s,
+                     SEXP max_iter, SEXP max_tol, SEXP bias)
+    {
+        
+        int status;
+        
+        int iterations = INTEGER(max_iter)[0];
+        double tolerance = REAL(max_tol)[0];
+        
+        SEXP ret = _EM_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], w, m, s);
+        
+        em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
+                  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
+                  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, REAL(bias)[0]);
+        
+        status = em.start(0);
+        if( status == 0 ) {
+            status = em.do_iterate(iterations, tolerance);
+            INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
+        }
+        INTEGER(VECTOR_ELT(ret,8))[0] = status;
+        INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
+        REAL(VECTOR_ELT(ret,10))[0] = tolerance;
+        
+#ifdef DEBUG
+        Rprintf("EMt (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",status, INTEGER(VECTOR_ELT(ret, 0))[0], iterations, tolerance, REAL(VECTOR_ELT(ret, 6))[0]);
+#endif
+        Rf_unprotect(1); // unprotect ret
+        
+        return ret;
+    }
+    
+    
+    // only estimation according to model parameter
+    SEXP call_mvt2E(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
+                   SEXP w, SEXP m, SEXP s)
+    {
+        int status;
+        
+        SEXP ret = _EM_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], w, m, s);
+        
+        em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
+                  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
+                  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);
+        
+        status = em.start(0);
+        if( status == 0 ) {
+            INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
+        }
+        INTEGER(VECTOR_ELT(ret,8))[0] = status;
+        
+        Rf_unprotect(1);
+        
+        return ret;
+        
+    }
+    
+    // << mvt2
+    
+    
 	// >>mvnHC
 	SEXP call_mvnHC(SEXP N, SEXP P, SEXP y, SEXP t)
 //			   SEXP alpha, SEXP beta)
