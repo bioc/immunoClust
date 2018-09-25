@@ -595,9 +595,10 @@ em_gaussian::build(const int* label, double logLike[3], int* history)
 	int i, k, p, q, status = 0;
 	
 
-	// mu
+	// w and mu
     const int* l = label;
     const double* y = Y;
+    const double* t = T;
     cblas_dcopy(K, &zero, 0, Z_sum, 1);
     cblas_dcopy(P*K, &zero, 0, M, 1);
 	for( i=0; i<N; ++i ) {
@@ -644,11 +645,12 @@ em_gaussian::build(const int* label, double logLike[3], int* history)
         y += P;
         
     }
-  
+    cblas_dcopy(P, &zero, 0, TRC, 1);
     for( k=0; k<K; ++k ) {
         double z_sum = Z_sum[k];
         if( history )
             history[k] = k+1;
+
         if( z_sum > 0 ) {
             double* s = S + k*P*P;
             for(p=0; p<P;++p){
@@ -656,14 +658,125 @@ em_gaussian::build(const int* label, double logLike[3], int* history)
                     *(s+p*P+q) /= z_sum;
                 }
             }
+            for( p=0; p<P; ++p){
+                /*
+                if( (*(s+p*P+p) /= z_sum) <= 1e-10 ) {
+                    *(s+p*P+p) += TRC[p]*z_sum;
+                }
+                */
+                TRC[p] += *(s+p*P+p);
+            }
         }
   	}
     
+    // zero deviation and invert
+    cblas_dscal(P, 1./K, TRC, 1);
+    for( k=0; k<K; ++k ) {
+        double* s = S + k*P*P;
+        for( p=0; p<P; ++p){
+            if( *(s+p*P+p) <= 1e-10 ) {
+                *(s+p*P+p) += TRC[p];
+            }
+        }
+        
+        if( W[k] > 0.0 ) {
+            status = mat::cholesky_decomp(P, s);
+            if( status != 0 ) {
+                mat::set_identity(P,s);
+                W[k] = 0.0;
+            }
+            else {
+                mat::invert(P, s, tmpPxP);
+                status = mat::cholesky_decomp(P, s);
+                if( status != 0 ) {
+                    mat::set_identity(P,s);
+                    W[k] = 0.0;
+                }
+            }
+        }
+        
+    }
+    
+    
+// 2018.05.04: too lazy
     logLike[0] = logLike[1] = logLike[2] = 0;
+    
+    /*
+     calc likelihood
+     */
+    double obLike=0.0, icLike=0.0;
+    const int L = K;
+    // tmpK holds number of events in for cluster k
+    //cblas_dcopy(K, &zero, 0, Z_sum, 1);
+    
+    y = Y;
+    t = T;
+    //double* z = Z;
+    
+    for(i=0;i<N;i++)
+    {
+        double sumLike = 0;
+        double maxLike = 0;
+        double maxPDF = 0;
+        int maxClust = -1;
+        
+        for(k=0;k<L;k++) if( Z_sum[k] > 0 )
+        {
+            double* m = M + k*P;
+            double* s = S + k*P*P;
+            
+            // observation likelihood: sumLike += tmpLike
+            // classification likelihood: sumLike = max(tmpLike)
+            // integrated classification likelihood: sumLike = max(tmpLike) without proportion
+            double w = W[k];
+            double tmpLike = 0.0;
+            double tmpPDF = 0.0;
+            if( w > 0.0 ){
+                tmpPDF = mvn::pdf(P, y, m, s, tmpP);
+                tmpLike = w * tmpPDF;
+                
+                sumLike += tmpLike;
+                
+                if( tmpLike > maxLike ){
+                    maxLike = tmpLike;
+                    maxClust = k;
+                    maxPDF = tmpPDF;
+                }
+            }
+            
+        } // for k
+        
+        obLike += (sumLike>0.0)? (*t) * log(sumLike) : 0.0;
+        icLike += (maxPDF>0.0)? (*t) * log(maxPDF) : 0.0;
+        
+        t += T_inc;
+        y += P;
+        //z += K;
+        
+    }
+    
+    // invert s
+    
+    
+    // BIC: observation likelihood
+    logLike[0] = obLike - log(T_sum) * (L*(P+1)*P/2.0 + L*P + L-1) * 0.5;
+    // ICL: integrated classification likelihood minus cluster costs
+    logLike[1] = icLike - icl::model_costs(T_sum, P, L, Z_sum, -1);
+    // ICL-lambda
+    logLike[2] = icLike + icl::sum(L, Z_sum);
+//
+    
+    /*
+     output S to be the covariance matrix
+     */
+    for(k=0;k<L;k++) {
+        double* s = S + k*P*P;
+        mat::invert(P, s, tmpPxP);
+    }
 	
  	return 0;
 	
-} // em_gaussian::l_init
+} // em_gaussian::build
 
 
 /*
