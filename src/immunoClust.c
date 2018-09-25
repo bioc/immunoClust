@@ -16,8 +16,8 @@ extern "C" {
 int print_text(const char* txt) 
 {
 #ifdef DEBUG
-//	Rprintf("%s\n", txt);
-#endif    
+	Rprintf("%s\n", txt);
+#endif
 	return 0;
 }
 	
@@ -42,8 +42,16 @@ int print_text(const char* txt)
 		{"immunoC_mvtMEt", (DL_FUNC)(&call_mvtMEt), 9},
 		{"immunoC_mvtEM", (DL_FUNC)(&call_mvtEM), 10},
 		{"immunoC_mvtEMt", (DL_FUNC)(&call_mvtEMt), 11},
+        {"immunoC_mvtM", (DL_FUNC)(&call_mvtM), 6},
 		{"immunoC_mvtE", (DL_FUNC)(&call_mvtE), 8},
 		
+        /* mvt2 */
+        {"immunoC_mvt2ME", (DL_FUNC)(&call_mvt2ME), 8},
+        {"immunoC_mvt2MEt", (DL_FUNC)(&call_mvt2MEt), 9},
+        {"immunoC_mvt2EM", (DL_FUNC)(&call_mvt2EM), 10},
+        {"immunoC_mvt2EMt", (DL_FUNC)(&call_mvt2EMt), 11},
+        {"immunoC_mvt2M", (DL_FUNC)(&call_mvt2M), 6},
+        {"immunoC_mvt2E", (DL_FUNC)(&call_mvt2E), 8},
 		
 		/* HTrans */
 		{"immunoC_vsHtrans_l", (DL_FUNC)(&call_vsHtrans_l), 10},
