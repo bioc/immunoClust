@@ -1,3 +1,7 @@
+immunoClust 1.13.2
+    CHANGES
+     * minor bugfixes and code cleaning
+
 immunoClust 1.9.3
    CHANGES
     * acccedentially change in cell-clustering corrected
