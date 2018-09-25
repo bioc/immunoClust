@@ -238,7 +238,7 @@ meta_norm::linear_Y()
         corr[p] = (exy*exy) / (exx*eyy);
         
         scaleA[p] = eyy / exy;
-        dbg::printf("used p=%d: %.2lf / %.4lf (sw=%.2lf sx=%.2lf sy=%.2lf sxy=%.2lf sxx=%.2lf syy=%.2lf)", p, scaleA[p], corr[p], sw, sx, sy, sxy, sxx, syy);
+        //dbg::printf("used p=%d: %.2lf / %.4lf (sw=%.2lf sx=%.2lf sy=%.2lf sxy=%.2lf sxx=%.2lf syy=%.2lf)", p, scaleA[p], corr[p], sw, sx, sy, sxy, sxx, syy);
 
         *(A+p*COEFF+1) = scaleA[p];
         *(A+p*COEFF) = (sy - sx*scaleA[p])/sw; // const term
@@ -295,7 +295,7 @@ meta_norm::scale_Y()
         
         corr[p] = (sxy*sxy)/(sxx*syy);
         scaleA[p] = syy/sxy;
-        dbg::printf("used p=%d: %.2lf / %.4lf (sw=%.2lf sxy=%.2lf sxx=%.2lf syy=%.2lf)", p, scaleA[p], corr[p], sw, sxy, sxx, syy);
+        //dbg::printf("used p=%d: %.2lf / %.4lf (sw=%.2lf sxy=%.2lf sxx=%.2lf syy=%.2lf)", p, scaleA[p], corr[p], sw, sxy, sxx, syy);
 
         // scale factor 
         *(A+p*COEFF+1) = scaleA[p]; // linear term
