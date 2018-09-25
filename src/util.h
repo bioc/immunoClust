@@ -40,7 +40,7 @@ namespace mat {
 }
 
 namespace mvn {
-	/* pdf requires S to be cholesky decomposed */
+	/* pdf requires S to be cholesky decomposed (and already inverted)*/
 	double pdf(const int P, const double* Y, const double* M, const double* S, double* tmp);
 	/* mahalanobis requires S to be cholesky decomposed */
 	double mahalanobis(const int P, const double* Y, const double* M, const double* S, double* tmp);
