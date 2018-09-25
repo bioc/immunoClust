@@ -43,8 +43,8 @@
 setGeneric("plot")
 
 setMethod("plot", signature(x="immunoClust", y="missing"),
-function(x, data, subset=c(1,2), ellipse=TRUE, show.rm=FALSE, include=seq_len(x@K), 
-main=NULL, col=include+1, pch=".", cex=0.6, 
+function(x, data, subset=c(1,2), ellipse=TRUE, show.rm=FALSE, 
+include=seq_len(x@K), main=NULL, col=include+1, pch=".", cex=0.6, 
 col.rm=1, pch.rm=1, cex.rm=0.6, ecol=col, elty=1, 
 npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
 {
