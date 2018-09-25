@@ -57,7 +57,7 @@ public:
 	em_mvt(int n, int p, int k, const double* x, double* z, double* w, double* m, double* s, double nu=5, const double* t=0, double bias=0.5);
 	~em_mvt();
 	
-	
+	int build(const int* label, double loglike[3], int* history=0);
 	int start(const int* label);
 	int do_iterate(int& max_iteration, double& max_tolerance);
 	int final(double logLike[3], int* label, int* history=0);
