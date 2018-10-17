@@ -1,58 +1,54 @@
-immunoClust 1.13.2
-    CHANGES
-     * minor bugfixes and code cleaning
+Changes in version 1.13.3
+- NEW FEATRUES
+  * additional variant of t-mixture model fitting respecting truncated
+    observed values
+- CHANGES
+  * minor bugfixes and code cleaning
 
-immunoClust 1.9.3
-   CHANGES
-    * acccedentially change in cell-clustering corrected
-    * minor changes in plot and splom methods
+Changes in version 1.9.3
+ - CHANGES
+  * acccedentially change in cell-clustering corrected
+  * minor changes in plot and splom methods
 
-immunoClust 1.9.2
-   CHANGES
-    * Optional label parameter in meta-clustering to continue the 
+Changes in version 1.9.2
+ - CHANGES
+  * Optional label parameter in meta-clustering to continue the
     meta-clustering with an initial cluster to meta-cluster assignment
 
-immunoClust 1.9.1
-   CHANGES
-    * Minor improvements and additional option in plot and splom methods
-    * Introduce of ALPHA option also for normalization precedures
+Changes in version 1.9.1
+ - CHANGES
+  * Minor improvements and additional option in plot and splom methods
+  * Introduce of ALPHA option also for normalization precedures
     
-immunoClust 1.3.3
-    CHANGES
-    * Optional plotting of additional parameter in FCS files
-    * Minor changes in export meta-cluster features
-    BUGFIXES
-    * Problems with clustering of 1-D data sets
+Changes in version 1.3.3
+ - CHANGES
+  * Optional plotting of additional parameter in FCS files
+  * Minor changes in export meta-cluster features
+ - BUGFIXES
+  * Problems with clustering of 1-D data sets
 
-immunoClust 1.3.1
-    CHANGES
-    * The normalization step within the meta.clusering proces is improved
+Changes in version 1.3.1
+ - CHANGES
+  * The normalization step within the meta.clusering proces is improved
       and extended which also effects the related  parameter settings
 
-immunoClust 1.1.1.
-    NEW FEATRUES:
-    * A normalization step which the sample cell-clusters to the common
+Changes in version 1.1.1.
+ - NEW FEATRUES
+  * A normalization step which the sample cell-clusters to the common
       meta-cluster model is included an optionally activated during the
       major meta-clustering process.
 
-    CHANGES:
-    * The meta.ME C-binding and return value was modified in a way that the
+ - CHANGES
+  * The meta.ME C-binding and return value was modified in a way that the
       A-Posterior probability matrix Z for a cell-cluster belonging to a
       meta-cluster is also calculated and returned.
-    BUFIXES:
-    * Ellipse position were not correct when ploting a parameter subset
+ - BUFIXES
+  * Ellipse position were not correct when ploting a parameter subset
 
-immunoClust 1.0.0:
-    The first version caintains basically the functios and routines usesd to 
-    obtain the results of 
-    "Soerensen, T., Baumgart, S., Durek, P., Gruetzkau, A. and Haeupl, T. 
-    immunoClust - an automated analysis pipeline for the identification of 
-    immunophenotypic signatures in high-dimensional cytometric datasets. 
-    Cytometry A (accepted)."
-
-    CHANGES:
-    * The code was cleaned and modified in the C-binding calls to make
+Changes in version 1.0.0:
+ - CHANGES
+  * The code was cleaned and modified in the C-binding calls to make
       it runable on R 3.1.2.
-    * A bug in the cell.hclust function was fixed, which does not effect
+  * A bug in the cell.hclust function was fixed, which does not effect
       the general results but lead to minor differences in concrete
       numbers.
