@@ -1681,7 +1681,7 @@ em_meta::final(int* label, double logLike[3], int* history)
 		if( maxClust > -1 )
 			tmpG[maxClust] += (*t);
 		
-        /* 2016.06.29: output absolut propabiliies ant not relative propabilities
+        /* 2016.06.29: output absolut propabilities and not relative propabilities
          // does not effect cluster assignment, which is only max
     	if( sumLike > 0.0 ) {
             cblas_dscal(L, 1./sumLike, z, 1);
