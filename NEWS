@@ -1,3 +1,7 @@
+Changes in Version 1.15.1
+- CHANGES
+  * adding biocView ImmunoOncology
+
 Changes in version 1.13.3
 - NEW FEATRUES
   * additional variant of t-mixture model fitting respecting truncated
