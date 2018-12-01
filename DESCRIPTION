@@ -2,8 +2,8 @@ Package: immunoClust
 Type: Package
 Title: immunoClust - Automated Pipeline for Population Detection in
         Flow Cytometry
-Version: 1.14.0
-Date: 2018-10-17
+Version: 1.14.1
+Date: 2018-12-01
 Author: Till Soerensen <till-antoni.soerensen@charite.de>
 Maintainer: Till Soerensen <till-antoni.soerensen@charite.de>
 Depends: R(>= 3.3),  methods, stats, graphics, grid, lattice, grDevices,
@@ -14,5 +14,5 @@ Description: Model based clustering and meta-clustering of Flow
 Collate: class.immunoClust.R plot.immunoClust.R splom.immunoClust.R
         data.R process.R cell.clustering.R meta.clustering.R
         meta.gating.R meta.export.R meta.plot.R clust.util.R transform.R
-biocViews: Clustering, FlowCytometry, CellBasedAssays
+biocViews: Clustering, FlowCytometry, CellBasedAssays, ImmunoOncology
 License: Artistic-2.0
