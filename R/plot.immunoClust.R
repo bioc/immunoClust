@@ -48,6 +48,8 @@ include=seq_len(x@K), main=NULL, col=include+1, pch=".", cex=0.6,
 col.rm=1, pch.rm=1, cex.rm=0.6, ecol=col, elty=1, 
 npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
 {
+    more.par <- list(...)
+    
     if (!is.numeric(subset)) subset <- match(subset, x@parameters)
     
     if( !is.null(attr(x, "desc")) ) {
@@ -146,22 +148,44 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
                     loc=x@mu[i,subset], n=npoints),
                     type="l", lty=elty[j <- j+1], col=ecol[j])
         }
-        ellipse.merged <- FALSE
-        if( ellipse.merged ) {
+    }
+    
+    #ellipse.merged <- FALSE
+    if( isTRUE(more.par$ellipsis.merged) ) {
         cc <- qt(0.95, 5)
         merged <- .clust.mergedClusters(x, include)
         eigenPair <- eigen(merged$sigma[subset,subset])
-        l1 <- sqrt(eigenPair$values[1]) * (cc)
-        l2 <- sqrt(eigenPair$values[2]) * (cc)
+        l1 <- sqrt(eigenPair$values[1]) * sqrt(cc)
+        l2 <- sqrt(eigenPair$values[2]) * sqrt(cc)
         angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1])
         angle <- angle * 180/pi
         
         points(.ellipsePoints(a=l1, b=l2, alpha=angle,
-                loc=merged$mu[subset], n=npoints),
-                type="l", lty=3, col="black")
-        }
-        
+        loc=merged$mu[subset], n=npoints),
+        type="l", lty=3, col="black")
     }
+    
+    if( !is.null(more.par$ellipses.mean) &&
+        !is.null(more.par$ellipses.sigma) ) {
+        
+        if( is.null(more.par$ellipses.cc))
+            cc <- rep(qt(0.98, 5), nrow(more.par$ellipses.mean))
+        else
+            cc <- more.par$ellipses.cc
+            
+        for( l in seq_len(nrow(more.par$ellipses.mean)) ) {
+            eigenPair <- eigen(more.par$ellipses.sigma[l,subset,subset])
+            l1 <- sqrt(eigenPair$values[1]) * cc[l]
+            l2 <- sqrt(eigenPair$values[2]) * cc[l]
+            angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1])
+            angle <- angle * 180/pi
+            points(.ellipsePoints(a=l1, b=l2, alpha=angle,
+            loc=more.par$ellipses.mean[l,subset], n=npoints),
+            type="l", lty=3, col="black")
+        }
+    }
+    
+    
 # plot gates    
     if( !is.null(gates) ) {
         x.limits = c(min(data[!flagFiltered,1],-1),

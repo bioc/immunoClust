@@ -66,7 +66,7 @@ npoints=501, add=FALSE, gates=NULL, mean=NULL, sigma=NULL, ...)
     
     if( !is.null(gates) && !ellipse.force ) {
         thres <- gates[subset,]
-        for( j in 1:length(thres[1,]) ){
+        for( j in seq_len(length(thres[1,])) ){
             if( !is.na(thres[1,j]) || !is.na(thres[2,]) )
             ellipse <- FALSE
         }
@@ -112,13 +112,13 @@ npoints=501, add=FALSE, gates=NULL, mean=NULL, sigma=NULL, ...)
         x.limits = c(min(x[!flagFiltered],-1), max(x[!flagFiltered],10))
         y.limits = c(min(y[!flagFiltered],-1), max(y[!flagFiltered],10))
         thres <- gates[subset,]
-        for( j in 1:length(thres[1,]) ) {   
+        for( j in seq_len(length(thres[1,])) ) {
             if( !is.na(thres[1,j]) ) {
                 panel.points(c(thres[1,j],thres[1,j]), y.limits, 
                             type="l", col=j+1)
             }
         }
-        for( j in 1:length(thres[2,]) ) {   
+        for( j in seq_len(length(thres[2,])) ) {
             if( !is.na(thres[2,j]) ) {
                 panel.points(x.limits, c(thres[2,j],thres[2,j]), 
                             type="l", col=j+1)
@@ -154,7 +154,7 @@ npoints=501, add=FALSE, gates=NULL, mean=NULL, sigma=NULL, ...)
 
 setMethod("splom", 
 signature=signature(x="immunoClust", data="missing"),
-definition=function(x, data, include=1:(x@K), ...)
+definition=function(x, data, include=seq_len(x@K), ...)
 {
     param <- attributes(x)$param
     
@@ -171,7 +171,7 @@ definition=function(x, data, include=1:(x@K), ...)
 
 setMethod("splom", 
 signature=signature(x="immunoClust",data="flowFrame"),definition=function(
-x, data, include=1:(x@K), subset=1:length(attributes(x)$param), 
+x, data, include=seq_len(x@K), subset=seq_len(length(attributes(x)$param)),
 N=NULL,label=NULL, desc=NULL, add.param=c(), ...
 ) {
     params <- c(attributes(x)$param[subset], add.param)
@@ -197,8 +197,8 @@ N=NULL,label=NULL, desc=NULL, add.param=c(), ...
     
     
     if( !is.null(N) && N < nrow(y) ) {
-        y <- y[1:N,]
-        clust.frame$label <- clust.frame$label[1:N]
+        y <- y[seq_len(N),]
+        clust.frame$label <- clust.frame$label[seq_len(N)]
     }
     
     varnames <- NULL
@@ -223,7 +223,7 @@ N=NULL,label=NULL, desc=NULL, add.param=c(), ...
 
 setMethod("splom", 
 signature=signature(x="immunoClust",data="matrix"), definition=function(
-x, data, include=1:(x@K), subset=1:length(attributes(x)$param), 
+x, data, include=seq_len(x@K), subset=seq_len(length(attributes(x)$param)),
 N=NULL,label=NULL, desc=NULL,...
 ){
     params <- attributes(x)$param[subset]
@@ -245,8 +245,8 @@ N=NULL,label=NULL, desc=NULL,...
     dim(clust.frame$mu) <- c(x@K, length(subset))
     
     if( !is.null(N) && N < nrow(y) ) {
-        y <- y[1:N,]
-        clust.frame$label <- clust.frame$label[1:N]
+        y <- y[seq_len(N),]
+        clust.frame$label <- clust.frame$label[seq_len(N)]
     }
     
     varnames <- NULL
@@ -264,7 +264,8 @@ N=NULL,label=NULL, desc=NULL,...
 })
 
 datSplom <- 
-function(label, data, subset=1:ncol(data), include=1:nrow(data), ...) 
+function(label, data, subset=seq_len(ncol(data)),
+include=seq_len(nrow(data)), ...) 
 {
     param <- colnames(data)[subset]
     y <- data[, param]
@@ -275,7 +276,7 @@ function(label, data, subset=1:ncol(data), include=1:nrow(data), ...)
     clust.frame <- list(K=nrow(data), P=length(param), sigma=NULL, mu=NULL, 
                     range=NULL,label=label)
     
-    splom(x=y, data=NULL, pscales=NULL, varnames=param, 
+    splom(x=y, data=NULL, varnames=param, 
         panel=.clust.panel.splom, frame=clust.frame, gp=gp, 
         include=include, ...)
 }

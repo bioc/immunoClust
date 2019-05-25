@@ -10,7 +10,7 @@
     if(consec) {
 # number groups in order of first row appearance
         l <- length(u)
-        for(i in 1:l)
+        for(i in seq_len(l))
         y[x == u[i]] <- i
     }
     else {
@@ -91,7 +91,7 @@
     hcp <- cbind(li,lj)
     N <- nrow(hcp)
     if( N>1)
-    for( n in 1:(N-1) ) {
+    for( n in seq_len(N-1) ) {
         i <- hcp[n,1]
         j <- hcp[n,2]
         if( i > j ) {
@@ -133,8 +133,8 @@
     }
     
     for( i in cls ) {
-        for( p in 1:P ) {
-            for( q in 1:P ) {
+        for( p in seq_len(P) ) {
+            for( q in seq_len(P) ) {
                 S[p,q] <- S[p,q] + (x@w[i]) * ( x@sigma[i, p, q] + 
                                     (x@mu[i,p]-M[p])*(x@mu[i,q]-M[q]) ) 
             }
@@ -155,7 +155,7 @@ expName="", parameters=c(), inc=c())
 #output sigma    
     sigma <- array(0, c(L, P, P))
     s <- matrix(obj$s, K, P * P, byrow=TRUE)
-    for (k in 1:L)
+    for (k in seq_len(L))
     sigma[k,,] <- matrix(s[k,], P, P, byrow = TRUE)
 
     
@@ -168,7 +168,7 @@ expName="", parameters=c(), inc=c())
     if( length(inc) > 0 ) {
         z <- matrix(NA, length(inc), K)
         z[inc,] <- matrix(obj$z, N, K, byrow=TRUE)
-        z <- z[,1:L]
+        z <- z[,seq_len(L)]
         
         label <- rep(NA, length(inc))
         label[inc] <- obj$label
@@ -178,7 +178,7 @@ expName="", parameters=c(), inc=c())
     }
     else {
         z <- matrix(obj$z, N, K, byrow=TRUE)
-        z <- as.matrix(z[,1:L])
+        z <- as.matrix(z[,seq_len(L)])
 ## 2014.07.08: quick fix (na/nan should not occur)  
         if( sum(is.infinite(z) | is.na(z) | is.nan(z)) > 0 ) {
             warning("Fehler: Z has infinite values", 
@@ -193,17 +193,17 @@ expName="", parameters=c(), inc=c())
     
     
     if( !is.null(state) ) {
-        for( k in 1:L ) {
+        for( k in seq_len(L) ) {
             state[k] <- state[ obj$history[k] ]
         }
-        state <- state[1:L]
+        state <- state[seq_len(L)]
     }
     else {
         state <- rep(0, L)
     }
     
     new("immunoClust", expName=expName, parameters=parameters,
-        K=L, P=P, N=N, w=obj$w[1:L], mu=mu, sigma=sigma,
+        K=L, P=P, N=N, w=obj$w[seq_len(L)], mu=mu, sigma=sigma,
         z=z, label=label, 
         logLike=obj$logLike, BIC=obj$logLike[1], ICL=obj$logLike[2],
         history=paste(obj$history), state=state)
@@ -235,7 +235,7 @@ expName="", parameters=c(), inc=c())
     S_b <- 0
     S_w <- 0 
     
-    for( i in 1:length(X) ) {
+    for( i in seq_len(length(X)) ) {
         x <- X[i]
         if( x <= a[1] ) {
             S_w <- S_w + (x-M_g[1])^2
@@ -284,7 +284,7 @@ expName="", parameters=c(), inc=c())
         S_b <- 0
         S_w <- 0 
         
-        for( i in 1:length(X) ) {
+        for( i in seq_len(length(X)) ) {
             x <- X[i]
             if( x <= a[1] ) {
                 S_w <- S_w + (x-M_g[1])^2
@@ -642,10 +642,10 @@ X, S, step.size=1, step.min=1e-5, aFac=7/6, bFac=7/6.25
     S_b <- matrix(0.0, nrow=P, ncol=P)
     S_w <- matrix(0.0, nrow=P, ncol=P)
     
-    for( i in 1:N_1 ) {
+    for( i in seq_len(N_1) ) {
         M_1 <- M_1 + mu1[i,]
     }
-    for( i in 1:N_2 ) {
+    for( i in seq_len(N_2) ) {
         M_2 <- M_2 + mu2[i,]
     }
     
@@ -653,12 +653,12 @@ X, S, step.size=1, step.min=1e-5, aFac=7/6, bFac=7/6.25
     M_1 <- M_1 / N_1
     M_2 <- M_2 / N_2
     
-    for( i in 1:N_1 ) {
+    for( i in seq_len(N_1) ) {
         X <- mu1[i,] - M_1
         S_w <- S_w + sigma1[i,,] + X %*% t(X) 
     }
     
-    for( i in 1:N_2 ) {
+    for( i in seq_len(N_2) ) {
         X <- mu2[i,] - M_2
         S_w <- S_w + sigma2[i,,] + X %*% t(X) 
     }

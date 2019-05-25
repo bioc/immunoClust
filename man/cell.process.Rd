@@ -93,7 +93,11 @@ observations is doubled successively.}
 \item{I.trans}{The number of iterations where transformation estimation is 
 applied.}
 \item{modelName}{Used mixture model; either \code{"mvt"} for a \eqn{t}-mixture 
-model or \code{"mvn"} for a Gaussian Mixture model.}
+model or \code{"mvn"} for a Gaussian Mixture model. With \code{"mvt2"} an 
+implementation variant for \code{"mvt"} is given, which is more reliable for 
+samples with cutted values at the lower or upper edges of the parameter space 
+(e.g. for CyTOF all values below a detection limit are set to zero which leads 
+to wrong co-variance estimators and poor clustering results).}
 \item{tol}{The tolerance used to assess the convergence of the major 
 EM(t)-algorithms of all observations.}
 \item{bias}{The ICL-bias used in the major EMt-algorithms of all observations.}

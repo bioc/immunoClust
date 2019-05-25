@@ -65,7 +65,7 @@ png.size=1024, filter=0)
     childs <- gating$childs
     if( length(childs) > 0 ) {
         pre <- paste(sep="", pre, name, "_")
-        for( g in 1:length(childs) ) {
+        for( g in seq_len(length(childs)) ) {
             if( N > 1 && childs[[g]]$desc == pattern[1] ) {
                 meta.plotGate(meta, childs[[g]], pre, gates, 
                     pattern[2:N], png.size=png.size, filter=filter)
@@ -98,7 +98,7 @@ meta.plotGating <- function(meta, pre, pattern=c(), png.size=1024, filter=0)
     gates <- matrix(NA, meta$dat.clusters$P, 3)
 
     if( length(childs) > 0 ) {
-        for( g in 1:length(childs) ) {
+        for( g in seq_len(length(childs)) ) {
             if( N>1 && childs[[g]]$desc == pattern[1] ) {
                 meta.plotGate(meta, childs[[g]], pre, gates, pattern[2:N], 
                 png.size=png.size, filter=filter)
@@ -151,7 +151,7 @@ ellipse.quantile=0.95)
         cols <- c(cols, rep(i+1,length(cl)))
     }
 
-    for( i in 1:length(exp) ) {
+    for( i in seq_len(length(exp)) ) {
         res <- exp[[i]]
         k <- meta$dat.clusters$K[i]
         inc <- cls[ cls <= k ]
@@ -212,7 +212,7 @@ ellipse.quantile=0.95, desc=NULL, N=NULL)
         j <- j+1
     }
     
-    for( i in 1:length(exp) ) {
+    for( i in seq_len(length(exp)) ) {
         res <- exp[[i]]
         k <- meta$dat.clusters$K[i]
         inc <- cls[ cls <= k ]
@@ -230,7 +230,7 @@ ellipse.quantile=0.95, desc=NULL, N=NULL)
                 dat <- trans.ApplyToData(res, fcs)
                 N <- length(res@label)
                 if( N < nrow(dat) ) {
-                    dat <- dat[1:N,]
+                    dat <- dat[seq_len(N),]
                 }
                 png(filename=png_file, width=png.size, height=png.size)
                 w <- res@w[inc]

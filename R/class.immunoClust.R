@@ -20,7 +20,6 @@ history=character(0), state=rep(numeric(0),0)
 )
 
 ## show method
-
 setMethod("show", "immunoClust",
 function(object)
 {

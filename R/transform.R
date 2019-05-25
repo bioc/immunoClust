@@ -14,7 +14,7 @@ max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale")
     ret <- data
     
     if( !is.null(x@label) & length(x@label) < nrow(data) ) {
-        ret <- data[1:length(x@label),]
+        ret <- data[seq_len(length(x@label)),]
     }
     
     if( is.null(max.decade) ) {
@@ -34,7 +34,7 @@ max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale")
         par <- parameters(data)
         range <- range(data)[c(param,add.param)]
         P <- length(param)
-        for( i in 1:P ) {
+        for( i in seq_len(P) ) {
             if( x@trans.a[i] > 0.0 ) {
                 a <- x@trans.a[i]
                 b <- x@trans.b[i]
@@ -69,7 +69,7 @@ max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale")
     else {
         mat <- data[,param]
         P <- length(param)
-        for( i in 1:P ) if( x@trans.a[i] > 0.0 ) {
+        for( i in seq_len(P) ) if( x@trans.a[i] > 0.0 ) {
             a <- x@trans.a[i]
             b <- x@trans.b[i]
             x_max <- max(mat[,i])

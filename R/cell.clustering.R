@@ -356,9 +356,9 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
     tst_l <- rep(1, K)
     
     state = model@state
-    for( k in 1:K ) {
+    for( k in seq_len(K) ) {
         
-        message("Test cluster ", k, " for sub-clustering")
+        #message("Test cluster ", k, " for sub-clustering")
 ## get cluster data
         cinc <- .clusterData(y,z,inc, k, extract.thres)
         t <- NULL 
@@ -377,8 +377,8 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
                             modelName=modelName) 
         
         ke <- strptime(date(), "%a %b %d %H:%M:%S %Y")
-        message("EM takes ", format(difftime(ke,ks,units="min"), digits=2), 
-                " minutes")
+        #message("EM takes ", format(difftime(ke,ks,units="min"), digits=2),
+        #        " minutes")
 
 #cat("cluster", k, "(", length(cinc), ")", "state", model@state[k])
         

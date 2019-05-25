@@ -63,7 +63,7 @@ meta.exprs <- function(exp, sub=c())
     }
     
     if( is.null(sub) ) {
-        sub <- 1:length(params)
+        sub <- seq_len(length(params))
         varNames <- params
     }
     else {
@@ -77,7 +77,7 @@ meta.exprs <- function(exp, sub=c())
     P <- length(varNames)
     K <- array(0, N)
     
-    for( i in 1:N ) {
+    for( i in seq_len(N) ) {
         K[i] <- exp[[i]]@K
     }
     
@@ -100,13 +100,13 @@ meta.exprs <- function(exp, sub=c())
     }
     
     k <- 0
-    for( i in 1:N ) {
+    for( i in seq_len(N) ) {
         res <- exp[[i]]
         expEvents[i] <- sum(!is.na(res@label))
         expNames[i] <- attr(res, "expName")
         removedEvents[i] <- sum(is.na(res@label))
         l <- k+1
-        for( j in 1:(K[i]) ) {
+        for( j in seq_len(K[i]) ) {
             clsEvents[k+j] <- sum(!is.na(res@label) & res@label==j)
         }
         
@@ -154,7 +154,7 @@ removed.above <- function(fcs, parameters=NULL, N=NULL, max.count=10, max=NULL)
     dat <- fcs
 ## restrict number of events?
     if( !is.null(N) && N < nrow(dat) ) {
-        dat <- dat[1:N]
+        dat <- dat[seq_len(N)]
     }
     else {
         N <- nrow(dat)
@@ -177,25 +177,25 @@ removed.above <- function(fcs, parameters=NULL, N=NULL, max.count=10, max=NULL)
     if (max.count > -1) {
         if (is.null(max)[1]) 
         max <- apply(y, 2, max)
-        for (p in 1:ncol(y))  
+        for (p in seq_len(ncol(y)))
         if (sum(y[,p]>=max[p]) >= max.count) {
             removed[1,p] <-  sum(y[,p] >= max[p])
             rm.above <- rm.above | (y[,p] >= max[p])
-            for( q in 1:ncol(y) ) 
+            for( q in seq_len(ncol(y)) )
             if( q != p ) {
                 removed.not[,q] <- removed.not[,q] | (y[,p] >= max[p])
             }
         }
         rm.sum <- sum(rm.above)
-        for( p in 1:ncol(y) ) {
+        for( p in seq_len(ncol(y)) ) {
             removed[2,p] <- sum(rm.above & !removed.not[,p])
         }
         
         removed[1,ncol(y)+1] <- rm.sum
         removed[1,ncol(y)+2] <- 100*rm.sum/nrow(y)
         
-        removed[2,ncol(y)+1] <- sum(removed[2,1:ncol(y)])
-        removed[2,ncol(y)+2] <- 100*sum(removed[2,1:ncol(y)])/nrow(y)
+        removed[2,ncol(y)+1] <- sum(removed[2,seq_len(ncol(y))])
+        removed[2,ncol(y)+2] <- 100*sum(removed[2,seq_len(ncol(y))])/nrow(y)
         
     }
         
@@ -210,7 +210,7 @@ removed.below <- function(fcs, parameters=NULL, N=NULL, min.count=10, min=NULL)
     dat <- fcs
 ## restrict number of events?
     if( !is.null(N) && N < nrow(dat) ) {
-        dat <- dat[1:N]
+        dat <- dat[seq_len(N)]
     }
     else {
         N <- nrow(dat)
@@ -233,25 +233,25 @@ removed.below <- function(fcs, parameters=NULL, N=NULL, min.count=10, min=NULL)
     if (min.count > -1) {
         if (is.null(min)[1]) 
         min <- apply(y, 2, min)
-        for (p in 1:ncol(y))  
+        for (p in seq_len(ncol(y)))
         if (sum(y[,p]<=min[p]) >= min.count) {
             removed[1,p] <-  sum(y[,p] <= min[p])
             rm.below <- rm.below | (y[,p] <= min[p])
-            for( q in 1:ncol(y) ) 
+            for( q in seq_len(ncol(y)) ) 
             if( q != p ) {
                 removed.not[,q] <- removed.not[,q] | (y[,p] <= min[p])
             }
         }
         rm.sum <- sum(rm.below)
-        for( p in 1:ncol(y) ) {
+        for( p in seq_len(ncol(y)) ) {
             removed[2,p] <- sum(rm.below & !removed.not[,p])
         }
         
         removed[1,ncol(y)+1] <- rm.sum
         removed[1,ncol(y)+2] <- 100*rm.sum/nrow(y)
         
-        removed[2,ncol(y)+1] <- sum(removed[2,1:ncol(y)])
-        removed[2,ncol(y)+2] <- 100*sum(removed[2,1:ncol(y)])/nrow(y)
+        removed[2,ncol(y)+1] <- sum(removed[2,seq_len(ncol(y))])
+        removed[2,ncol(y)+2] <- 100*sum(removed[2,seq_len(ncol(y))])/nrow(y)
         
     }
     

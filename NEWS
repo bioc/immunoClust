@@ -1,3 +1,17 @@
+Changes in version 1.17.1
+- CHANGES
+  * minor bugfixes and code cleaning
+  * minor additional options for immunoClust.plot/splom
+
+Changes in version 1.15.1
+- NEW FEATRUES
+  * additional cell-clustering method which is more reliable for samples
+    with cutted edge values (e.g. CyTOF or logarithmic applified and digitized)
+- CHANGES
+  * bufix in the final ICL calculation for meta-clustering
+  * minor change in cluster re-labeling within sub-clustering routine which
+    leads finally to differences in cluster numbering
+
 Changes in version 1.13.3
 - NEW FEATRUES
   * additional variant of t-mixture model fitting respecting truncated

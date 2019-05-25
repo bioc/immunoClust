@@ -11,7 +11,7 @@ scatter.subset=c(), scatter.bias=0.25,scatter.prior=6
     res <- meta.Clustering(dat$P, dat$N, dat$K, 
                         dat$clsEvents, dat$M, dat$S, 
                         bias=meta.bias, I.iter=meta.iter, B=50, tol=tol, 
-                        EM.method=20, alpha=meta.alpha, 
+                        EM.method=20, alpha=meta.alpha,
                         norm.method=norm.method, norm.blur=norm.blur, 
                         norm.minG=norm.minG)
 
@@ -62,6 +62,34 @@ scatter.subset=c(), scatter.bias=0.25,scatter.prior=6
                     "desc"="all", "partition"=TRUE)
 
     }
+    
+    # if BD
+    {
+        trans.a <- apply( sapply(exp,function(x) x@trans.a), 1, mean)
+        pscal <- list(length(trans.a))
+        for( p in 1:length(trans.a)) {
+            if( trans.a[p] == 0 ) {
+                pscal[[p]] <- list(at=c(50000, 100000,150000, 200000, 250000),
+                labels=c("50", "100", "150", "200", "250"),
+                limits=c(0,260000),
+                unit="[/1000]")
+            }
+            else {
+                a <- trans.a[p]
+                pscal[[p]] <- list(at=c(asinh(-100*a),0,asinh(100*a),
+                asinh(500*a), asinh(1000*a),
+                asinh(5000*a), asinh(10000*a),
+                asinh(50000*a), asinh(100000*a)),
+                labels=c("-100", "0", "100",
+                "",expression(10^3),
+                "",expression(10^4),
+                "",expression(10^5)),
+                limits=c(-1,asinh(260000*a)))
+            }
+        }
+        meta$gating$pscales <- pscal
+    }
+    
     class(meta) <- "immunoMeta"
     meta
 }
@@ -88,9 +116,6 @@ meta.RegNorm <- function(y, x, method=1, alpha=0.5)
             package="immunoClust")
     tM <- matrix(obj$M, nrow=obj$K, ncol=P, byrow=TRUE)
     tS <- matrix(obj$S, nrow=obj$K, ncol=(P*P), byrow=TRUE)
-    
-#colnames(tM) <- colnames(M)
-#rownames(tM) <- rownames(M)
     
     list("P"=P, "N"=1, "K"=obj$K, "M"=tM,"S"=tS)
 
@@ -131,6 +156,12 @@ bias=0.25, alpha=0.5, min.class=0
 ) {
     G <- max(label)
     
+    if( method == 23 ) {
+        ## 2018.12.06:
+        ## method==23: K[1] cluster are not re-labeled
+        ## min.class parameter is re-used for this method
+        min.class = K[1]
+    }
     obj <- .Call("immunoC_metaME",
             as.integer(sum(K)), as.integer(P), as.integer(G),
             as.double(W), as.double(c(t(M))), as.double(c(t(S))),
@@ -161,17 +192,7 @@ bias=0.25, alpha=0.5, min.class=0
         }
         z[is.na(z)] <- 0
     }
-#    if( sum( z > 1) > 0 ) {
-#        warning("meta.ME: above 1 in Z\n")
-#        for(row in 1:nrow(z) ) {
-#            if( sum(z[row,]>1) > 0 ) {
-#                cat("above 1 in Z[", row, ",]:", which(z[row,]>1), "\n")
-#            }
-#       }
-#       z[z > 1] <- 1
-#
-#    }
-    
+
 # output BIC & ICL
     BIC <- obj$logLike[1]
     ICL <- obj$logLike[2]
@@ -214,11 +235,16 @@ norm.method=0, norm.blur=2, norm.minG=10
     else {
         G <- max(label)
     }
+    subEM.method <- EM.method
+    ### 2018.12.06: trial EM.method=23 to fix cluster of first sample
+    ### sub-clustering is performed with EM.method=20
+    if( EM.method == 23 )
+        subEM.method <- 20
     for( i in 1:(I.iter) ) {
         if( norm.method > 0 ) {
             if( G >= norm.minG) {
-                message("meta.Normalize ", i, " of ", I.iter, " with ", res@K,
-                        " clusters (blur=", norm.blur, ")")
+                #message("meta.Normalize ", i, " of ", I.iter, " with ", res@K,
+                #        " clusters (blur=", norm.blur, ")")
                 nS <- (1+norm.blur) * tS
                 n.res <- meta.ME(P, N, K, W, tM, nS, res@label, B=10, tol=tol, 
                                 bias=bias, alpha=alpha, method=10 ) 
@@ -232,11 +258,11 @@ norm.method=0, norm.blur=2, norm.minG=10
         if( G < 10 ) 
         label <- meta.SubClustering(P, totK, W, tM, tS, label, tol=tol, 
                                     bias=bias*0.5, alpha=alpha, 
-                                    EM.method=EM.method)
+                                    EM.method=subEM.method)
         else
         label <- meta.SubClustering(P, totK, W, tM, tS, label, tol=tol, 
                                     bias=bias, alpha=alpha,
-                                    EM.method=EM.method)
+                                    EM.method=subEM.method)
         
         message("Fit Model ", i, " of ", I.iter, " with ", max(label), 
                 " clusters")
@@ -265,7 +291,7 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
     icl_l <- rep(0, K)
     tst_l <- rep(1, K)
     
-    for( k in 1:K ) {
+    for( k in seq_len(K) ) {
         
         inc <- which(label==k)
         if( length(inc) > 1 ) {
@@ -288,15 +314,6 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
             icl_l[k] <- max(icl)
             l <- which.max(icl)
             tst_l[k] <- l
-
-#            if( res[[l]]@K == 1 ) {
-#                message("cluster ", k, " of ", K, " is OK")
-#            }
-#            else {
-#                message("cluster ", k, " of ", K, ": max. ICL ", 
-#                    format(icl_l[k], digits=2), " at ", l, 
-#                    " with ", res[[l]]@K, " sub-clusters")
-#            }
         }
         else {
             icl_l[k] <- cutoff
@@ -338,15 +355,24 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
         }
         
         sK <- 0
-        for(i in 1:K ) 
+        for(i in seq_len(K) )
         if( !is.null(ins[[i]]) ) 
         sK <- sK + (ins[[i]])@K
-    }
+    } # while J > sK
     
-    for( k in 1:K) if( !is.null(ins[[k]]) ) {
-#message("split cluster ", k, " into ", (ins[[k]])@K, " sub-clusters")
+    for( k in seq_len(K) ) if( !is.null(ins[[k]]) ) {
+        #message("split cluster ", k, " into ", (ins[[k]])@K, " sub-clusters")
+## 2018.12.05, try do better re-labeling with the aim:
+## first label==k cluster and all of them with same sub-cluster label
+## keep label k, the rest get's a new label
+## should have the consequence, that the cluster label of the first experiment
+## is not changed if they all distinct??? (required for EM.method=23)
+        inc <- which(label==k)
+        lnc <- (ins[[k]]@label==ins[[k]]@label[1])
+        knc <- inc[lnc]
         label[label==k] <- ins[[k]]@label + max(label)
-    }  
+        label[knc] <- k
+    }  #for cluster k
     
     label
 }

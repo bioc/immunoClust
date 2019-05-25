@@ -26,44 +26,6 @@ extern "C" {
 #endif	
 	
 	
-    /*
-	// metaME
-	void metaME(int* n, int* p, int* g, double* w, double* m, double* s,
-				double* z, double* gw, double* gm, double* gs, 
-				int* label, double* logLike, int* history, int* B, double* tol, int* method, double* bias, double* alpha, int* min_g)
-	{
-		int status = 0;
-		em_meta em(*n, *p, *g, w, m, s, z, gw, gm, gs, *bias, *alpha);
-		switch(*method) {
-			case 1:		//
-				em.start(label, false);
-				status = em.bc_maximize(*B, *tol);
-				break;
-			case 2:		// EM-T: classification no weights
-				em.start(label, false);
-				status = em.do_classify(*B, *tol, *min_g);
-				break;
-			case 10:
-				em.start(label, true);
-				status = em.bc_maximize(*B, *tol);
-				break;
-			case 20:	// EM-T: classification with weights
-				em.start(label, true);
-				status = em.do_classify(*B, *tol, *min_g);
-				break;
-			default:
-				em.start(label, false);
-				status = em.kl_minimize(*B, *tol);
-				break;
-		}
-		*g = em.final(label, logLike, history);
-		Rprintf("The EM (%d) with %d clusters required %d iterations, has tolerance %g and loglike %g\n",status, *g, *B, *tol, logLike[1]);	
-
-	}
-     */
-	
-	
-	
 	// metaScale
 	void metaScale(int* p, int* n, int* k, double* w, double* m, double* s, int* label, int* method)
 	{
@@ -91,20 +53,6 @@ extern "C" {
 		}
 	}
 
-    /*
-    //metaGPA
-	void metaGPA(int* p, int* n, int* k, double* w, double* m, double* s, int* g, double* z, int* groups)
-	{
-		meta_gpa normalizer(*p, *n, k, w, m, s, *g, z);
-		normalizer.process();
-	}
-	void metaGPAl(int* p, int* n, int* k, double* w, double* m, double* s, int* label, int* groups)
-	{
-		meta_gpa normalizer(*p, *n, k, w, m, s, label);
-		normalizer.process();
-	}
-    */
-    
 	//metaNormalize
 	void metaNormalize(int* p, int* n, int* k, double* w, double* m, double* s, int* l, double* z, int* method)
 	{
@@ -209,34 +157,52 @@ extern "C" {
                    REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
                    REAL(bias)[0], REAL(alpha)[0]);
         
+       
 		switch(INTEGER(method)[0]) {
-			case 1:		//
+            case 1:		// bc EM: no weights
 				em.start(INTEGER(label), false);
 				status = em.bc_maximize(iterations, tolerance);
 				break;
-			case 2:		// EM-T: classification no weights
+			case 2:		// bc EM-T: classification no weights
 				em.start(INTEGER(label), false);
-				status = em.do_classify(iterations, tolerance, INTEGER(min_g)[0]);
+				status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);
 				break;
-			case 10:
+            case 3:     // kl EM: no weights
+                em.start(INTEGER(label), false);
+                status = em.kl_maximize(iterations, tolerance);
+                break;
+            case 4:     // kl EM-T: no weights
+                em.start(INTEGER(label), false);
+                status = em.kl_classify(iterations, tolerance, INTEGER(min_g)[0]);
+                break;
+            
+            case 10:    // bc EM: weights
 				em.start(INTEGER(label), true);
 				status = em.bc_maximize(iterations, tolerance);
 				break;
-			case 20:	// EM-T: classification with weights
+			case 20:	// bc EM-T: classification with weights
 				em.start(INTEGER(label), true);
-				status = em.do_classify(iterations, tolerance, INTEGER(min_g)[0]);
+				status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);
 				break;
-            // TOPROOF
-            case 21:    // EM-T: classification with weights
+          
+            case 23:    // bc EM-T: classification with weights were the labeling of min_g cluster remains unchanged
                 em.start(INTEGER(label), true);
-                status = em.do_classify21(iterations, tolerance, INTEGER(min_g)[0]);
+                status = em.bc_fixedN_classify(iterations, tolerance, INTEGER(min_g)[0]);
                 break;
-            /* bug in thinking or implementation
-            case 22:
+            
+            case 30:    // kl EM: weights
                 em.start(INTEGER(label), true);
-                status = em.do_classify22(iterations, tolerance, INTEGER(min_g)[0]);
+                status = em.kl_maximize(iterations, tolerance);
                 break;
-            */
+            case 40:    // kl EM-T: classification with weights
+                em.start(INTEGER(label), true);
+                status = em.kl_classify(iterations, tolerance, INTEGER(min_g)[0]);
+                break;
+            case 43:    // kl EM-T: classification with weights were the labeling of min_g cluster remains unchanged
+                em.start(INTEGER(label), true);
+                status = em.kl_fixedN_classify(iterations, tolerance, INTEGER(min_g)[0]);
+                break;
+            
 			default:
 				em.start(INTEGER(label), false);
 				status = em.kl_minimize(iterations, tolerance);
@@ -246,16 +212,11 @@ extern "C" {
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
         
-        if( 21 == INTEGER(method)[0] ) {
-            INTEGER(VECTOR_ELT(ret,0))[0] = em.final21(INTEGER(VECTOR_ELT(ret,5)),
-                                                     REAL(VECTOR_ELT(ret,6)),
-                                                     INTEGER(VECTOR_ELT(ret,7)) );
-        }
-        else {
-		INTEGER(VECTOR_ELT(ret,0))[0] = em.final(INTEGER(VECTOR_ELT(ret,5)), 
+      
+		INTEGER(VECTOR_ELT(ret,0))[0] = em.final(INTEGER(VECTOR_ELT(ret,5)),
                                                  REAL(VECTOR_ELT(ret,6)), 
                                                  INTEGER(VECTOR_ELT(ret,7)) );
-        }
+        
         
         Rf_unprotect(1);	// unprocted ret
                                                  

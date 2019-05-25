@@ -18,16 +18,17 @@ This method generates scatterplot matrix revealing the cluster assignment.
 }
 
 \usage{
-\S4method{splom}{immunoClust,missing}(x, data, include=1:(x@K), \dots)
+\S4method{splom}{immunoClust,missing}(x, data, include=seq_len(x@K), \dots)
 
-\S4method{splom}{immunoClust,flowFrame}(x, data, include=1:(x@K), 
-subset=1:length(attributes(x)$param), N=NULL,label=NULL, desc=NULL, 
+\S4method{splom}{immunoClust,flowFrame}(x, data, include=seq_len(x@K), 
+subset=seq_len(length(attributes(x)$param)), N=NULL,label=NULL, desc=NULL, 
 add.param=c(), \dots)
 
-\S4method{splom}{immunoClust,matrix}(x, data, include=1:(x@K), 
-subset=1:length(attributes(x)$param), N=NULL,label=NULL, desc=NULL, \dots)
+\S4method{splom}{immunoClust,matrix}(x, data, include=seq_len(x@K), 
+subset=seq_len(length(attributes(x)$param)), N=NULL,label=NULL, desc=NULL, \dots)
 
-datSplom(label, data, subset=1:ncol(data), include=1:nrow(data), \dots) 
+datSplom(label, data, subset=seq_len(ncol(data)), 
+include=seq_len(nrow(data)), \dots) 
 }
 
 \arguments{

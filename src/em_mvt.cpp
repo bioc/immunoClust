@@ -1282,16 +1282,9 @@ em_mvt::final(double logLike[3], int* label, int* history)
 			double tmpLike = 0.0;
 			double tmpPDF = 0.0;
 			if( w > 0.0 ){
+                
 				tmpPDF = mvt::pdf(P, y, m, s, Nu, tmpP);
-				/*
-				int pc = fpclassify( tmpPDF );
-				if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
-					dbg::printf("%d: NaN for PDF value", k);
-				}
-				*/
-							
 				tmpLike = w * tmpPDF;
-				
 				sumLike += tmpLike;
 				
 				if( tmpLike > maxLike ){
@@ -1303,10 +1296,7 @@ em_mvt::final(double logLike[3], int* label, int* history)
 			z[k] = (*t)*tmpLike;
 			
 		} // for k
-		//int pc = fpclassify( sumLike );
-		//if( pc != FP_NORMAL ) {
-		//	dbg::printf("%d: NaN for sumLike value (%d)", i, pc);
-		//}
+		
 		if( maxClust > -1 )
 			tmpK[maxClust] += (*t);
 		
