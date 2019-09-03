@@ -173,6 +173,11 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
         else
             cc <- more.par$ellipses.cc
             
+        if( is.null(more.par$ellipses.col))
+            col <- rep("black", nrow(more.par$ellipses.mean) )
+        else
+            col <- more.par$ellipses.col
+            
         for( l in seq_len(nrow(more.par$ellipses.mean)) ) {
             eigenPair <- eigen(more.par$ellipses.sigma[l,subset,subset])
             l1 <- sqrt(eigenPair$values[1]) * cc[l]
@@ -181,7 +186,7 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
             angle <- angle * 180/pi
             points(.ellipsePoints(a=l1, b=l2, alpha=angle,
             loc=more.par$ellipses.mean[l,subset], n=npoints),
-            type="l", lty=3, col="black")
+            type="l", lty=3, col=col[l])
         }
     }
     

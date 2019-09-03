@@ -78,7 +78,10 @@ r <- dat.exp[[1]]
 summary(r)
 ## apply model parameter to all (unfiltered) events
 dat.trans <- trans.ApplyToData(r, dat.fcs)
-r2 <- cell.EM(dat.trans, parameters=r@parameters, K=r@K, w=r@w,m=r@mu,s=r@sigma)
+#r2 <- cell.EM(dat.trans, parameters=r@parameters, 
+#    K=r@K, w=r@w,m=r@mu,s=r@sigma)
+r2 <- cell.EM(dat.trans, parameters(r), K=ncls(r), 
+            w=weights(r),m=mu(r),s=sigma(r))
 summary(r2)
 }
 \keyword{ cluster }

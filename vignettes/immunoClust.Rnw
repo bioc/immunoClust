@@ -170,32 +170,62 @@ function.
 
 <<stage2data, echo=TRUE>>=
 data(dat.exp)
-meta<-meta.process(dat.exp, meta.bias=0.3, scatter.subset=c(1,2))
+meta<-meta.process(dat.exp, meta.bias=0.3)
 @
-The obtained \Robject{list}-object contains the meta-clustering result in 
+The obtained \Robject{immunoMeta}-object contains the meta-clustering result in 
 \Rcode{\$res.clusters}, and the used cell-clusters information in 
-\Rcode{\$dat.clusters}. Additionally a meta-clustering using only the scatter 
-parameter is performed within the \Rfunction{meta.process} function with 
-results in \Rcode{\$res.scatter} and \Rcode{\$dat.scatter}. In a preliminary 
-state of development an automated hierarchical gating on the meta-cluster is 
-performed with results in \Rcode{\$gating}.
+\Rcode{\$dat.clusters}. Additionally, the clusters can be structures manually
+in a hierarchical mannner using methods of the \Robject{immunoMeta}-object.
 
-A scatter plot matrix of the meta-clustering is again obtained by the 
-\Rfunction{splom} method. 
-<<stage2splom, fig=TRUE>>=
-splom(meta$res.clusters, meta$dat.clusters$M, ellipse=TRUE)
+A scatter plot matrix of the meta-clustering is obtained by the 
+\Rfunction{plot} method. 
+<<stage2plot, fig=TRUE>>=
+plot(meta, c())
 @
 In these scatter plots each cell-cluster is marked by a point of its centre. 
-With the \Rcode{ellipse=TRUE} argument the meta-clusters are outlined by 
-ellipses of the 90\% quantile.
+With the default \Rcode{plot.ellipse=TRUE} argument the meta-clusters are 
+outlined by ellipses of the 90\% quantile.
 
-A scatter plot of the scatter parameter distribution of the cell-clusters is 
-obtained by the \Rfunction{plot} method using \Rcode{\$res.scatter}. 
-<<stage2plot, fig=TRUE>>=
-plot(meta$res.scatter, data=meta$dat.scatter$M)
+\subsection{Meta Annotation} \label{meta-annotation}
+We take a look on the event numbers of all meta-clusters in each sample
+<<stage2events, echo=TRUE>>=
+cls <- clusters(meta,c())
+events(meta,cls)
 @
-The scatter distribution is divided into 6 major regions \texttt{P1 - P6} with 
-default colors red, green, blue, cyan, magenta and yellow.
+and pick the meta-clusters of the five commonly found population, with respect 
+to the technical depletion to collect them in a first annotation level
+<<stage2annotation, echo=TRUE>>=
+addLevel(meta,c(1),"leucocytes") <- c(1,2,6,7,10,14,18)
+@
+In the plot of this level the five major population are seen easily
+<<stage2plot1, fig=TRUE>>=
+plot(meta, c(1))
+@
+and we identify the clusters for the particular populations successivley
+by their expression levels.
+<<stage2annotation, echo=TRUE>>=
+cls <- clusters(meta,c(1))
+sort(mu(meta,cls,7))        ## CD3 expression
+inc <- mu(meta,cls,7) > 5   ## CD3+ clusters
+cls[inc]
+mu(meta,cls[inc],6)         ## CD4 expression
+addLevel(meta,c(1,1), "CD3+CD4+") <- 10
+addLevel(meta,c(1,2), "CD3+CD4-") <- 2
+cls <- unclassified(meta,c(1))
+sort(mu(meta,cls,5))        ## CD15 expression
+inc <- mu(meta,cls,5) > 3
+addLevel(meta,c(1,3), "CD15+") <- cls[inc]
+cls <- unclassified(meta,c(1))
+sort(mu(meta,cls,3))        ## CD14 expression
+inc <- mu(meta,cls,3) > 5
+addLevel(meta,c(1,4), "CD14+") <- cls[inc]
+cls <- unclassified(meta,c(1))
+sort(mu(meta,cls,4))        ## CD19 expression
+inc <- mu(meta,cls,4) > 3
+addLevel(meta,c(1,5), "CD19+") <- cls[inc]
+@
+The whole analysis is performed on uncompensated FC data, thus the high CD19 
+values on the CD14-population is explained by spillover of FITC into PE.
 
 The event numbers of each meta-cluster and each sample are extracted in a 
 numeric matrix by the \Rfunction{meta.numEvents} function.
@@ -204,27 +234,28 @@ numeric matrix by the \Rfunction{meta.numEvents} function.
 tbl <- meta.numEvents(meta, out.all=FALSE)
 tbl[,1:5]
 @
-Each row denotes a meta-cluster and each column a data sample used for 
-meta-clustering. The row names give the automated generated gating name, the 
-meta-cluster index and the default color used in the plot routines for each 
-meta-cluster. With an argument \Rcode{out.all=TRUE} additionally the event 
-numbers in each gating hierarchy level are extracted. 
+Each row denotes an annotated hierarchical level or/and meta-cluster and each
+column a data sample used in meta-clustering. The row names give the annotated
+population name, the meta-cluster index and the default color used in the plot
+routines for each meta-cluster.  
 In the last columns additionally the meta-cluster centre values in each 
 parameter are given, which helps to identify the meta-clusters. Further export 
 functions retrieve relative cell event frequencies and sample meta-cluster 
 centre values in a particular parameter.
 
-Picking the meta-clusters of the five commonly found population, with respect 
-to the technical depletion the scatter plot matrix reduces to
-<<stage2final, fig=TRUE>>=
-splom(meta$res.clusters, meta$dat.clusters$M, 
-include=c(3,9,10,4,7,12), subset=3:7, ellipse=TRUE)
+We see here, that for sample \texttt{12546} where the CD15-cells are depleted, 
+the CD14-population is missing.
+Anyway, this missing cluster could be in the so far unclassified clusters.
+<<stage2annotation, echo=TRUE>>=
+move(meta,c(1,4)) <- 13
 @
-The whole analysis is performed on uncompensated FC data, thus the high CD19 
-values on the CD14-population is explained by spillover of FITC into PE. The 
-variation of the CD3 expression in the CD14-population of sample \texttt{12546}
-is caused artificially due to depletion of the granulocytes, which constitute 
-about 60\% - 75\% of the cells in the other samples. 
+<<stage2final, fig=TRUE>>=
+plot(meta, c(1))
+@
+We see the CD14 population of sample \texttt{12546} shifted in
+FSC and CD3 expression levels, probably due to technical variation in the
+measurement of the CD15-depleted sample, where the granulocytes are
+missing which constitute about 60\% - 70\% of the events in the other samples.
 
 \section{Session Info}
 The documentation and example output was compiled and obtained on the system:

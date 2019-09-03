@@ -3,8 +3,8 @@
 ####
 meta.process <- function(
 exp, dat.subset=c(), meta.iter=10, tol=1e-5, meta.bias=0.2, 
-meta.alpha=.5, norm.method=0, norm.blur=2, norm.minG=10,
-scatter.subset=c(), scatter.bias=0.25,scatter.prior=6
+meta.alpha=.5, norm.method=0, norm.blur=2, norm.minG=10
+#,scatter.subset=c(), scatter.bias=0.25,scatter.prior=6
 ) {
     dat <- meta.exprs(exp, sub=dat.subset)
     
@@ -24,50 +24,50 @@ scatter.subset=c(), scatter.bias=0.25,scatter.prior=6
     
     attr(res, "desc") <- dat$desc
     
-    if( length(scatter.subset) > 0 ) {
-        scatter <- .meta.scatter.gating(exp, sub=scatter.subset, 
-                                    EM.method=10, 
-                                    EM.bias=scatter.bias, 
-                                    scatter.prior=scatter.prior)
-        
-        res.scatter <- scatter$res
-        dat.scatter <- scatter$dat
-        attr(res.scatter,"desc") <- dat$desc
-        
-        meta <- list("dat.scatter"=dat.scatter, "res.scatter"=res.scatter, 
-                    "dat.clusters"=dat, "res.clusters"=res)
-        
+    #if( length(scatter.subset) > 0 ) {
+    #   scatter <- .meta.scatter.gating(exp, sub=scatter.subset,
+    #                               EM.method=10,
+    #                               EM.bias=scatter.bias,
+    #                               scatter.prior=scatter.prior)
+    #
+    #   res.scatter <- scatter$res
+    #   dat.scatter <- scatter$dat
+    #   attr(res.scatter,"desc") <- dat$desc
+    #
+    #   meta <- list("dat.scatter"=dat.scatter, "res.scatter"=res.scatter,
+    #               "dat.clusters"=dat, "res.clusters"=res)
+    #
 ## do auto gating of meta clusters
-        G <- res.scatter@K
-        childs <- vector("list", G)
-        for( g in 1:G ) {
-            childs[[g]] <- list("desc"=paste(sep="", "P",g), 
-                            "clusters"=.meta.ClustersForScatter(meta,g))
-        }
-        meta$gating <- list("clusters"=1:res@K, "plot.childs"=TRUE, 
-            "par"=scatter.subset, "desc"="all", "childs"=childs)
-        
-        par <- rep(TRUE, dat$P)
-        par[scatter.subset] <- FALSE
-        for( g in 1:G ) {
-            meta$gating <- .meta.gating(meta$res.clusters, meta$gating, 
-                                    paste(sep="","P",g), which(par), 
-                                    c(), iFilter=0)
-        }
-    }
-    else {
+#   G <- res.scatter@K
+#       childs <- vector("list", G)
+#       for( g in seq_len(G) ) {
+#           childs[[g]] <- list("desc"=paste(sep="", "P",g),
+#                           "clusters"=.meta.ClustersForScatter(meta,g))
+#       }
+#       meta$gating <- list("clusters"=seq_len(res@K), "plot.childs"=TRUE,
+#           "par"=scatter.subset, "desc"="all", "childs"=childs)
+#
+#       par <- rep(TRUE, dat$P)
+#       par[scatter.subset] <- FALSE
+#       for( g in seq_len(G) ) {
+#           meta$gating <- .meta.gating(meta$res.clusters, meta$gating,
+#                                   paste(sep="","P",g), which(par),
+#                                   c(), iFilter=0)
+#       }
+#   }
+#   else {
         meta <- list("dat.scatter"=NULL, "res.scatter"=NULL,  
                     "dat.clusters"=dat, "res.clusters"=res)
-        meta$gating <- list("clusters"=1:res@K, "childs"=c(), 
+        meta$gating <- list("clusters"=seq_len(res@K), "childs"=c(), 
                     "desc"="all", "partition"=TRUE)
 
-    }
+#   }
     
     # if BD
     {
         trans.a <- apply( sapply(exp,function(x) x@trans.a), 1, mean)
         pscal <- list(length(trans.a))
-        for( p in 1:length(trans.a)) {
+        for( p in seq_len(length(trans.a))) {
             if( trans.a[p] == 0 ) {
                 pscal[[p]] <- list(at=c(50000, 100000,150000, 200000, 250000),
                 labels=c("50", "100", "150", "200", "250"),
@@ -174,18 +174,18 @@ bias=0.25, alpha=0.5, min.class=0
 # output obj$s to sigma
     sigma <- array(0, c(L, P, P))
     s <- matrix(obj$s, G, P * P, byrow=TRUE)
-    for (k in 1:L)
+    for (k in seq_len(L))
     sigma[k,,] <- matrix(s[k,], P, P, byrow = TRUE)
     
-    mu <- matrix(obj$m, G, P, byrow=TRUE)[1:L,]
+    mu <- matrix(obj$m, G, P, byrow=TRUE)[seq_len(L),]
     dim(mu) <- c(L,P)
     
     z <- matrix(obj$z, sum(K), G, byrow=TRUE)
-    z <- as.matrix(z[,1:L])
+    z <- as.matrix(z[,seq_len(L)])
     
     if( sum(is.na(z)) > 0 ) {
         warning("meta.ME: N/As in Z\n")
-        for(row in 1:nrow(z) ) {
+        for(row in seq_len(nrow(z)) ) {
             if( sum(is.na(z[row,])) > 0 ) {
                 cat("N/As in Z[", row, ",]:", which(is.na(z[row,])), "\n")
             }
@@ -200,13 +200,13 @@ bias=0.25, alpha=0.5, min.class=0
 # output meta-model
     parameters <- colnames(M)
     if( length(parameters) == 0 ) {
-        parameters <- paste(sep="", "P", 1:P)
+        parameters <- paste(sep="", "P", seq_len(P))
     }
     result <- new("immunoClust", expName="meta.ME", parameters=parameters, 
-                    K=L, w=obj$w[1:L], mu=mu, sigma=sigma, 
+                    K=L, w=obj$w[seq_len(L)], mu=mu, sigma=sigma, 
                     z=z, label=obj$label, 
                     logLike=obj$logLike, BIC=BIC, ICL=ICL,
-                    state=obj$history[1:L])
+                    state=obj$history[seq_len(L)])
     
     result
     
@@ -240,7 +240,7 @@ norm.method=0, norm.blur=2, norm.minG=10
     ### sub-clustering is performed with EM.method=20
     if( EM.method == 23 )
         subEM.method <- 20
-    for( i in 1:(I.iter) ) {
+    for( i in seq_len(I.iter) ) {
         if( norm.method > 0 ) {
             if( G >= norm.minG) {
                 #message("meta.Normalize ", i, " of ", I.iter, " with ", res@K,
@@ -308,7 +308,7 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
         if( !is.null(res) && length(res) > 1 ) {
             
             icl <- rep(0, length(res))
-            for( l in 1:length(res) )
+            for( l in seq_len(length(res)) )
             icl[l] <- res[[l]]@ICL/res[[l]]@K
             
             icl_l[k] <- max(icl)
@@ -391,7 +391,7 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
         
         parameters <- colnames(M)
         if( is.null(parameters) ) {
-            parameters <- paste(sep="", "P", 1:P)
+            parameters <- paste(sep="", "P", seq_len(P))
         }
         result <- vector("list", J)
 
@@ -413,15 +413,15 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
 # output obj$s to sigma
         sigma <- array(0, c(L, P, P))
         s <- matrix(obj$s, L, P * P, byrow=TRUE)
-        for (k in 1:L)
+        for (k in seq_len(L))
         sigma[k,,] <- matrix(s[k,], P, P, byrow = TRUE)
         
-        mu <- matrix(obj$m, L, P, byrow=TRUE)[1:L,]
+        mu <- matrix(obj$m, L, P, byrow=TRUE)[seq_len(L),]
         dim(mu) <- c(L,P)
         
 # output obj$z to Z
         z <- matrix(obj$z, N, 1, byrow=TRUE)
-        z <- as.matrix(z[,1:L])
+        z <- as.matrix(z[,seq_len(L)])
         
 # output BIC & ICL
         BIC <- obj$logLike[1]
@@ -490,10 +490,10 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
                 sigma <- array(0, c(L, P, P))
                 s <- matrix(obj$s, k, P * P, byrow=TRUE)
                 if( L > 0 ) {
-                    for (l in 1:L)
+                    for (l in seq_len(L))
                         sigma[l,,] <- matrix(s[l,], P, P, byrow = TRUE)
 
-                    mu <- matrix(obj$m, k, P, byrow=TRUE)[1:L,]
+                    mu <- matrix(obj$m, k, P, byrow=TRUE)[seq_len(L),]
                     dim(mu) <- c(L,P)
                 }   
                 else {
@@ -527,7 +527,7 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
 ###
 meta.hclust <- function(P, N, W, M, S) 
 {
-    partition <- 1:N
+    partition <- seq_len(N)
     attr(partition, "unique") <- N
     
     obj <- .C("metaHC",

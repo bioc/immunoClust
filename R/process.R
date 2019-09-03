@@ -20,7 +20,7 @@ trans.parameters=NULL
     dat <- fcs
 ## restrict number of events?
     if( !is.null(N) && N < nrow(dat) ) {
-        dat <- dat[1:N]
+        dat <- dat[seq_len(N)]
     }
     else {
         N <- nrow(dat)
@@ -40,13 +40,13 @@ trans.parameters=NULL
     if (max.count > -1) {
         if (is.null(max)[1]) 
         max <- apply(y, 2, max)
-        for (p in 1:ncol(y))  if (sum(y[,p]>=max[p]) >= max.count) 
+        for (p in seq_len(ncol(y)))  if (sum(y[,p]>=max[p]) >= max.count) 
         rm.max <- rm.max | (y[,p] >= max[p])
     }
     if (min.count > -1) {
         if (is.null(min)[1]) 
         min <- apply(y, 2, min)
-        for (p in 1:ncol(y))  if (sum(y[,p]<=min[p]) >= min.count) 
+        for (p in seq_len(ncol(y)))  if (sum(y[,p]<=min[p]) >= min.count) 
         rm.min <- rm.min | (y[,p] <= min[p])
     }
     inc <- !rm.max & !rm.min
@@ -68,7 +68,7 @@ trans.parameters=NULL
         trans.parameters <- trans.parameters[trans.use]
         
         npar <- ncol(dat)
-        id <- paste("P", 1:npar, "DISPLAY", sep="")
+        id <- paste("P", seq_len(npar), "DISPLAY", sep="")
         description(dat)[id] <- "LIN"
         par <- match(trans.parameters, colnames(dat))
         id <- paste("P", par, "DISPLAY", sep="")
@@ -117,7 +117,7 @@ trans.parameters=NULL
         res@z <- matrix()
         dat <- fcs
         if( N < nrow(dat) ) {
-            dat <- dat[1:N]
+            dat <- dat[seq_len(N)]
         }
         if( apply.compensation ) {
             dat <- .cell.compensate(dat)
@@ -211,17 +211,17 @@ dat, x=NULL, parameters=NULL, I.buildup=6, I.final=4,
 modelName="mvt", tol=1e-5, bias=0.3,
 sub.bias=bias, sub.thres=0.0, sub.tol=1e-4, sub.samples=1500, 
 sub.extract=0.8, sub.weights=1, sub.EM="MEt", 
-sub.standardize=TRUE, seed=1 
+sub.standardize=TRUE #, seed=1 
 ) {
     
-    set.seed(seed)
+    #set.seed(seed)
     s <- strptime(date(), "%a %b %d %H:%M:%S %Y")
     
     data <- dat
     N <- nrow(data)
     L <- I.buildup
     if( L > 0 ) {
-        sam_t <- sample( 1:N, N/(2^L) )
+        sam_t <- sample( seq_len(N), N/(2^L) )
         dat_t <- data[sam_t,]
         sam_t <- NULL
     }
@@ -239,10 +239,10 @@ sub.standardize=TRUE, seed=1
         
     }
     
-    set.seed(seed)
+    #set.seed(seed)
     
     model <- NULL
-    for( i in 1:(I.buildup+I.final) ) {
+    for( i in seq_len(I.buildup+I.final) ) {
         
         model <- cell.SubClustering(res, dat_t, thres=sub.thres, bias=sub.bias, 
                             B=100, tol=sub.tol, 
@@ -256,7 +256,7 @@ sub.standardize=TRUE, seed=1
         L <- L-1
         finished <- (L < (-1))
         if( L > 0 ) {
-            sam_t <- sample( 1:N, N/(2^L) )
+            sam_t <- sample( seq_len(N), N/(2^L) )
             dat_t <- data[sam_t,]
             sam_t <- NULL
         }
@@ -296,7 +296,7 @@ cell.MajorIterationTrans <- function(
 fcs, x=NULL, parameters=NULL, I.buildup=6, I.final=4, I.trans=I.buildup, 
 modelName="mvt", tol=1e-5, bias=0.3,
 sub.bias=bias, sub.thres=0.0, sub.tol=1e-4, sub.samples=1500, 
-sub.extract=0.8, sub.weights=1, sub.EM="MEt", sub.standardize=TRUE, seed=1,   
+sub.extract=0.8, sub.weights=1, sub.EM="MEt", sub.standardize=TRUE, #seed=1,   
 trans.minclust=5, trans.a=0.01, trans.decade=-1, trans.scale=1.0, 
 trans.proc="vsHtransAw" 
 ) {
@@ -304,11 +304,11 @@ trans.proc="vsHtransAw"
     data <- fcs
     s <- strptime(date(), "%a %b %d %H:%M:%S %Y")
     
-    set.seed(seed)
+    #set.seed(seed)
     N <- nrow(data)
     L <- I.buildup
     if( L > 0 ) {
-        sam_t <- sample( 1:N, N/(2^L) )
+        sam_t <- sample( seq_len(N), N/(2^L) )
         dat_t <- data[sam_t,]
         sam_t <- NULL
     }
@@ -336,10 +336,10 @@ trans.proc="vsHtransAw"
         
     }
     
-    set.seed(seed)
+    #set.seed(seed)
     
     model <- NULL
-    for( i in 1:(I.buildup+I.final) ) {
+    for( i in seq_len(I.buildup+I.final) ) {
         L <- L-1
         finished <- (L < (-1))
         
@@ -361,7 +361,7 @@ trans.proc="vsHtransAw"
                                 modelName=modelName)
         
         if( L > 0 ) {
-            sam_t <- sample( 1:N, N/(2^L) )
+            sam_t <- sample( seq_len(N), N/(2^L) )
             dat_t <- data[sam_t,]
             sam_t <- NULL
         }
@@ -409,7 +409,7 @@ cell.classifyAll <- function(fcs, x, apply.compensation=FALSE)
         dat <- .cell.compensate(dat)
     }
     if( N < nrow(dat) ) {
-        dat <- dat[1:N]
+        dat <- dat[seq_len(N)]
     }
     t_dat <- trans.ApplyToData(res, dat)
     a_res <- cell.Classify(res, t_dat, modelName="mvt")

@@ -35,13 +35,13 @@ cell.MajorIterationLoop(dat, x=NULL, parameters=NULL,
     I.buildup=6, I.final=4, 
     modelName="mvt", tol=1e-5, bias=0.3,
     sub.bias=bias, sub.thres=0.0, sub.tol=1e-4, sub.samples=1500, 
-    sub.extract=0.8, sub.weights=1, sub.EM="MEt", sub.standardize=TRUE, seed=1)
+    sub.extract=0.8, sub.weights=1, sub.EM="MEt", sub.standardize=TRUE)
 
 cell.MajorIterationTrans(fcs, x=NULL, parameters=NULL, 
     I.buildup=6, I.final=4, I.trans=I.buildup, 
     modelName="mvt", tol=1e-5, bias=0.3,
     sub.bias=bias, sub.thres=0.0, sub.tol=1e-4, sub.samples=1500, 
-    sub.extract=0.8, sub.weights=1, sub.EM="MEt", sub.standardize=TRUE, seed=1, 
+    sub.extract=0.8, sub.weights=1, sub.EM="MEt", sub.standardize=TRUE, 
     trans.minclust=5, trans.a=0.01, trans.decade=-1, trans.scale=1.0, 
     trans.proc="vsHtransAw")
 
@@ -119,7 +119,6 @@ the used weights are the probabilities of cluster membership.}
 \code{"ME"} for EM-iteration without test step.}
 \item{sub.standardize}{A numeric indicating whether the samples for 
 hierarchical clustering are standardized (mean=0, SD=1).}
-\item{seed}{The seed integer for the random number generator.}
 
 \bold{Arguments for transformation optimization:}
 \item{trans.estimate}{A numeric indicator whether transformation estimation 

@@ -25,7 +25,8 @@ subset=seq_len(length(attributes(x)$param)), N=NULL,label=NULL, desc=NULL,
 add.param=c(), \dots)
 
 \S4method{splom}{immunoClust,matrix}(x, data, include=seq_len(x@K), 
-subset=seq_len(length(attributes(x)$param)), N=NULL,label=NULL, desc=NULL, \dots)
+subset=seq_len(length(attributes(x)$param)), N=NULL, label=NULL, 
+desc=NULL, \dots)
 
 datSplom(label, data, subset=seq_len(ncol(data)), 
 include=seq_len(nrow(data)), \dots) 

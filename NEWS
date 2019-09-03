@@ -1,3 +1,15 @@
+Changes in version 1.17.2
+- NEW FEATURES
+  * introducing immunoMeta-class on meta-clustering results to buildup and
+    annotate a hierachical population/sub-populaton tree
+- CHANGES
+  * trail of automated annotation of meta-clusters using scatter-clustering is
+    removed. The approach does not work in a usefull manner. Instead the
+    immunoMeta-class is introduced providing methods for a manual annotation
+    of meta-cluster. See man-pages and vignette for more details.
+  * set.seed is removed from clustering routines. To obtain reproducable
+    results with cell.process function set.seed has to set explicit before.
+
 Changes in version 1.17.1
 - CHANGES
   * minor bugfixes and code cleaning

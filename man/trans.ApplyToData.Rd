@@ -64,7 +64,7 @@ Till Sörensen \email{till-antoni.soerensen@charite.de}
 data(dat.fcs)
 data(dat.exp)
 dat.trans <- trans.ApplyToData(dat.exp[[1]], dat.fcs)
-\dontrun{
-plot(dat.exp[[1]], data=dat.trans)
-}
+#
+#plot(dat.exp[[1]], data=dat.trans)
+#
 }

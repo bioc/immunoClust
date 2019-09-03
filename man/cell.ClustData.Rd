@@ -13,7 +13,7 @@ clusters.
 }
 \usage{
 cell.ClustData(data, K, parameters=NULL, expName="immunoClust Experiment", 
-                sample.seed=1, sample.number=1500, sample.standardize=TRUE,
+                sample.number=1500, sample.standardize=TRUE,
                 B=50, tol=1e-5, modelName="mvt") 
 }
 \arguments{
@@ -25,7 +25,6 @@ parameters.}
 included in clustering. When it is left unspecified, all the parameters will be
 used.}
 \item{expName}{The name of the clustering experiment.}
-\item{sample.seed}{The seed integer for the random number generator.}
 \item{sample.number}{The maximum number of samples used for initial hierarchical
 clustering.}
 \item{sample.standardize}{A numeric indicating whether the samples for 

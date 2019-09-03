@@ -16,7 +16,7 @@ extern "C" {
 int print_text(const char* txt) 
 {
 #ifdef DEBUG
-	Rprintf("%s\n", txt);
+//	Rprintf("%s\n", txt);
 #endif
 	return 0;
 }

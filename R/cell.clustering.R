@@ -17,7 +17,7 @@ state=NULL, K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt"
     
     if (nrow(s)) {
         S <- rep(0,length(s))
-        for(k in 1:K){
+        for(k in seq_len(K)){
             S[(1+(k-1)*P*P):(k*P*P)] = c(s[k,,])
         }
     }
@@ -59,7 +59,7 @@ history=NULL, state=NULL, K, w, m, s, modelName="mvt"
     
     if (nrow(s)) {
         S <- rep(0,length(s))
-        for(k in 1:K){
+        for(k in seq_len(K)){
             S[(1+(k-1)*P*P):(k*P*P)] = c(s[k,,])
         }
     }
@@ -184,7 +184,7 @@ cell.Classify <- function(x, data, modelName="mvt" ) {
 ###
 cell.ClustData<-function(
 data, K, parameters=NULL, expName="immunoClust Experiment", 
-sample.seed=1, sample.number=1500, sample.standardize=TRUE,
+sample.number=1500, sample.standardize=TRUE,
 B=50, tol=1e-5, modelName="mvt"
 ) {
     
@@ -203,21 +203,21 @@ B=50, tol=1e-5, modelName="mvt"
             q <- quantile(y, seq(from=0, to=1, by=1/K))
             label <- rep(0, N)
             q[1] <- q[1]-1
-            for (k in 1:K) label[y>q[k] & y<=q[k+1]] <- k
+            for (k in seq_len(K)) label[y>q[k] & y<=q[k+1]] <- k
         }
         else {
             if (N > sample.number) {
-                set.seed(sample.seed)
-                ySubset <- sample(1:N, sample.number)
+                #set.seed(sample.seed)
+                ySubset <- sample(seq_len(N), sample.number)
             }
             else {
-                ySubset <- 1:N
+                ySubset <- seq_len(N)
             }
             
 ## 2013.01.30: does not matter
             if( sample.standardize ) {
                 x <- y[ySubset,]
-                for( p in 1:P )
+                for( p in seq_len(P) )
                 x[,p] <- (x[,p]-mean(x[,p]))/sd(x[,p])
             }
             
@@ -266,7 +266,7 @@ B=50, tol=1e-5, modelName="mvt"
     dim(S) <- c(K+L-1, P, P)
     
     if( k>1 ) {
-        for( i in 1:(k-1) ){ 
+        for( i in seq_len(k-1) ){ 
             W[i] = x@w[i]
             M[i,] = x@mu[i,]
             S[i,,] = x@sigma[i,,]
@@ -292,7 +292,7 @@ B=50, tol=1e-5, modelName="mvt"
         }
     }
     
-    for( i in 1:L ){
+    for( i in seq_len(L) ){
         W[k-1+i] = x@w[k]*y@w[i]
         S[k-1+i,,] = y@sigma[i,,]
         M[k-1+i,] = y@mu[i,]
@@ -358,7 +358,6 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
     state = model@state
     for( k in seq_len(K) ) {
         
-        #message("Test cluster ", k, " for sub-clustering")
 ## get cluster data
         cinc <- .clusterData(y,z,inc, k, extract.thres)
         t <- NULL 
@@ -377,11 +376,7 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
                             modelName=modelName) 
         
         ke <- strptime(date(), "%a %b %d %H:%M:%S %Y")
-        #message("EM takes ", format(difftime(ke,ks,units="min"), digits=2),
-        #        " minutes")
 
-#cat("cluster", k, "(", length(cinc), ")", "state", model@state[k])
-        
         res_l[[k]] <- res
         if( !is.null(res) && length(res) > 1 ) {
         
@@ -472,14 +467,12 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
         }   
         
         sK <- 0
-        for(i in 1:K ) if( !is.null(ins[[i]]) ) 
+        for(i in seq_len(K) ) if( !is.null(ins[[i]]) ) 
         sK <- sK + (ins[[i]])@K
     } 
     
     
-    for( k in 1:K) if( !is.null(ins[[k]]) ) {
-#        message("split cluster ", k, " into ", (ins[[k]])@K, " sub-cluster")
-#cat("split cluster", k, "state:", state[k], "=>", model@state[k+off], "\n")
+    for( k in seq_len(K)) if( !is.null(ins[[k]]) ) {
         model <- .mergeModel(model, ins[[k]], k+off)
         off <- off + (ins[[k]]@K) - 1
     }  
@@ -529,7 +522,7 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
     
     if (nrow(x@sigma)) {
         S <- rep(0,length(x@sigma))
-        for(k in 1:K){
+        for(k in seq_len(K)){
             S[(1+(k-1)*P*P):(k*P*P)] = c(x@sigma[k,,])
         }
     }
@@ -628,8 +621,6 @@ modelName="mvt"
                             x@sigma[cluster, use_p, use_p]) )
         
         if( is.null(maha) ) {
-#warning(" singularity:", det(x@sigma[cluster,,]), 
-#                   diag(x@sigma[cluster,,]), "use", use_p, "\n") 
             warning(" singularity in cluster", cluster, "\n")
         }
         else {
@@ -651,21 +642,21 @@ modelName="mvt"
 # 2012.11.07:     
 # enhence outliers in sub sample
             if( !is.null(maha) ) {
-                ySubset <- sample(1:N, sample.number, prob=prob)
+                ySubset <- sample(seq_len(N), sample.number, prob=prob)
             }
             else {
-                ySubset <- sample(1:N, sample.number)
+                ySubset <- sample(seq_len(N), sample.number)
             }
         }
         else {
-            ySubset <- 1:N
+            ySubset <- seq_len(N)
         }
         
 ##    hcPairs <- HClust(y[ySubset,], weights=t[ySubset])
 ## ... or standardize?      
         sub <- y[ySubset,]
         if( sample.standardize ) {
-            for( p in 1:P ) {
+            for( p in seq_len(P) ) {
                 if( sd(sub[,p]) > 0 ) {
                     sub[,p] <- (sub[,p]-mean(sub[,p]))/sd(sub[,p])
                 }
@@ -689,7 +680,7 @@ modelName="mvt"
         if (P==1) {
             q <- quantile(y, seq(from=0, to=1, by=1/k))
             q[1] <- q[1]-1
-            for (l in 1:k) label[y>q[l] & y<=q[l+1]] <- l
+            for (l in seq_len(k)) label[y>q[l] & y<=q[l+1]] <- l
         }
         else {
             label[ySubset] <- .clust.hclass(hcPairs, k)
@@ -704,7 +695,7 @@ modelName="mvt"
 ## 2012.12.12: singularity problems   
         if( obj$L < 1 || obj$logLike[3] == Inf || obj$tolerance > tol) {
             res_t = vector("list", k-1)
-            for( l in 1:(k-1) )
+            for( l in seq_len(k-1) )
             res_t[[l]] <- result[[l]]
             
             result <- res_t
@@ -716,10 +707,10 @@ modelName="mvt"
 # output obj$s to sigma
         sigma <- array(0, c(L, P, P))
         s <- matrix(obj$s, k, P * P, byrow=TRUE)
-        for (l in 1:L)
+        for (l in seq_len(L))
         sigma[l,,] <- matrix(s[l,], P, P, byrow = TRUE)
         
-        mu <- matrix(obj$m, k, P, byrow=TRUE)[1:L,]
+        mu <- matrix(obj$m, k, P, byrow=TRUE)[seq_len(L),]
         dim(mu) <- c(L,P)
         
 # output BIC & ICL
@@ -740,7 +731,7 @@ modelName="mvt"
         
 # outp    
         result[[k]] <- new("immunoClust", parameters=x@parameters, 
-                        K=L, N=N, P=P, w=obj$w[1:L], mu=mu, sigma=sigma,
+                        K=L, N=N, P=P, w=obj$w[seq_len(L)], mu=mu, sigma=sigma,
                         logLike=obj$logLike, BIC=BIC, ICL=ICL)
         obj <- NULL
         
@@ -773,7 +764,7 @@ cell.hclust <- function(data, weights=NULL)
     if(N <= P)
     warning("# of observations <= # of parameters")
     
-    partition <- 1:N
+    partition <- seq_len(N)
     attr(partition, "unique") <- N
         
     obj <- .Call("immunoC_mvnHC", as.integer(N), as.integer(P), 

@@ -1,4 +1,109 @@
 ###
+##
+bhattacharyya.prob <- function(gM,gS, cM,cS, alpha=1)
+{
+    ret <- 0
+    if( alpha <= 0 ) {
+        ret <- bhattacharyya.prob(gM,diag(diag(gS)), cM, diag(diag(cS)))
+        return(ret)
+    }
+    else if( alpha < 1 ) {
+        a <- bhattacharyya.prob(gM,gS, cM, cS)
+        b <- bhattacharyya.prob(gM,diag(diag(gS)), cM, diag(diag(cS)))
+        ret <- alpha*a + (1-alpha)*b
+        return(ret)
+    }
+    
+    det_g <- log(det(gS))
+    det_c <- log(det(cS))
+    
+    S <- chol((gS+cS)/2)
+    S <- chol2inv(S)
+    
+    logD <- log(det(S))
+    dist <- mahalanobis(gM, cM, S, inverted=TRUE)
+    logD <- logD + 0.5*det_g + 0.5*det_c
+    logD <- logD - 0.5*0.5*dist
+    
+    ## normalization factor
+    logD <- logD - 0.25*det_g
+    
+    ret <- exp(0.5*logD)
+    if( is.na(ret) || ret <= 0 ) {
+        ret <- 0
+    }
+    
+    ret
+    
+}
+
+## bhattacharyya.dist = -log(bhattacharyya.coeff)
+bhattacharyya.dist <- function (gM, gS, cM, cS)
+{
+    if( is.null(gS) || is.null(cS) ) {
+        
+        return(0)
+    }
+    
+    S <- (gS + cS)/2
+    d1 <- mahalanobis(gM, cM, S)/8
+    
+    d2 <- log(det(as.matrix(S))/sqrt(det(as.matrix(gS)) *
+    det(as.matrix(cS))))/2
+    ret <- d1 + d2
+    ret
+}
+
+## bhattacharyya.coeff = exp(-bhattacharyya.dist)
+bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
+{
+    ret <- 0
+    if( is.null(gS) || is.null(cS) ) {
+        
+        return(0)
+    }
+    if( alpha <= 0 ) {
+        ret <- bhattacharyya.coeff(gM,diag(diag(gS)), cM, diag(diag(cS)))
+        return(ret)
+    }
+    else if( alpha < 1 ) {
+        a <- bhattacharyya.coeff(gM,gS, cM, cS)
+        b <- bhattacharyya.coeff(gM,diag(diag(gS)), cM, diag(diag(cS)))
+        ret <- alpha*a + (1-alpha)*b
+        return(ret)
+    }
+    
+    
+    det_g <- log(det(gS))
+    det_c <- log(det(cS))
+    
+    S <- NULL
+    try( S <- solve((gS+cS) / 2), silent=TRUE)
+    
+    if( is.null(S) ) {
+        return (0)
+    }
+    
+    logD <- log(det(S))
+    dist <- mahalanobis(gM, cM, S, inverted=TRUE)
+    logD <- logD + 0.5*det_g + 0.5*det_c
+    logD <- logD - 0.5*0.5*dist
+    
+    ret <- exp(0.5*logD)
+    if( is.na(ret) || ret <= 0 ) {
+        ret <- 0
+    }
+    
+    if( ret > 1 ) {
+        ret <- 1
+    }
+    
+    ret
+    
+}
+####
+
+###
 ## clust.hclass
 ##  retrieve group membership from hcPairs structure
 ###
@@ -48,7 +153,7 @@
         cl[, 1] <- initial
         m <- 2
     }
-    for (l in 1:max(select)) {
+    for ( l in seq_len(max(select)) ) {
 # merge at l    
         ij <- hcPairs[, l]
         i <- ij[1]
@@ -160,7 +265,7 @@ expName="", parameters=c(), inc=c())
 
     
 # output mu    
-    mu <- matrix(obj$m, K, P, byrow=TRUE)[1:L,]
+    mu <- matrix(obj$m, K, P, byrow=TRUE)[seq_len(L),]
     dim(mu) <- c(L,P)
     
     

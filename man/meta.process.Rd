@@ -11,18 +11,11 @@ Meta-clustering of Cell-clusters in the immunoClust-pipeline
 This function performs iterative model based clustering on the clusters obtained
 by \code{\link{cell.process}} of several samples. Its input is a vector of the 
 \code{immunoClust-objects} of the samples.
-
-The function also performs in a secondary step an ordering of the meta-clusters
-according to their distribution in the scatter parameter and an automated gating
-process. These procedures are preliminary and not part of the presented 
-algorithms of the reference.
 }
 
 \usage{
 meta.process(exp, dat.subset=c(), meta.iter=10, tol=1e-05, meta.bias=0.2,
-            meta.alpha=.5, norm.method=0, norm.blur=2, norm.minG=10,
-            scatter.subset=c(), scatter.bias=0.25, 
-            scatter.prior=6)}
+            meta.alpha=.5, norm.method=0, norm.blur=2, norm.minG=10)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 \item{exp}{A vector of \code{list} objects, each \code{list} contains the 
@@ -51,16 +44,12 @@ performed during the major iteration.}
 matrices are increased within the normalization step.} 
 \item{norm.minG}{Minimum number of meta-clusters required before processing
 the normalization step.}
-\item{scatter.subset}{A numeric vector, giving the indices for the scatter 
-parameter. If the scatter.subset is empty, scatter clustering was not 
-performed.}
-\item{scatter.bias}{The ICL-bias used in EMt-iteration of scatter-clustering.}
-\item{scatter.prior}{experimental; gives the number of initial scatter regions 
-for scatter clustering.}
+
 }
 
 \value{
-The function returns a list-object with the following components:
+The function returns a \code{\link[=immunoMeta.object]{immunoMeta}} with the 
+following components:
 \tabular{ll}{
 \code{dat.clusters} \tab A \code{dat} list-object of the cell event clusters 
 used for meta-clustering.\cr
@@ -76,27 +65,7 @@ scatter-clustering mixture model.\cr
 gating-tree.\cr
 }
 
-The components of the \code{dat} list-objects are:
-\tabular{ll}{
-\code{P}  \tab The number of parameters for the cell event clusters.\cr
-\code{N}  \tab The number of cell-clustering experiments.\cr
-\code{K}  \tab The \eqn{N}-dimensional vector with the numbers of cell event 
-clusters in each experiment. The total number of clusters is 
-\eqn{ sum_{i=1}^N K_i}{sum(K)}.\cr
-\code{W}  \tab The \eqn{totK}-dimensional vector with the mixture proportions 
-of all clusters.\cr
-\code{M}  \tab The \eqn{totK x P}-dimensional matrix of all cluster means.\cr
-\code{S}  \tab The \eqn{totK x P x P}-dimensional matrix of all cluster 
-covariance matrices.\cr 
-\code{expNames}   \tab The \eqn{N}-dimensional character vector with the 
-cell-clustering experiment names.\cr
-\code{expEvents}  \tab The \eqn{N}-dimensional vector with the numbers of 
-events in each cell-clustering experiment.\cr
-\code{clsEvents}  \tab The \eqn{totK}-dimensional vector with the number of 
-events in each cluster.\cr
-\code{desc}     \tab The \eqn{P}-dimensional character vector with the 
-parameter description.\cr
-}
+
 }
 
 \references{
@@ -110,6 +79,7 @@ Till Sörensen \email{till-antoni.soerensen@charite.de}
 }
 
 \seealso{
+\code{\link[=immunoMeta.object]{immunoMeta-object}},
 \code{\link[=immunoClust.object]{immunoClust-object}}, 
 \code{\link{meta.Clustering}}, \code{\link{meta.export}}, 
 \code{\link{cell.process}}
@@ -118,7 +88,7 @@ Till Sörensen \email{till-antoni.soerensen@charite.de}
 \examples{
 data(dat.exp)
 meta <- meta.process(dat.exp)
-summary(meta$res.clusters)
+summary(meta)
 tbl <- meta.numEvents(meta)
 }
 

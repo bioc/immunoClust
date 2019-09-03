@@ -64,7 +64,7 @@ r1 <- dat.exp[[1]]
 summary(r1)
 ## apply model parameter to all (unfiltered) events
 dat.trans <- trans.ApplyToData(r1, dat.fcs)
-r2 <- cell.ME(dat.trans, parameters=r1@parameters, label=r1@label)
+r2 <- cell.ME(dat.trans, parameters(r1), label=label(r1))
 summary(r2)
 }
 \keyword{ cluster }

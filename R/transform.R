@@ -27,7 +27,7 @@ max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale")
     
     param <- attributes(x)$param
     
-    if( class(data) == "flowFrame" ) {
+    if( is(data, "flowFrame") ) {
         
         mat <- as.matrix(exprs(data))[,c(param, add.param)]
         

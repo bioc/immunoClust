@@ -8,6 +8,7 @@
 \alias{meta.relEvents2}
 \alias{meta.relEvents3}
 \alias{meta.majorEvents}
+\alias{meta.relParent}
 
 \encoding{utf8}
 
@@ -25,6 +26,7 @@ table.
 \usage{
 meta.numEvents(meta, out.all=TRUE, out.removed=FALSE,  out.unclassified=TRUE)
 meta.relEvents(meta, out.all=TRUE)
+meta.relParent(meta, out.all=TRUE, out.removed=FALSE,  out.unclassified=TRUE)
 
 meta.parMFI(meta, par, out.all=TRUE)
 
@@ -32,11 +34,6 @@ meta.numClusters(meta, out.all=TRUE)
 
 meta.freqTable(meta)
 
-meta.relEvents2(meta, major=1:5, out.all=TRUE)
-
-meta.relEvents3(meta, major=1:5, out.all=TRUE)
-
-meta.majorEvents(meta, major=1:6, out.events=TRUE)
 }
 
 \arguments{
@@ -47,11 +44,7 @@ hierarchical gating levels are obtained or only the meta-clusters themselves.}
 \item{out.removed}{A numeric indcator whether the number of removed events,
 which are not used for clustering are exported.}
 \item{out.unclassified}{A numeric indicator whether the event numbers of the 
-hierarchical gating levels or all meta-clusters are exported.}
-\item{out.events}{Switch between cell event numbers and relative cell 
-frequencies.} 
-\item{major}{A numeric array indication the major scatter regions which were 
-used as total events.}
+hierarchical gating levels or all meta-clusters are exported.} 
 }
 
 \value{
@@ -60,15 +53,13 @@ A numberic matrix with
     \item{numEvents}{the number of cell events}
     \item{relEvents}{relative frequencies, i.e. the number of cell events per 
     total meeasured events}
+    \item{relParent}{relative frequencies according to parent relationship in
+    the annotated hierarchy.}
     \item{parMFI}{mean fluorecence intensities in one parameter, i.e. the 
     meta-cluster centers in asinh-tranformed scale}
     \item{numClusters}{the number of cell clusters}
     \item{freqTable}{relative frequencies with respect to all gating 
     hierarchie levels}
-    \item{relEvents2}{prelimary function; as relEvents but is restricted to 
-    the events in the given major scatter regions.}
-    \item{relEvents3}{prelimary function; union of relEvents and relEvents2}
-    \item{majorEvents}{the number of cell events for the major regions only}
 } 
 in each meta-cluster (and gating hierarchy level) for each cell-clustering 
 experiment.

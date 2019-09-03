@@ -115,7 +115,7 @@ meta.exprs <- function(exp, sub=c())
         M[l:k,] <- res@mu[,map]
         S[l:k,] <- res@sigma[,map,map]
         
-        cls[l:k] <- paste(sep="", attr(exp[[i]], "expName"), "_", 1:K[i])
+        cls[l:k] <- paste(sep="", attr(exp[[i]], "expName"), "_", seq_len(K[i]))
     }
     
     rownames(M) <- cls

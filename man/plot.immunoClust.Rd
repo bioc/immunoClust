@@ -1,6 +1,5 @@
 \name{plot.immunoClust}
 \docType{methods}
-\alias{plot}
 \alias{plot.immunoClust}
 \alias{plot,immunoClust-method}
 \alias{plot,immunoClust,missing-method}
