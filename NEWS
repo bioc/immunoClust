@@ -1,3 +1,7 @@
+Changes in version 1.17.3
+- CHANGES
+  * bugfix in subset.immunoMeta
+
 Changes in version 1.17.2
 - NEW FEATURES
   * introducing immunoMeta-class on meta-clustering results to buildup and

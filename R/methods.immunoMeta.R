@@ -295,7 +295,8 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
     dat$desc <- dat$desc[params]
     y <- immunoMeta(res, dat, y$gating)
     y$gating <- .pop.restructure(y$gating, subset=params)
-    y$gating <- .annotate.buildModel(y$gating, y$res.clusters)
+    #y$gating <- .annotate.buildModel(y$gating, y$res.clusters)
+    y$gating <- .annotate.buildModel(y$gating, weights(y), mu(y), sigma(y))
     }
     
     y
@@ -344,5 +345,6 @@ finalize.immunoMeta <- function(x, remove.empty=FALSE, depth=-1)
 "transfer<-.immunoMeta" <- function(x, value)
 {
     x <- .annotate.clustering(value, x)
+    x <- finalize(x)
     x
 }
