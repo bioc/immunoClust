@@ -43,7 +43,8 @@ function(object, for.sample=NA) {
     if( is.na(for.sample) )
     return(object$res.clusters@label)
     
-    if( !is.integer(for.sample) )
+    #if( !is.integer(for.sample) )
+    if( abs(for.sample-round(for.sample)) > .Machine$double.eps )
     stop("for.sample option has to be an integer")
     
     K <- object$dat.clusters$K

@@ -459,7 +459,7 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
         if( icl <= cutoff )
         break
         
-        if( (res@K>1) & (icl>icl_thres) ) {
+        if( (res@K>1) && (icl>icl_thres) ) {
             ins[[k]] <- new("immunoClust", expName="Cluster Refinement", 
                         parameters=res@parameters,
                         K=res@K, w=res@w, mu=res@mu, sigma=res@sigma, 

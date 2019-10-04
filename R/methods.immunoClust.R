@@ -64,11 +64,19 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
     sigma <- x@sigma[cls,par,par]
     dim(mu) <- c(L,P)
     dim(sigma) <- c(L, P, P)
-    new("immunoClust", expName=x@expName,parameters=x@parameters,
-    K=L,P=P,N=x@N,w=x@w[cls],mu=mu,sigma=sigma,
-    z=matrix(0,nrow=0,ncol=0), label=label,
-    logLike=x@logLike, BIC=x@BIC, ICL=x@ICL, history=x@history, state=x@state
-    )
+    
+    y <- new("immunoClust", expName=x@expName,parameters=x@parameters[par],
+        K=L,P=P,N=x@N,w=x@w[cls],mu=mu,sigma=sigma,
+        z=matrix(0,nrow=0,ncol=0), label=label,
+        logLike=x@logLike, BIC=x@BIC, ICL=x@ICL, history=x@history, state=x@state
+        )
+    
+    desc <- attr(x, "desc")
+    if( !is.null(desc) ) {
+        attr(y,"desc") <- desc[par]
+    }
+    
+    y
 })
 
 setMethod("transformParams", signature(object="immunoClust"),
@@ -86,6 +94,6 @@ function(object, scale=c(), offset=c())
     y <- object
     for( k in seq_len(K))
     y@mu[k,] <- scale * object@mu[k,] + offset
-    
+
     y
 })
