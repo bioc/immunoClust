@@ -203,7 +203,7 @@ bias=0.25, alpha=0.5, min.class=0
         parameters <- paste(sep="", "P", seq_len(P))
     }
     result <- new("immunoClust", expName="meta.ME", parameters=parameters, 
-                    K=L, w=obj$w[seq_len(L)], mu=mu, sigma=sigma, 
+                    K=L, P=P, w=obj$w[seq_len(L)], mu=mu, sigma=sigma, 
                     z=z, label=obj$label, 
                     logLike=obj$logLike, BIC=BIC, ICL=ICL,
                     state=obj$history[seq_len(L)])

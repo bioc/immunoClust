@@ -702,6 +702,7 @@ meta.freqTable <- function(meta)
             parDesc <- "measured"
         }
         
+        ##cat( paste(collapse=".", gating$position), parDesc, "\n")
         clusters <- c()
         classified <- .annotate.retrieveClassified(gating,c())
         if( out.linage && length(gating$clusters)>=0 ) {

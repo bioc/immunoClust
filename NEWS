@@ -1,3 +1,15 @@
+Changes in version 1.19.2
+- CHANGES
+  * fixes a compiler error under windows
+  
+Changes in version 1.19.1
+- CHANGES
+  * bugfix in transformParam.immunoMeta
+
+Changes in version 1.17.4
+- CHANGES
+  * bugfix in subset.immunoMeta ans subset.immunoClust
+
 Changes in version 1.17.3
 - CHANGES
   * bugfix in subset.immunoMeta

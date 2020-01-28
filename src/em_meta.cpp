@@ -18,6 +18,7 @@
 #include <string.h>
 #include <algorithm>
 
+using::fpclassify;
 
 /*
 	C´STR, D´STR

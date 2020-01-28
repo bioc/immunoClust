@@ -236,7 +236,7 @@ function(object, pos)
         stop("some parent clusters are not in cluster range")
     }
     
-    object$gating <- .annotate.setParent(object$gating, pos, value, 
+    object$gating <- .annotate.setParent(object$gating, pos, parent=value, 
                         childs=sub.levels)
     object
 }
@@ -292,8 +292,16 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
     dim(dat$S) <- c(nrow(dat$S), dat$P, dat$P)
     dat$S <- dat$S[,params,params]
     dat$P <- length(params)
-    dim(dat$S) <- c(nrow(dat$S),dat$P, dat$P)
+    dim(dat$S) <- c(nrow(dat$S),dat$P*dat$P)
     dat$desc <- dat$desc[params]
+    
+    sigma <- attr(res, "sigma.scaled")
+    if( !is.null(sigma)){
+        sigma <- sigma[,params,params]
+        dim(sigma) <- c(res@K,res@P,res@P)
+        attr(res,"sigma.scaled") <- sigma
+    }
+       
     y <- immunoMeta(res, dat, y$gating)
     y$gating <- .pop.restructure(y$gating, subset=params)
     #y$gating <- .annotate.buildModel(y$gating, y$res.clusters)
@@ -326,7 +334,7 @@ function(object, scale=c(), offset=c(), scale.sigma=FALSE)
     y$dat.clusters$M[k,] <- scale * object$dat.clusters$M[k,] + offset
     
     if( scale.sigma ) {
-        s <- (sqrt(scale) %*% t(sqrt(scale))) ## s[p,q] = scale[p] * scale[q]
+        s <- ((scale) %*% t((scale))) ## s[p,q] = scale[p] * scale[q]
         for( k in seq_len(K) )
         y$res.clusters@sigma[k,,] <- s * y$res.clusters@sigma[k,,]
     }

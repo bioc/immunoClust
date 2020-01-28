@@ -20,6 +20,8 @@
 using std::max;
 using std::min;
 
+using::fpclassify;
+
 #define TRIAL_JUNE_2014_n 1
 
 /*
@@ -1026,7 +1028,7 @@ em_mvt::m_step_diag_k(int k)
 	}
 	/*
 	for(p=0;p<P; ++p) {
-		int pc = fpclassify( log(*(s+p*P+p)) );
+		int pc = std::fpclassify( log(*(s+p*P+p)) );
 		if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
 			dbg::printf("%d: NaN (%d) for log-parameter %d [%g]", k, pc, p, *(s+p*P+p));
 			status = 1;

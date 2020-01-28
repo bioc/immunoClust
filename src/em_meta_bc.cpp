@@ -16,6 +16,8 @@
 #include <string.h>
 #include <algorithm>
 
+using::fpclassify;
+
 /*
  bhattacharrya:
  bhattacharrya coefficient for cluster i and component j

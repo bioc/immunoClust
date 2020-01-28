@@ -75,6 +75,9 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
     if( !is.null(desc) ) {
         attr(y,"desc") <- desc[par]
     }
+    attr(y,"fcsName") <- attr(x,"fcsName")
+    attr(y,"trans.a") <- attr(x,"trans.a")[par]
+    attr(y,"trans.b") <- attr(x,"trans.b")[par]
     
     y
 })

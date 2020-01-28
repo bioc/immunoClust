@@ -188,6 +188,7 @@ sample.number=1500, sample.standardize=TRUE,
 B=50, tol=1e-5, modelName="mvt"
 ) {
     
+    if( modelName == "mvt2" ) modelName <- "mvt"
     y <- .exprs(data, parameters)
     
     N <- nrow(y)
@@ -718,7 +719,13 @@ modelName="mvt"
         
 ## 2012.11.07: use sumT not total N
 ## 2012.12.13: use obj$L and not k  
+#        ICL <- obj$logLike[3] - logLike - .icl_delta(sumT, P, K, L)*bias
+# 2019.10.28: if L==1
+        if( L > 1 )
         ICL <- obj$logLike[3] - logLike - .icl_delta(sumT, P, K, L)*bias
+        else
+        ICL <- obj$logLike[3] - .icl_delta(sumT, P, K, L)*bias
+
 ## 2016.06.28: skip below, is a bit unpredictable
 ## 2018.02.14: reactivate again
         if( L > result[[k-1]]@K ) {
