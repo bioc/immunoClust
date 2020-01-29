@@ -2,8 +2,8 @@ Package: immunoClust
 Type: Package
 Title: immunoClust - Automated Pipeline for Population Detection in
         Flow Cytometry
-Version: 1.19.2
-Date: 2020-01-28
+Version: 1.19.3
+Date: 2020-01-29
 Author: Till Soerensen <till-antoni.soerensen@charite.de>
 Maintainer: Till Soerensen <till-antoni.soerensen@charite.de>
 Depends: R(>= 3.6),  methods, stats, graphics, grid, lattice, grDevices,

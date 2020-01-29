@@ -68,7 +68,8 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
     y <- new("immunoClust", expName=x@expName,parameters=x@parameters[par],
         K=L,P=P,N=x@N,w=x@w[cls],mu=mu,sigma=sigma,
         z=matrix(0,nrow=0,ncol=0), label=label,
-        logLike=x@logLike, BIC=x@BIC, ICL=x@ICL, history=x@history, state=x@state
+        logLike=x@logLike, BIC=x@BIC, ICL=x@ICL,
+        history=x@history, state=x@state
         )
     
     desc <- attr(x, "desc")

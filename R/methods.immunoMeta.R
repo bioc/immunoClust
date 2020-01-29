@@ -301,7 +301,7 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
         dim(sigma) <- c(res@K,res@P,res@P)
         attr(res,"sigma.scaled") <- sigma
     }
-       
+    
     y <- immunoMeta(res, dat, y$gating)
     y$gating <- .pop.restructure(y$gating, subset=params)
     #y$gating <- .annotate.buildModel(y$gating, y$res.clusters)

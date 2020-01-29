@@ -18,7 +18,7 @@
 #include <string.h>
 #include <algorithm>
 
-using::fpclassify;
+using std::fpclassify;
 
 /*
 	C´STR, D´STR
