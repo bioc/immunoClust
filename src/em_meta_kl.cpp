@@ -16,6 +16,8 @@
 #include <string.h>
 #include <algorithm>
 
+using std::fpclassify;
+
 // kl_probability
 double
 em_meta::kl_probability(int i, int j)

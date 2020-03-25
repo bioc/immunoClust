@@ -19,6 +19,7 @@
 
 using std::max;
 using std::min;
+using std::fpclassify;
 
 #define TRIAL_JUNE_2014_n 1
 

@@ -1,3 +1,7 @@
+Changes in version 1.18.1
+- CHANGES
+  * fixes a compiler error under windows
+
 Changes in version 1.17.3
 - CHANGES
   * bugfix in subset.immunoMeta

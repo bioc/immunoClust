@@ -16,6 +16,7 @@
 #include <gsl/gsl_errno.h>
 #include <string.h>
 
+using std::fpclassify;
 
 /*
 	C´STR, D´STR

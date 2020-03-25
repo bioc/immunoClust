@@ -10,7 +10,8 @@
 #ifndef util_h_included
 #define util_h_included
 
-#include <math.h>
+//#include <math.h>
+#include <cmath>
 #include "gsl/gsl_vector.h"
 
 inline double sqr(double x) { return x*x; }
