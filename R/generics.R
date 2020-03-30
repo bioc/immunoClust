@@ -17,7 +17,8 @@ setGeneric("parameters")
 ## label
 label <- function(object,...) UseMethod("label")
 
-
+## posterior
+posterior <- function(object, ...) UseMethod("posterior")
 
 ##
 ## subset: already S3 in base
@@ -53,6 +54,14 @@ unclassified <- function(object, ...) UseMethod("unclassified")
 "transfer<-" <- function(x, value) UseMethod("transfer<-")
 finalize <- function(x,remove.empty=FALSE, depth=-1) UseMethod("finalize")
 #makeModel <- function(x,remove.empty=TRUE, depth=-1) UseMethod("makeModel")
+
+nsam <- function(object, ...) UseMethod("nsam")
+sam_ncls <- function(object, ...) UseMethod("sam_ncls")
+sam_clsWeights <- function(object, ...) UseMethod("sam_clsWeights")
+sam_clsEvents <- function(object, ...) UseMethod("sam_clsEvents")
+sam_clsMu <- function(object, ...) UseMethod("sam_clsMu")
+sam_clsSigma <- function(object, ...) UseMethod("sam_clsSigma")
+
 
 ## TODO transformParams => transform??
 # transform: already S4-method in flowCore

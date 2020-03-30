@@ -60,7 +60,9 @@ The merging distances need not to be monotonic increasing.
 \examples{
 data(dat.exp)
 r <- dat.exp[[1]]
-hcPairs <- meta.hclust(r@P, r@K, r@w, r@mu, t(apply(r@sigma,1,c)))
+#hcPairs <- meta.hclust(r@P, r@K, r@w, r@mu, t(apply(r@sigma,1,c)))
+hcPairs <- meta.hclust(npar(r), ncls(r), weights(r), 
+    mu(r), t(apply(sigma(r),1,c)))
 }
 
 \keyword{ cluster }

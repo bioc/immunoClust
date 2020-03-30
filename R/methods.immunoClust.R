@@ -39,10 +39,15 @@ setMethod("label", signature(object="immunoClust"),
 function(object) {
     object@label
 })
-
+setMethod("posterior", signature(object="immunoClust"),
+function(object) {
+    object@z
+})
 setMethod("events", signature(object="immunoClust"),
 function(object,cls=seq_len(ncls(object)) ) {
-    ret <- sapply(cls, function(k) sum(!is.na(object@label) & object@label==k) )
+    #ret <- sapply(cls, function(k) sum(!is.na(object@label) & object@label==k))
+    ret <- vapply(cls, function(k) 
+            sum(!is.na(object@label) & object@label==k), 0 )
     names(ret) <- sprintf("cls-%d",cls)
     ret
 })

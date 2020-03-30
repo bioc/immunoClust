@@ -1,5 +1,11 @@
 \name{generics.immunoclust}
 \docType{class}
+\alias{nsam}
+\alias{sam_ncls}
+\alias{sam_clsWeights}
+\alias{sam_clsEvents}
+\alias{sam_clsMu}
+\alias{sam_clsSigma}
 \alias{nobs}
 \alias{npar}
 \alias{ncls}
@@ -7,6 +13,7 @@
 \alias{mu}
 \alias{sigma}
 \alias{label}
+\alias{posterior}
 \alias{subset}
 \alias{parameters}
 \alias{transformParams}
@@ -23,6 +30,18 @@ either for an \code{immunoClust} or an \code{immunoMeta} object.
 }
 
 \usage{
+nsam(object, \dots)
+
+sam_ncls(object, \dots)
+
+sam_clsWeights(object, \dots)
+
+sam_clsEvents(object, \dots)
+
+sam_clsMu(object, \dots)
+
+sam_clsSigma(object, \dots)
+
 nobs(object, \dots)
 
 npar(object, \dots)
@@ -36,6 +55,8 @@ mu(object, \dots)
 sigma(object, \dots)
 
 label(object, \dots)
+
+posterior(object, \dots)
 
 subset(x, \dots)
 
@@ -55,6 +76,20 @@ The appropriate value for the specific cal (see dection Details).
 
 \section{Details}{
 \describe{
+    \item{nsam}{returns the number of cell-event \code{immunoClust}-objects 
+    co-clustered in the \code{immunoMeta}-object.}
+
+    \item{sam_clsWeights}{returns the cluster weights of all samples 
+    cell-clusters.}
+
+    \item{sam_clsEVents}{returns the cluster event numbers of all samples 
+    cell-clusters.}
+
+    \item{sam_clsMu}{returns the cluster means of all samples cell-clusters.}
+
+    \item{sam_clsSigma}{returns the cluster co-variance matrices of all samples 
+    cell-clusters.}
+
     \item{nobs}{already generic in \code{stats}. Here, returns the number of 
     clustered objects either cell-events or cell-clusters in cell event or 
     meta clustering.}
@@ -74,6 +109,9 @@ The appropriate value for the specific cal (see dection Details).
 
     \item{label}{returns the cluster label, i.e. the assignment of the 
     clustered objects to the clusters.}
+    
+    \item{posterior}{returns the posterior probabilities of cluster membership
+    for the clustered objects.}
 
     \item{events}{returns the number of cell-events for the clusters.}
 

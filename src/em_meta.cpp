@@ -157,9 +157,9 @@ em_meta::wt_step()
 	int minClust = -1;
 	
 	//double minThres = THRES;
-	double minNk = T_sum;
+	//double minNk = T_sum;
 	double minThres = FLTMAX;
-	double minDelta = FLTMAX;
+	//double minDelta = FLTMAX;
 	for(int j=0; j<G; ++j) {
 		// unlikelihood
 		if( (long)tmpNg[j] > 0 ) {
@@ -170,19 +170,19 @@ em_meta::wt_step()
 				
 				tmpG[j] += deltaCosts;
 				if( minClust == -1 ) {
-					minNk = tmpNg[j];
+					//minNk = tmpNg[j];
 					minClust = j;
 					minThres = tmpG[j]/tmpNg[j];
-					minDelta = deltaCosts;
+					//minDelta = deltaCosts;
 					//minThres = tmpG[j];
 				}
 				else
 				if( tmpG[j]/tmpNg[j] < minThres ) {
 				//if( tmpG[j] < minThres ) {
-					minNk = tmpNg[j];
+					//minNk = tmpNg[j];
 					minClust = j;
 					minThres = tmpG[j]/tmpNg[j];
-					minDelta = deltaCosts;
+					//minDelta = deltaCosts;
 					//minThres = tmpG[j];
 				}
 			}
@@ -224,9 +224,9 @@ em_meta::st_step()
 	int minClust = -1;
 	
 	//double minThres = THRES;
-	double minNk = T_sum;
+	//double minNk = T_sum;
 	double minThres = FLTMAX;
-	double minDelta = FLTMAX;
+	//double minDelta = FLTMAX;
 	for(int j=0; j<G; ++j) {
 		// unlikelihood
 		if( (long)tmpNg[j] > 0 ) {
@@ -239,19 +239,19 @@ em_meta::st_step()
 				tmpG[j] += deltaCosts;
 				// dbg::printf("\tthres = %.3.lf", tmpG[k]/tmpNg[k]);
 				if( minClust == -1 ) {
-					minNk = tmpNg[j];
+					//minNk = tmpNg[j];
 					minClust = j;
 					//minThres = tmpG[j]/tmpNg[j];
-					minDelta = deltaCosts;
+					//minDelta = deltaCosts;
 					minThres = tmpG[j];
 				}
 				else
 					//if( tmpG[j]/tmpNg[j] < minThres ) {
 					if( tmpG[j] < minThres ) {
-						minNk = tmpNg[j];
+						//minNk = tmpNg[j];
 						minClust = j;
 						//minThres = tmpG[j]/tmpNg[j];
-						minDelta = deltaCosts;
+						//minDelta = deltaCosts;
 						minThres = tmpG[j];
 					}
 			}
@@ -695,7 +695,7 @@ em_meta::fixedN_et_step()
         
         double sumLike = 0.0;
         double maxLike = 0.0;
-        double sndLike = 0.0;
+        //double sndLike = 0.0;
         double maxPDF = 0.0;
         double sndPDF = 0.0;
         int maxClust = -1, sndClust = -1;
@@ -720,7 +720,7 @@ em_meta::fixedN_et_step()
             sumLike += tmpLike;
             
             if( tmpPDF > maxPDF) {
-                sndLike = maxLike;
+                //sndLike = maxLike;
                 sndPDF = maxPDF;
                 sndClust = maxClust;
                 maxLike = tmpLike;
@@ -729,7 +729,7 @@ em_meta::fixedN_et_step()
             }
             else
             if( tmpPDF > sndPDF ) {
-                sndLike = tmpLike;
+                //sndLike = tmpLike;
                 sndPDF = tmpPDF;
                 sndClust = j;
             }

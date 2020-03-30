@@ -1,5 +1,17 @@
 \name{methods.immunoMeta}
 \docType{class}
+\alias{nsam.immunoMeta}
+\alias{nsam,immunoMeta-method}
+\alias{sam_ncls.immunoMeta}
+\alias{sam_ncls,immunoMeta-method}
+\alias{sam_clsWeights.immunoMeta}
+\alias{sam_clsWeights,immunoMeta-method}
+\alias{sam_clsMu.immunoMeta}
+\alias{sam_clsMu,immunoMeta-method}
+\alias{sam_clsSigma.immunoMeta}
+\alias{sam_clsSigma,immunoMeta-method}
+\alias{sam_clsEvents.immunoMeta}
+\alias{sam_clsEvents,immunoMeta-method}
 \alias{nobs.immunoMeta}
 \alias{nobs,immunoMeta-method}
 \alias{ncls.immunoMeta}
@@ -21,6 +33,8 @@
 \alias{events}
 \alias{events.immunoMeta}
 \alias{events,immunoMeta-method}
+\alias{posterior.immunoMeta}
+\alias{posterior,immunoMeta-method}
 \alias{prop}
 \alias{prop<-}
 \alias{prop.immunoMeta}
@@ -99,8 +113,63 @@ the sequence of indices into these sub-levels begining at root level.}
 \section{Accessors}{
 \describe{
 
+\item{nsam}{
+    the number of \code{immunoClust}-objects (samples) which
+    are co-clustered.
+
+    \emph{Usage:}
+
+    \code{nsam(immunoMeta)}
+}
+
+\item{sam_ncls}{
+    the number of cell event clusters in the\code{immunoClust}-objects 
+    (samples) which are co-clustered.
+
+    \emph{Usage:}
+
+    \code{sam_ncls(immunoMeta, for.samples=seq_len(nsam(meta))}
+}
+
+\item{sam_clsWeights}{
+    the weigths of all cell event clusters which are collected
+    for co-clustering.
+
+    \emph{Usage:}
+
+    \code{sam_clsWeights(immunoMeta)}
+}
+
+\item{sam_clsMu}{
+    the means of all cell event clusters which are collected
+    for co-clustering.
+
+    \emph{Usage:}
+
+    \code{sam_clsMu(immunoMeta)}
+}
+
+\item{sam_clsSigma}{
+    the co-variance matrices of all cell event clusters which are collected
+    for co-clustering.
+
+    \emph{Usage:}
+
+    \code{sam_clsSigma(immunoMeta)}
+}
+
+\item{sam_clsEvents}{
+    the event numbers of all cell event clusters which are collected
+    for co-clustering.
+
+    \emph{Usage:}
+
+    \code{sam_clsEvents(immunoMeta)}
+}
+
+
 \item{nobj}{
-    the number of \code{immunoClust}-objects from sample cell-clustering which
+    the number of cell events clusters from sample cell-clustering which
     are co-clustered.
 
     \emph{Usage:}
@@ -178,6 +247,16 @@ the sequence of indices into these sub-levels begining at root level.}
         par=seq_len(npar(immunoMeta)))}
 
 }
+
+\item{posterior}{
+    the posterior probabilities of cluster membership for each cell-cluster
+
+    \emph{Usage:}
+
+    \code{posterior(immunoMeta)}
+
+}
+
 
 \item{events}{
     the cell-event numbers for each sample for the cluster selection

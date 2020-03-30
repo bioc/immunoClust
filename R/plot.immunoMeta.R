@@ -94,7 +94,8 @@ pscal=NULL,...)
             for( i in seq_len(g) ) if( !is.null(pop$childs[[i]]$plot.color) ) {
                 key.col[i] <- pop$childs[[i]]$plot.color
             }
-            key.text <- sapply(pop$childs,function(x)x$desc)
+            #key.text <- sapply(pop$childs,function(x)x$desc)
+            key.text <- vapply(pop$childs,function(x)x$desc, "")
             key <- list(title="Sub Level",
             cex.title=1,
             columns=1,
@@ -169,16 +170,17 @@ pscal=NULL,...)
         }
         
         for( i in seq_len(length(pop$childs)) ) {
+        if( length(pop$childs[[i]]$childs) > 0 ||
+            length(pop$childs[[i]]$clusters) > 1 ) {
             .annotate.plotPop( res, M, pop$childs[[i]], c(), main=main,
             plot.childs=plot.childs, plot.unclassified=plot.unclassified,
             plot.parent=plot.parent,
             plot.ellipse=plot.ellipse,
             plot.subset=plot.subset, plot.all=TRUE,
             pscal=pscal,...)
+            }
         }
     }
-    
-    
 }
 
 

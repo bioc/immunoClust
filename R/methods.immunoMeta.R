@@ -1,4 +1,28 @@
 ## immunoMeta accessors
+setMethod("nsam", signature(object="immunoMeta"),
+function(object) {
+    object$dat.clusters$N
+})
+setMethod("sam_ncls", signature(object="immunoMeta"),
+function(object, for.samples=seq_len(nsam(object))) {
+    object$dat.clusters$K[for.samples]
+})
+setMethod("sam_clsWeights", signature(object="immunoMeta"),
+function(object) {
+    object$dat.clusters$W
+})
+setMethod("sam_clsMu", signature(object="immunoMeta"),
+function(object) {
+    object$dat.clusters$M
+})
+setMethod("sam_clsSigma", signature(object="immunoMeta"),
+function(object) {
+    object$dat.clusters$S
+})
+setMethod("sam_clsEvents", signature(object="immunoMeta"),
+function(object) {
+    object$dat.clusters$clsEvents
+})
 setMethod("nobs", signature(object="immunoMeta"),
 function(object) {
     length(object$res.clusters@label)
@@ -57,6 +81,10 @@ function(object, for.sample=NA) {
     
     object$res.clusters@label[sl:el]
     
+})
+setMethod("posterior", signature(object="immunoMeta"),
+function(object){
+    object$res.clusters@z
 })
 setMethod("events", signature(object="immunoMeta"),
 function(object,cls=seq_len(ncls(object))) {

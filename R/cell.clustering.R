@@ -619,10 +619,10 @@ modelName="mvt"
         
         use_p <- which(diag(x@sigma[cluster,,]) > 1e-8)
         try( maha <- mahalanobis(y[,use_p], x@mu[cluster,use_p], 
-                            x@sigma[cluster, use_p, use_p]) )
+                            x@sigma[cluster, use_p, use_p]), silent=TRUE )
         
         if( is.null(maha) ) {
-            warning(" singularity in cluster", cluster, "\n")
+            warning(" singularity in cluster ", cluster, "\n")
         }
         else {
             abv <- qchisq(0.95,P)^2

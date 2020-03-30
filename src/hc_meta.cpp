@@ -811,7 +811,7 @@ mvn_dendro::mahalanobis_w(int* li, int* lj, double* crit)
 	
 	
 	const double *M_i, *M_j;
-	const double *S_i, *S_j;
+	//const double *S_i, *S_j;
 	double od; // tmp;
 	// int status = 0;
 	
@@ -878,14 +878,14 @@ mvn_dendro::mahalanobis_w(int* li, int* lj, double* crit)
 		join_nodes(oi, oj);
 		
 		// update D<<oi,oj>,k> -> D<oi,k>
-		S_j = S+oi*P*P;
+		//S_j = S+oi*P*P;
 		M_j = M+oi*P;
 		//W_j = W[oi];		
 		// W_j = 0.5;
 		
 		dij = D + (oi*(oi-1))/2;	// = d<0,oi>
 		for(i=0; i<oi; ++i) {
-			S_i = S+i*P*P;
+			//S_i = S+i*P*P;
 			M_i = M+i*P;
 			//W_i = W[i];
 			// W_i = 0.5;
@@ -896,13 +896,13 @@ mvn_dendro::mahalanobis_w(int* li, int* lj, double* crit)
 			*dij = mvn::mahalanobis(P, M_i, M_j, tmpS, tmpP);
 			++dij;
 		}
-		S_i = S_j;
+		//S_i = S_j;
 		M_i = M_j;
 		// W_i = W_j;
 		dij += oi;
 		for(j=oi+1; j<l; ++j) {
 			
-			S_j = S+j*P*P;
+			//S_j = S+j*P*P;
 			M_j = M+j*P;
 			//W_j = W[j];
 			// W_j = 0.5;

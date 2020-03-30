@@ -520,7 +520,7 @@ em_mvt::t_step()
 	// test cluster likelihood
 	int minClust = -1;
 
-	double minNk = T_sum;
+	//double minNk = T_sum;
 	double minThres = FLTMAX;
 	for(int k=0; k<K; ++k) {
 		// unlikelihood
@@ -533,13 +533,13 @@ em_mvt::t_step()
 				tmpK[k] += deltaCosts;
 				// dbg::printf("\tthres = %.3.lf", tmpK[k]/tmpNk[k]);
 				if( minClust == -1 ) {
-					minNk = tmpNk[k];
+					//minNk = tmpNk[k];
 					minClust = k;
 					minThres = tmpK[k]/tmpNk[k];
 				}
 				else
 				if( tmpK[k]/tmpNk[k] < minThres ) {
-					minNk = tmpNk[k];
+					//minNk = tmpNk[k];
 					minClust = k;
 					minThres = tmpK[k]/tmpNk[k];
 				}
@@ -770,7 +770,7 @@ em_mvt::build(const int* label, double logLike[3], int* history)
         double sumLike = 0;
         double maxLike = 0;
         double maxPDF = 0;
-        int maxClust = -1;
+        //int maxClust = -1;
         
         for(k=0;k<L;k++) if( Z_sum[k] > 0 )
         {
@@ -791,7 +791,7 @@ em_mvt::build(const int* label, double logLike[3], int* history)
                 
                 if( tmpLike > maxLike ){
                     maxLike = tmpLike;
-                    maxClust = k;
+                    //maxClust = k;
                     maxPDF = tmpPDF;
                 }
             }
@@ -1028,7 +1028,7 @@ em_mvt::m_step_diag_k(int k)
 	}
 	/*
 	for(p=0;p<P; ++p) {
-		int pc = std::fpclassify( log(*(s+p*P+p)) );
+		int pc = fpclassify( log(*(s+p*P+p)) );
 		if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
 			dbg::printf("%d: NaN (%d) for log-parameter %d [%g]", k, pc, p, *(s+p*P+p));
 			status = 1;

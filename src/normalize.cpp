@@ -147,6 +147,7 @@ normalize::build_consensus()
 int
 normalize::linear_X(int kb, int kn)
 {
+   
     
 	cblas_dcopy(P*COEFF, &zero, 0, A, 1);
     // linear term
@@ -156,8 +157,8 @@ normalize::linear_X(int kb, int kn)
     if( L < COEFF )
         return 1;
     
-	int k, j, p;
     
+    int k, j, p;
 	const double *xw, *xm, *yw, *ym, *z;
 	// build X^T * X and X^T * Y
     for( p=0; p<P; ++p ) {
@@ -272,7 +273,6 @@ normalize::scale_X(int kb, int kn)
         return 1;
     
 	int k, j, p;
-    
 	const double *xw, *xm, *yw, *ym, *z;
 	// build X^T * X and X^T * Y
     for( p=0; p<P; ++p ) {
@@ -378,7 +378,6 @@ normalize::linear_Y(int kb, int kn)
         return 1;
     
 	int k, j, p;
-    
 	const double *xw, *xm, *yw, *ym, *z;
 	// build X^T * X and X^T * Y
     for( p=0; p<P; ++p ) {
@@ -460,7 +459,6 @@ normalize::scale_Y(int kb, int kn)
         return 1;
     
 	int k, j, p;
-    
 	const double *xw, *xm, *yw, *ym, *z;
 	// build Y^T * Y and Y^T * X
     for( p=0; p<P; ++p ) {

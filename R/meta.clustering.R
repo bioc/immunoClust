@@ -65,7 +65,9 @@ meta.alpha=.5, norm.method=0, norm.blur=2, norm.minG=10
     
     # if BD
     {
-        trans.a <- apply( sapply(exp,function(x) x@trans.a), 1, mean)
+        #trans.a <- apply( sapply(exp,function(x) x@trans.a), 1, mean)
+        trans.a <- apply( vapply(exp,function(x) x@trans.a, 
+            rep(0.01,npar(res))), 1, mean)
         pscal <- list(length(trans.a))
         for( p in seq_len(length(trans.a))) {
             if( trans.a[p] == 0 ) {

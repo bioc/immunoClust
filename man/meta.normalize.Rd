@@ -83,8 +83,9 @@ Till Sörensen \email{till-antoni.soerensen@charite.de}
 
 \examples{
 data(dat.meta)
-dat <- dat.meta$dat.clusters
+#dat <- dat.meta$dat.clusters
 res <- dat.meta$res.clusters
-dat.norm <- meta.Normalize(dat$P, dat$N, dat$K, dat$clsEvents, 
-    dat$M, dat$S, res@K, res@z)
+dat.norm <- meta.Normalize(npar(dat.meta), nsam(dat.meta), 
+    sam_ncls(dat.meta), sam_clsEvents(dat.meta), sam_clsMu(dat.meta), 
+    sam_clsSigma(dat.meta), ncls(res), posterior(res))
 }

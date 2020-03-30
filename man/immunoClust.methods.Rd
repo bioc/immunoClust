@@ -20,6 +20,8 @@
 \alias{sigma,immunoClust-method}
 \alias{events.immunoClust}
 \alias{events,immunoClust-method}
+\alias{posterior.immunoClust}
+\alias{posterior,immunoClust-method}
 
 \alias{subset.immunoClust}
 \alias{subset,immunoClust-method}
@@ -125,6 +127,15 @@ Documentation of the accessors and methods for immunoClust-objects
 
     \code{sigma(immunoClust, cls=seq_len(ncls(immunoClust)), 
         par=seq_len(npar(immunoClust)))}
+
+}
+
+\item{posterior}{
+    the posterior probabilities of cluster membership for each event
+
+    \emph{Usage:}
+
+    \code{posterior(immunoClust)}
 
 }
 

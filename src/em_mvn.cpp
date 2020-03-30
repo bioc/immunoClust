@@ -720,7 +720,7 @@ em_gaussian::build(const int* label, double logLike[3], int* history)
         double sumLike = 0;
         double maxLike = 0;
         double maxPDF = 0;
-        int maxClust = -1;
+        //int maxClust = -1;
         
         for(k=0;k<L;k++) if( Z_sum[k] > 0 )
         {
@@ -741,7 +741,7 @@ em_gaussian::build(const int* label, double logLike[3], int* history)
                 
                 if( tmpLike > maxLike ){
                     maxLike = tmpLike;
-                    maxClust = k;
+                    //maxClust = k;
                     maxPDF = tmpPDF;
                 }
             }

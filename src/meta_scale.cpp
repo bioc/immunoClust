@@ -843,14 +843,14 @@ meta_scale::quantile()
 	cblas_dcopy(N*P, &zero, 0, expM, 1);
 	
 	int i, k, p, q;
-	double *w, *m, *s;
+	double /* *w,*/ *m, *s;
 	double /* *ew,*/ *em /*, *es*/; //, *tk;
 	double* tk;
     
 
     // 1. get quantiles in all parameter
 	for( p=0; p<P; ++p ) {
-		w = W;
+		//w = W;
 		m = M+p;
 		em = expM+p;
 		

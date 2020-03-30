@@ -69,7 +69,7 @@ dist_mvn::hellinger(double* D)
 			mat::sum(P, tmpS, S_k, S_l, 0.5, 0.5);
 			det = logdet_invS(tmpS);
 			
-			logD = det - (det_l+det_l);
+			logD = det - (det_k+det_l);
 			logD -= 0.25 * sqr(mvn::mahalanobis(P, M_k, M_l, tmpS, tmpP));
 			*d++ = 1 - exp(0.5*logD);
 		}

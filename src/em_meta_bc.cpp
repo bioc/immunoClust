@@ -235,7 +235,7 @@ em_meta::bc_et_step()
         
         double sumLike = 0.0;
         double maxLike = 0.0;
-        double sndLike = 0.0;
+        //double sndLike = 0.0;
         double maxPDF = 0.0;
         double sndPDF = 0.0;
         int maxClust = -1, sndClust = -1;
@@ -261,7 +261,7 @@ em_meta::bc_et_step()
             sumLike += tmpLike;
             
             if( tmpPDF > maxPDF) {
-                sndLike = maxLike;
+                //sndLike = maxLike;
                 sndPDF = maxPDF;
                 sndClust = maxClust;
                 maxLike = tmpLike;
@@ -270,7 +270,7 @@ em_meta::bc_et_step()
             }
             else
             if( tmpPDF > sndPDF ) {
-                sndLike = tmpLike;
+                //sndLike = tmpLike;
                 sndPDF = tmpPDF;
                 sndClust = j;
             }
@@ -521,7 +521,7 @@ em_meta::bc_fixedN_et_step()
         
         double sumLike = 0.0;
         double maxLike = 0.0;
-        double sndLike = 0.0;
+        //double sndLike = 0.0;
         double maxPDF = 0.0;
         double sndPDF = 0.0;
         int maxClust = -1, sndClust = -1;
@@ -546,7 +546,7 @@ em_meta::bc_fixedN_et_step()
             sumLike += tmpLike;
             
             if( tmpPDF > maxPDF) {
-                sndLike = maxLike;
+                //sndLike = maxLike;
                 sndPDF = maxPDF;
                 sndClust = maxClust;
                 maxLike = tmpLike;
@@ -555,7 +555,7 @@ em_meta::bc_fixedN_et_step()
             }
             else
             if( tmpPDF > sndPDF ) {
-                sndLike = tmpLike;
+                //sndLike = tmpLike;
                 sndPDF = tmpPDF;
                 sndClust = j;
             }
