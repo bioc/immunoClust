@@ -95,7 +95,7 @@ function(object, ...){
     cat("\tclusters    events  name\n")
     for( n in seq_len(object$dat.clusters$N)) {
         cat(sprintf("\t%8d  %8d  %s\n", object$dat.clusters$K[n],
-            object$dat.clusters$expEvents[n], object$dat.clusters$expNames[n]))
+            round(object$dat.clusters$expEvents[n]), object$dat.clusters$expNames[n]))
     }
     cat("Parameters:  ", npar(object), "\n")
     for( p in seq_len(npar(object)) ) {

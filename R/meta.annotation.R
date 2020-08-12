@@ -352,6 +352,8 @@
     else {
         pos <- NULL
     }
+    if( p > length(pop$childs))
+        return(c())
         
     .annotate.retrieveClusters( pop$childs[[p]], pos)
 }
