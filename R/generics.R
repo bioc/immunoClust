@@ -13,6 +13,8 @@ mu <- function(object,...) UseMethod("mu")
 setGeneric("sigma")
 ## parameters already S4 in flowCore
 setGeneric("parameters")
+"parameters<-" <- function(object, ..., value) UseMethod("parameters<-")
+setGeneric("parameters<-")
 
 ## label
 label <- function(object,...) UseMethod("label")
@@ -34,25 +36,34 @@ events <- function(object,...) UseMethod("events")
 
 prop <- function(object, ...) UseMethod("prop")
 "prop<-" <- function(object, ..., value) UseMethod("prop<-")
+setGeneric("prop<-")
 desc <- function(object, ...) UseMethod("desc")
 descFull <- function(object, ...) UseMethod("descFull")
 "desc<-" <- function(object, ..., value) UseMethod("desc<-")
+setGeneric("desc<-")
 
 level <- function(object, ...) UseMethod("level")
 findLevel <- function(object, ...) UseMethod("findLevel")
 "level<-" <- function(object, ..., value) UseMethod("level<-")
+setGeneric("level<-")
 clusters <- function(object, ...) UseMethod("clusters")
 classified <- function(object, ...) UseMethod("classified")
 unclassified <- function(object, ...) UseMethod("unclassified")
 
 
 "addLevel<-" <- function(object, ..., value) UseMethod("addLevel<-")
+setGeneric("addLevel<-")
 "move<-" <- function(object, ..., value) UseMethod("move<-")
-"parent<-" <- function(object, ..., value) UseMethod("parent<-")
-"remove<-" <- function(object, ..., value) UseMethod("remove<-")
+setGeneric("move<-")
 
-"transfer<-" <- function(x, value) UseMethod("transfer<-")
-finalize <- function(x,remove.empty=FALSE, depth=-1) UseMethod("finalize")
+"parent<-" <- function(object, ..., value) UseMethod("parent<-")
+setGeneric("parent<-")
+"remove<-" <- function(object, ..., value) UseMethod("remove<-")
+setGeneric("remove<-")
+
+"transfer<-" <- function(object, ..., value) UseMethod("transfer<-")
+setGeneric("transfer<-")
+finalize <- function(object, ...) UseMethod("finalize")
 #makeModel <- function(x,remove.empty=TRUE, depth=-1) UseMethod("makeModel")
 
 nsam <- function(object, ...) UseMethod("nsam")

@@ -109,9 +109,16 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
     
     flagFiltered <- is.na(label)
 # plot points with different colors/symbols corr. to cluster assignment
-    col <- matrix(col, length(include))
-    pch <- matrix(pch, length(include))
-    cex <- matrix(cex, length(include))
+    if( length(include) ) {
+        col <- matrix(col, length(include))
+        pch <- matrix(pch, length(include))
+        cex <- matrix(cex, length(include))
+    }
+    else {
+        col <- c()
+        pch <- c()
+        cex <- c()
+    }
     
     j <- 0
     

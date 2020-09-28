@@ -88,7 +88,7 @@ d <- meta.exprs(dat.exp)
 label <- rep(1,sum(d$K))
 label <- meta.SubClustering(d$P, sum(d$K), d$clsEvents, d$M, d$S, label=label)
 \dontrun{
-r1 <- meta.ME(d$P, d$N, d$K, d$clsEvents, d%M, d$S, label)
+r1 <- meta.ME(d$P, d$N, d$K, d$clsEvents, d$M, d$S, label)
 }
 }
 

@@ -69,13 +69,15 @@ trans.parameters=NULL
         
         npar <- ncol(dat)
         id <- paste("P", seq_len(npar), "DISPLAY", sep="")
-        description(dat)[id] <- "LIN"
+        #description(dat)[id] <- "LIN"
+        keyword(dat)[id] <- "LIN"
         par <- match(trans.parameters, colnames(dat))
         id <- paste("P", par, "DISPLAY", sep="")
-        description(dat)[id] <- "LOG"
+        #description(dat)[id] <- "LOG"
+        keyword(dat)[id] <- "LOG"
     }
     
-##     
+##
     if( trans.estimate ) {
         res <- cell.MajorIterationTrans(dat, parameters=parameters, 
                                     I.buildup=I.buildup, I.final=I.final, 
@@ -90,9 +92,9 @@ trans.parameters=NULL
                                     trans.a=trans.a)
     }
     else {
-        
-        m <- cell.InitialModel(dat, parameters=parameters, 
+        m <- cell.InitialModel(dat, parameters=parameters,
                                 trans.a=trans.a, trans.b=trans.b)
+                                
         dat <- trans.ApplyToData(m, dat)
         
         res <- cell.MajorIterationLoop(dat, parameters=parameters, 
@@ -137,7 +139,9 @@ trans.parameters=NULL
     
     attr(res, "bias") <- bias
     attr(res, "call") <- match.call()
-    attr(res, "fcsName") <- description(dat)$`FILENAME`
+    #attr(res, "fcsName") <- description(dat)$`FILENAME`
+    attr(res, "fcsName") <- keyword(dat)$`FILENAME`
+    
     par <- parameters(dat)
     inc <- match(res@parameters, par@data[,'name'])
     attr(res, "desc") <- par@data[inc, 'desc']
@@ -414,7 +418,9 @@ cell.classifyAll <- function(fcs, x, apply.compensation=FALSE)
     t_dat <- trans.ApplyToData(res, dat)
     a_res <- cell.Classify(res, t_dat, modelName="mvt")
     
-    attr(a_res, "fcsName") <- description(dat)$`FILENAME`
+    #attr(a_res, "fcsName") <- description(dat)$`FILENAME`
+    attr(a_res, "fcsName") <- keyword(dat)$`FILENAME`
+    
     par <- parameters(dat)
     inc <- match(a_res@parameters, par@data['name'])
     attr(a_res, "desc") <- par@data[inc, 'desc']

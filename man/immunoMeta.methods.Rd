@@ -21,7 +21,7 @@
 \alias{parameters.immunoMeta}
 \alias{parameters,immunoMeta-method}
 \alias{parameters<-.immunoMeta}
-\alias{parameters<-,immunoMeta-method}
+\alias{parameters<-,immunoMeta,character-method}
 \alias{label.immunoMeta}
 \alias{label,immunoMeta-method}
 \alias{weights.immunoMeta}
@@ -51,8 +51,9 @@
 \alias{descFull.immunoMeta}
 \alias{descFull,immunoMeta-method}
 \alias{level}
-\alias{level<-}
 \alias{level.immunoMeta}
+\alias{level,immunoMeta-method}
+\alias{level<-}
 \alias{level<-.immunoMeta}
 \alias{findLevel}
 \alias{findLevel.immunoMeta}
@@ -72,12 +73,15 @@
 \alias{move<-.immunoMeta}
 \alias{parent<-}
 \alias{parent<-.immunoMeta}
+\alias{parent<-.immunoMeta-method}
 \alias{remove<-}
 \alias{remove<-.immunoMeta}
 \alias{transfer<-}
 \alias{transfer<-.immunoMeta}
+\alias{transfer<-,immunoMeta,immunoMeta-method}
 \alias{finalize}
 \alias{finalize.immunoMeta}
+\alias{finalize,immunoMeta-method}
 \alias{subset.immunoMeta}
 \alias{subset,immunoMeta-method}
 \alias{transformParams.immunoMeta}

@@ -16,6 +16,7 @@
 \alias{posterior}
 \alias{subset}
 \alias{parameters}
+\alias{parameters<-}
 \alias{transformParams}
 
 \encoding{utf8}
@@ -62,12 +63,15 @@ subset(x, \dots)
 
 parameters(object, \dots)
 
+parameters(object, \dots) <- value
+
 transformParams(object, \dots)
 }
 
 \arguments{
 \item{object, x}{an object to apply the function.}
-\item{\dots}{addionional options to be passed tomethods}
+\item{value}{ a value to apply in replace method.}
+\item{\dots}{addionional options to be passed to methods}
 }
 
 \value{
@@ -119,6 +123,9 @@ The appropriate value for the specific cal (see dection Details).
     mixture model on a subset of parameters.}
 
     \item{parameters}{already generic in \code{flowCore}. Here, lists the
+    parameters used for clustering.}
+
+    \item{parameters<-}{ Modifies the list of
     parameters used for clustering.}
 
     \item{transformParam}{return an object with transformed mixture model

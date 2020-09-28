@@ -19,7 +19,7 @@ setMethod("mu", signature(object="immunoClust"),
 function(object, cls=seq_len(ncls(object)), par=seq_len(npar(object))) {
     object@mu[cls,par]
 })
-setMethod(sigma, signature(object="immunoClust"),
+setMethod("sigma", signature(object="immunoClust"),
 function(object, cls=seq_len(ncls(object)), par=seq_len(npar(object))) {
     object@sigma[cls,par,par]
 })

@@ -9,7 +9,7 @@
 \alias{parameters.immunoClust}
 \alias{parameters,immunoClust-method}
 \alias{parameters<-.immunoClust}
-\alias{parameters<-,immunoClust-method}
+\alias{parameters<-,immunoClust,character-method}
 \alias{label.immunoClust}
 \alias{label,immunoClust-method}
 \alias{weights.immunoClust}

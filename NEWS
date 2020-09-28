@@ -1,5 +1,11 @@
+Changes in version 1.21.2
+- CHANGES
+    * plot of no clusters
+    * soves the deprecated warning from flowCore
+    * code cleaning
+    
 Changes in version 1.21.1
-_CHANGES
+- CHANGES
     * authors email contact
     
 Changes in version 1.19.4
@@ -16,7 +22,7 @@ Changes in version 1.19.1
 
 Changes in version 1.17.4
 - CHANGES
-  * bugfix in subset.immunoMeta ans subset.immunoClust
+  * bugfix in subset.immunoMeta and subset.immunoClust
 
 Changes in version 1.17.3
 - CHANGES
@@ -25,13 +31,13 @@ Changes in version 1.17.3
 Changes in version 1.17.2
 - NEW FEATURES
   * introducing immunoMeta-class on meta-clustering results to buildup and
-    annotate a hierachical population/sub-populaton tree
+    annotate a hierarchical population/sub-populaton tree
 - CHANGES
   * trail of automated annotation of meta-clusters using scatter-clustering is
-    removed. The approach does not work in a usefull manner. Instead the
+    removed. The approach does not work in a useful manner. Instead the
     immunoMeta-class is introduced providing methods for a manual annotation
     of meta-cluster. See man-pages and vignette for more details.
-  * set.seed is removed from clustering routines. To obtain reproducable
+  * set.seed is removed from clustering routines. To obtain reproducible
     results with cell.process function set.seed has to set explicit before.
 
 Changes in version 1.17.1
@@ -40,16 +46,16 @@ Changes in version 1.17.1
   * minor additional options for immunoClust.plot/splom
 
 Changes in version 1.15.1
-- NEW FEATRUES
+- NEW FEATURES
   * additional cell-clustering method which is more reliable for samples
-    with cutted edge values (e.g. CyTOF or logarithmic applified and digitized)
+    with cuted edge values (e.g. CyTOF or logarithmic amplified and digitized)
 - CHANGES
-  * bufix in the final ICL calculation for meta-clustering
+  * bugfix in the final ICL calculation for meta-clustering
   * minor change in cluster re-labeling within sub-clustering routine which
     leads finally to differences in cluster numbering
 
 Changes in version 1.13.3
-- NEW FEATRUES
+- NEW FEATURES
   * additional variant of t-mixture model fitting respecting truncated
     observed values
 - CHANGES
@@ -57,7 +63,7 @@ Changes in version 1.13.3
 
 Changes in version 1.9.3
  - CHANGES
-  * acccedentially change in cell-clustering corrected
+  * accidentally change in cell-clustering corrected
   * minor changes in plot and splom methods
 
 Changes in version 1.9.2
@@ -68,7 +74,7 @@ Changes in version 1.9.2
 Changes in version 1.9.1
  - CHANGES
   * Minor improvements and additional option in plot and splom methods
-  * Introduce of ALPHA option also for normalization precedures
+  * Introduce of ALPHA option also for normalization procedures
     
 Changes in version 1.3.3
  - CHANGES
@@ -79,11 +85,11 @@ Changes in version 1.3.3
 
 Changes in version 1.3.1
  - CHANGES
-  * The normalization step within the meta.clusering proces is improved
+  * The normalization step within the meta.clustering process is improved
       and extended which also effects the related  parameter settings
 
 Changes in version 1.1.1.
- - NEW FEATRUES
+ - NEW FEATURES
   * A normalization step which the sample cell-clusters to the common
       meta-cluster model is included an optionally activated during the
       major meta-clustering process.
@@ -98,7 +104,7 @@ Changes in version 1.1.1.
 Changes in version 1.0.0:
  - CHANGES
   * The code was cleaned and modified in the C-binding calls to make
-      it runable on R 3.1.2.
+      it runnable on R 3.1.2.
   * A bug in the cell.hclust function was fixed, which does not effect
       the general results but lead to minor differences in concrete
       numbers.

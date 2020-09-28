@@ -13,12 +13,12 @@ max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale")
     
     ret <- data
     
-    if( !is.null(x@label) & length(x@label) < nrow(data) ) {
+    if( !is.null(x@label) && length(x@label) < nrow(data) ) {
         ret <- data[seq_len(length(x@label)),]
     }
     
     if( is.null(max.decade) ) {
-        max.decade = -1
+        max.decade <- -1
     }
     
     if( is.null(lin.scale) ) {
@@ -62,9 +62,12 @@ max.decade=attr(x,"trans.decade"), lin.scale=attr(x,"trans.scale")
         inc <- match(c(param,add.param), par@data[,'name'])
         par@data <- par@data[inc,]
         attr(mat, "ranges") <- NULL
-#2016.09.20: parameters and description do not fit together ATTENTION! 
+#2016.09.20: parameters and description do not fit together ATTENTION!
+#desc <- description(data)
+        desc <- keyword(data)
+        
         ret <- new("flowFrame", exprs=mat, parameters=par,
-                description=description(data))
+                description=desc)
     }
     else {
         mat <- data[,param]

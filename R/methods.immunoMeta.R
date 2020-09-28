@@ -107,22 +107,28 @@ function(object,cls=seq_len(ncls(object))) {
     ret
 })
 
-prop.immunoMeta <- function(object, name, pos=c(), ...)
+setMethod("prop", signature(object="immunoMeta"),
+function(object, name="", pos=c())
 {
-    #props <- c("plot.subset", "plot.parent", "plot.color",
-    #"plot.childs", "plot.endLevel", "pscales", "desc")
-    
     pop <- .annotate.getPop(object$gating, pos)
     pop[[name]]
-}
-#setReplaceMethod("prop", signature=signature(object="immunoMeta", value=ANY),
-#function(object,which, pos, for.level=TRUE, for.sublevels=FALSE, value )
+})
+
+#setReplaceMethod("prop", signature=signature(object="immunoMeta", value="ANY"),
+#definition=function(object, name="", pos=NA, for.level=TRUE,
+#for.sublevels=FALSE, ..., value )
+#{
+#     if( !all(is.integer(pos)) ) {
+#           stop("level position has to be specified as integer array")
+#    }
+#    object$gating <- .annotate.setProp(object$gating, pos, name, value,
+#        for.level=for.level, for.sublevels=for.sublevels)
+#    object
+#})
+
 "prop<-.immunoMeta" <-
 function(object, name, pos, for.level=TRUE, for.sublevels=FALSE, ..., value)
 {
-    #    props <- c("plot.subset", "plot.parent", "plot.color",
-    #"plot.childs", "plot.endLevel", "pscales", "desc")
-    
     object$gating <- .annotate.setProp(object$gating, pos, name, value,
     for.level=for.level, for.sublevels=for.sublevels)
     object
@@ -135,6 +141,7 @@ function(object, pos=c())
     pop <- .annotate.getPop(object$gating, pos)
     pop[["desc"]]
 })
+
 
 "desc<-.immunoMeta" <-
 function(object, pos, ..., value)
@@ -154,11 +161,22 @@ function(object, pos=c())
     paste(collapse="_", desc)
 })
 
-level.immunoMeta <- function(object, pos, ...)
+setMethod("level", signature(object="immunoMeta"),
+function(object, pos=c())
 {
     pop <- .annotate.getPop(object$gating, pos)
     pop
-}
+})
+#setReplaceMethod("level",signature=signature(object="immunoMeta",value="ANY"),
+#definition=function(object, pos=NA, ..., value)
+#{
+#    if( !all(is.integer(pos)) ) {
+#        stop("level position has to be specified as integer array")
+#    }
+#    object$gating <- .annotate.setPop(object$gating, pos, value)
+#    object$gating <- .annotate.restructure(object$gating)
+#    object
+#})
 
 "level<-.immunoMeta" <- function(object, pos, ..., value)
 {
@@ -215,30 +233,85 @@ function(object, pos)
 ## immunoMeta accessors
 
 ## immunoMeta manipulators
+#setReplaceMethod("addLevel",
+#signature=signature(object="immunoMeta", value="ANY"),
+#definition=function(object, pos=NA, desc="new level", ..., value)
+#{
+#    cat("addLvel", pos,"\n")
+#    if( length(pos) > 0 && !all(is.integer(pos)) ) {
+#        stop("level position has to be specified integer array")
+#    }
+#    if( !all(value %in% seq_len(ncls(object))) ) {
+#        stop("some level clusters are not in meta cluster range")
+#    }#
+#
+#    object$gating <- .annotate.addPop(object$gating, pos, value, desc)
+#    object
+#})
 
 "addLevel<-.immunoMeta" <- function(object, pos, desc="new level", ..., value)
 {
     if( !all(value %in% seq_len(ncls(object))) ) {
         stop("some level clusters are not in meta cluster range")
     }
-    
+
     object$gating <- .annotate.addPop(object$gating, pos, value, desc)
     object
 }
+
+#setReplaceMethod("move",
+#signature=signature(object="immunoMeta", value="integer"),
+#definition=function(object, pos=NA, add=FALSE, ..., value)
+#{
+#    if( length(pos) > 0 && !all(is.integer(pos)) ) {
+#        stop("level position has to be specified as integer array")
+#    }
+#
+#    if( !all(value %in% seq_len(ncls(object))) ) {
+#        stop("some clusters are not in cluster range")
+#    }
+#
+#    if( add )
+#    object$gating <- .annotate.addClusters(object$gating, value, pos)
+#    else
+#    object$gating <- .annotate.moveClusters(object$gating, value, pos)
+#
+#    object
+#})
 
 "move<-.immunoMeta" <- function(object, pos, add=FALSE, ..., value)
 {
     if( !all(value %in% seq_len(ncls(object))) ) {
         stop("some clusters are not in cluster range")
     }
-    
+
     if( add )
     object$gating <- .annotate.addClusters(object$gating, value, pos)
     else
     object$gating <- .annotate.moveClusters(object$gating, value, pos)
-    
+
     object
 }
+#setReplaceMethod("remove",
+#signature=signature(object="immunoMeta", value="ANY"),
+#definition=function(object, pos=NA, ..., value)
+#{
+    #    if( !all(value %in% 1:x$res.clusters@K) ) {
+    #       stop("some clusters are not in cluster range")
+    #   }
+#     if( length(pos) > 0 && !all(is.integer(pos)) ) {
+#          stop("level position has to be specified as integer array")
+#   }
+#   if( value == "all" ) {
+#       object$gating <- .annotate.clearClusters(object$gating)
+#       object$gating <- .annotate.addClusters(object$gating,
+#                           seq_len(ncls(object)), c())
+#   }
+#   else {
+#       object$gating <- .annotate.removeClusters(object$gating, value, pos=pos)
+#   }
+#   object
+#})
 
 "remove<-.immunoMeta" <- function(object, pos, ..., value)
 {
@@ -257,14 +330,31 @@ function(object, pos)
     object
 }
 
+#setReplaceMethod("parent",
+#signature=signature(object="immunoMeta", value="ANY"),
+#definition=function(object, pos=NA, sub.levels=TRUE, ..., value)
+#{
+#    if( length(pos) > 0 && !all(is.integer(pos)) ) {
+#           stop("level position has to be specified as integer array")
+#    }
+#    if( !is.numeric(value) &&
+#          !all(value$clusters %in% seq_len(ncls(object)) ) ) {
+#          stop("some parent clusters are not in cluster range")
+#      }
+#
+#      object$gating <- .annotate.setParent(object$gating, pos, parent=value,
+#                         childs=sub.levels)
+#      object
+#
+#})
 "parent<-.immunoMeta" <- function(object, pos, sub.levels=TRUE, ..., value)
 {
     if( !is.numeric(value) &&
         !all(value$clusters %in% seq_len(ncls(object)) ) ) {
         stop("some parent clusters are not in cluster range")
     }
-    
-    object$gating <- .annotate.setParent(object$gating, pos, parent=value, 
+
+    object$gating <- .annotate.setParent(object$gating, pos, parent=value,
                         childs=sub.levels)
     object
 }
@@ -371,17 +461,31 @@ function(object, scale=c(), offset=c(), scale.sigma=FALSE)
     y
 })
 
-finalize.immunoMeta <- function(x, remove.empty=FALSE, depth=-1)
+setMethod("finalize", signature(object="immunoMeta"),
+function(object, remove.empty=FALSE, depth=-1)
 {
-    x$gating <- .annotate.restructure(x$gating,
+    object$gating <- .annotate.restructure(object$gating,
                     remove.empty=remove.empty, depth=depth)
-    x$gating <- .annotate.buildModel(x$gating, weights(x), mu(x), sigma(x))
-    x
+    object$gating <- .annotate.buildModel(object$gating,
+        weights(object), mu(object), sigma(object))
+    object
+})
+
+"transfer<-.immunoMeta" <- function(object, value)
+{
+    object <- .annotate.clustering(value, object)
+    object <- finalize(object)
+    object
 }
 
-"transfer<-.immunoMeta" <- function(x, value)
-{
-    x <- .annotate.clustering(value, x)
-    x <- finalize(x)
-    x
-}
+#setReplaceMethod("transfer",
+#signature=signature(object="immunoMeta",  value="immunoMeta"),
+#definition=function(object, ..., value)
+#{
+    #object <- .annotate.clustering(value, object)
+    #object <- finalize(object)
+    #object
+#    transfer(object) <- value
+#})
+
+

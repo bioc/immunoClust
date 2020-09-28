@@ -88,7 +88,7 @@ history=NULL, state=NULL, K, w, m, s, modelName="mvt"
 ###
 ##  fit model to the sample data, initial event assignment given by label
 ###
-cell.ME<-function(
+cell.ME <-function(
 data, parameters=NULL, expName="immunoClust Experiment", 
 history=NULL, state=NULL, label, B=50, tol=1e-5, modelName="mvt"
 ) {

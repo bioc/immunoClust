@@ -11,23 +11,22 @@ importFrom(lattice, panel.points, splom, diag.panel.splom)
 importFrom(grDevices, dev.off, png)
 
 importClassesFrom(flowCore, flowFrame)
-importMethodsFrom(flowCore, exprs, "exprs<-", description, "description<-", 
+importMethodsFrom(flowCore, exprs, "exprs<-", description, "description<-",
+    keyword, "keyword<-",
     parameters, colnames, spillover)
 importFrom(flowCore, "read.FCS")
 
 ## export anything w/out a dot in front. 
-exportPattern("^[^\\.]")
+## exportPattern("^[^\\.]")
 
-exportClasses(immunoClust)
-## exportClasses(immunoMeta)
-exportMethods(show, summary, plot, splom)
 
-S3method("prop", "immunoMeta")
+
+## S3method("prop", "immunoMeta")
 S3method("prop<-", "immunoMeta")
 S3method("desc<-", "immunoMeta")
 S3method("addLevel<-", "immunoMeta")
-S3method("finalize", "immunoMeta")
-S3method("level", "immunoMeta")
+## S3method("finalize", "immunoMeta")
+## S3method("level", "immunoMeta")
 S3method("level<-", "immunoMeta")
 S3method("move<-", "immunoMeta")
 S3method("parent<-", "immunoMeta")
@@ -36,4 +35,112 @@ S3method("transfer<-", "immunoMeta")
 S3method("show", "immunoMeta")
 S3method("summary", "immunoMeta")
 S3method("plot", "immunoMeta")
+
+exportClasses(immunoClust)
+exportClasses(immunoMeta)
+exportMethods(show, summary, plot, splom)
+
+## immunoClust + immunoMeta
+exportMethods(
+
+nobs,
+npar,
+ncls,
+weights,
+mu,
+sigma,
+parameters,
+##"parameters<-",
+label,
+
+posterior,
+events,
+subset,
+transformParams
+)
+
+## immunoMeta
+export(immunoMeta)
+exportMethods(
+nsam,
+sam_ncls,
+sam_clsWeights,
+sam_clsEvents,
+sam_clsMu,
+sam_clsSigma,
+level,
+"level<-",
+"addLevel<-",
+findLevel,
+prop,
+"prop<-",
+desc,
+"desc<-",
+descFull,
+"parent<-",
+"move<-",
+"remove<-",
+clusters,
+classified,
+unclassified,
+finalize,
+"transfer<-"
+)
+
+## process
+export(
+cell.process,cell.InitialModel,
+cell.MajorIterationLoop,
+cell.MajorIterationTrans,
+cell.classifyAll)
+## cell clustering
+export(
+cell.EM,
+cell.Estimation,
+cell.ME,
+cell.FitModel,
+cell.Classify,
+cell.ClustData,
+cell.SubClustering,
+cell.TestSubCluster,
+cell.hclust
+)
+## meta clustering
+export(
+meta.process,
+meta.RegNorm,
+meta.Normalize,
+meta.ME,
+meta.Clustering,
+meta.SubClustering,
+meta.TestSubCluster,
+meta.hclust
+)
+## meta.export
+export(
+meta.numEvents,
+meta.numClusters,
+meta.relEvents,
+meta.parMFI,
+meta.freqTable,
+meta.relParent
+)
+## transform
+export(
+trans.ApplyToData,
+trans.FitToData
+)
+## data
+export(
+meta.exprs,
+removed.above,
+removed.below
+)
+## clust
+export(
+bhattacharyya.prob,
+bhattacharyya.dist,
+bhattacharyya.coeff
+)
+
 
