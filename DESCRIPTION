@@ -2,14 +2,16 @@ Package: immunoClust
 Type: Package
 Title: immunoClust - Automated Pipeline for Population Detection in
         Flow Cytometry
-Version: 1.23.0
-Date: 2020-09-28
+Version: 1.23.1
+Date: 2020-11-06
 Author: Till Soerensen <till.soerensen@bioretis.com>
 Maintainer: Till Soerensen <till.soerensen@bioretis.com>
 Depends: R(>= 3.6), flowCore
 Imports: methods, stats, graphics, grid, lattice, grDevices
 Suggests: BiocStyle, utils
-Description: immunoClust is a model based clustering approach for Flow Cytometry samples. The cell-events of single Flow Cytometry samples are modelled by a mixture of multinominal normal- or t-distributions. The cell-event clusters
+Description: immunoClust is a model based clustering approach for Flow Cytometry
+    samples. The cell-events of single Flow Cytometry samples are modelled by a
+    mixture of multinominal normal- or t-distributions. The cell-event clusters
     of several samples are modelled by a mixture of multinominal
     normal-distributions aiming stable co-clusters across these samples.
 Collate: generics.R class.immunoClust.R plot.immunoClust.R splom.immunoClust.R

@@ -13,7 +13,7 @@ importFrom(grDevices, dev.off, png)
 importClassesFrom(flowCore, flowFrame)
 importMethodsFrom(flowCore, exprs, "exprs<-", description, "description<-",
     keyword, "keyword<-",
-    parameters, colnames, spillover)
+    parameters, "parameters<-", colnames, spillover)
 importFrom(flowCore, "read.FCS")
 
 ## export anything w/out a dot in front. 
@@ -35,6 +35,8 @@ S3method("transfer<-", "immunoMeta")
 S3method("show", "immunoMeta")
 S3method("summary", "immunoMeta")
 S3method("plot", "immunoMeta")
+#S3method("parameters", "immunoMeta")
+#S3method("parameters<-", "immunoMeta")
 
 exportClasses(immunoClust)
 exportClasses(immunoMeta)
@@ -50,7 +52,7 @@ weights,
 mu,
 sigma,
 parameters,
-##"parameters<-",
+#"parameters<-",
 label,
 
 posterior,
@@ -84,7 +86,10 @@ clusters,
 classified,
 unclassified,
 finalize,
-"transfer<-"
+"transfer<-",
+clusterDist,
+clusterCoeff,
+clusterProb
 )
 
 ## process
@@ -93,7 +98,7 @@ cell.process,cell.InitialModel,
 cell.MajorIterationLoop,
 cell.MajorIterationTrans,
 cell.classifyAll)
-## cell clustering
+## cell.clustering
 export(
 cell.EM,
 cell.Estimation,
@@ -105,7 +110,7 @@ cell.SubClustering,
 cell.TestSubCluster,
 cell.hclust
 )
-## meta clustering
+## meta.clustering
 export(
 meta.process,
 meta.RegNorm,
@@ -136,7 +141,7 @@ meta.exprs,
 removed.above,
 removed.below
 )
-## clust
+## util
 export(
 bhattacharyya.prob,
 bhattacharyya.dist,
