@@ -33,7 +33,6 @@ class em_mvt2 {
 	int				T_inc;
 	double			T_sum;
 	
-    size_t*         Y_order;    // sorted for each parameter: N x P
     double*         Y_min;  // observed min: P
     double*         Y_max;  // observed max: P
     

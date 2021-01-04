@@ -455,9 +455,9 @@ function(P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
                                     if( d <= 0 ) return (-300)
                                         log(d)
                                     }) > -100)
-            if( length(samples.set) < N ) {
-                cat(length(samples.set), "of", N, "clusters used\n")
-            }
+            #if( length(samples.set) < N ) {
+            #    cat(length(samples.set), "of", N, "clusters used\n")
+            #}
             
             if( J > length(samples.set) ) {
                 return (NULL)

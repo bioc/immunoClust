@@ -13,8 +13,9 @@ mu <- function(object,...) UseMethod("mu")
 setGeneric("sigma")
 ## parameters already S4 in flowCore
 setGeneric("parameters")
-"parameters<-" <- function(object, ..., value) UseMethod("parameters<-")
-setGeneric("parameters<-")
+## parameters<- already S4 in flowCore
+#"parameters<-" <- function(object, ..., value) UseMethod("parameters<-")
+#setGeneric("parameters<-")
 
 ## label
 label <- function(object,...) UseMethod("label")
@@ -29,7 +30,7 @@ setGeneric("subset")
 transformParams <- function(object, ... ) UseMethod("transformParams")
 
 
-## generics only for immunoMeta
+## generics only for immunoMeta S3methods (replacement)
 
 ## events
 events <- function(object,...) UseMethod("events")
@@ -73,6 +74,9 @@ sam_clsEvents <- function(object, ...) UseMethod("sam_clsEvents")
 sam_clsMu <- function(object, ...) UseMethod("sam_clsMu")
 sam_clsSigma <- function(object, ...) UseMethod("sam_clsSigma")
 
+clusterDist <- function(object, ...) UseMethod("clusterDist")
+clusterCoeff <- function(object, ...) UseMethod("clusterCoeff")
+clusterProb <- function(object, ...) UseMethod("clusterProb")
 
 ## TODO transformParams => transform??
 # transform: already S4-method in flowCore

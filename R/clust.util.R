@@ -14,6 +14,9 @@ bhattacharyya.prob <- function(gM,gS, cM,cS, alpha=1)
         return(ret)
     }
     
+    if( is.null(gS) || is.null(cS) )
+        return (0)
+        
     det_g <- log(det(gS))
     det_c <- log(det(cS))
     
@@ -122,7 +125,8 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
 # represent each group by its lowest-numbered member
         for(i in u) {
             l <- x == i
-            y[l] <- (1:n)[l][1]
+            #y[l] <- (1:n)[l][1]
+            y[l] <- seq_len(n)[l][1]
         }
     }
     y
@@ -223,7 +227,9 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
 ###
 
 ###
-## 
+##
+
+
 .clust.mergedClusters <- function(x, cls)
 {
     P <- ncol(x@mu)
@@ -307,11 +313,16 @@ expName="", parameters=c(), inc=c())
         state <- rep(0, L)
     }
     
-    new("immunoClust", expName=expName, parameters=parameters,
+    ret <-new("immunoClust", expName=expName, parameters=parameters,
         K=L, P=P, N=N, w=obj$w[seq_len(L)], mu=mu, sigma=sigma,
         z=z, label=label, 
         logLike=obj$logLike, BIC=obj$logLike[1], ICL=obj$logLike[2],
         history=paste(obj$history), state=state)
+        
+    attr(ret,"iterations") <- obj$iterations
+    attr(ret,"tolerance") <- obj$tolerance
+    
+    ret
     
 }
 ## .immunoClust2

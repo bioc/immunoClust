@@ -86,6 +86,10 @@
 \alias{subset,immunoMeta-method}
 \alias{transformParams.immunoMeta}
 \alias{transformParams,immunoMeta-method}
+\alias{clusterCoeff,immunoMeta-method}
+\alias{clusterDist,immunoMeta-method}
+\alias{clusterProb,immunoMeta-method}
+
 \encoding{utf8}
 
 \title{
@@ -469,6 +473,39 @@ in each parameter
     \emph{Usage:}
 
     \code{transformedMeta <- transformParams(immunoMeta, scale=c(), offset=c())}
+}
+
+\item{clusterCoeff}{
+Calculates the bhattacharrya coefficients of clusters \code{cls} for a level
+\code{lvl} in the \code{immunoMeta}-object
+
+    \emph{Usage:}
+
+    \code{ret <- clustersCoeff(immunoMeta, cls, lvl, 
+        par=seq_len(npar(immunoMeta))}
+
+}
+
+\item{clusterDist}{
+Calculates the bhattacharrya distances of clusters \code{cls} for a level
+\code{lvl} in the \code{immunoMeta}-object
+
+    \emph{Usage:}
+
+    \code{ret <- clustersDist(immunoMeta, cls, lvl, 
+        par=seq_len(npar(immunoMeta))}
+
+}
+
+\item{clusterProb}{
+Calculates the bhattacharrya probabilities of clusters \code{cls} for a level
+\code{lvl} in the \code{immunoMeta}-object
+
+    \emph{Usage:}
+
+    \code{ret <- clustersProb(immunoMeta, cls, lvl, 
+        par=seq_len(npar(immunoMeta))}
+
 }
 
 }

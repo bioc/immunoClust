@@ -38,3 +38,16 @@ The Bhattacharyya probability, distance or coefficient
 \author{
 Till Sörensen \email{till-antoni.soerensen@charite.de}
 }
+
+\examples{
+data(dat.meta)
+
+prob <- bhattacharyya.prob(prop(dat.meta,"M",c()), prop(dat.meta,"S"),
+    mu(dat.meta,1), sigma(dat.meta,1))
+dist <- bhattacharyya.dist(prop(dat.meta,"M",c()), prop(dat.meta,"S"),
+    mu(dat.meta,1), sigma(dat.meta,1))
+coeff <- bhattacharyya.coeff(prop(dat.meta,"M",c()), prop(dat.meta,"S"),
+    mu(dat.meta,1), sigma(dat.meta,1))
+
+
+}

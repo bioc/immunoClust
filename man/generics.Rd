@@ -18,6 +18,9 @@
 \alias{parameters}
 \alias{parameters<-}
 \alias{transformParams}
+\alias{clusterCoeff}
+\alias{clusterDist}
+\alias{clusterProb}
 
 \encoding{utf8}
 
@@ -66,6 +69,12 @@ parameters(object, \dots)
 parameters(object, \dots) <- value
 
 transformParams(object, \dots)
+
+clusterCoeff(object, \dots)
+
+clusterDist(object, \dots)
+
+clusterProb(object, \dots)
 }
 
 \arguments{
@@ -100,7 +109,7 @@ The appropriate value for the specific cal (see dection Details).
 
     \item{npar}{returns the number of parameters used for clustering.}
 
-    \item{ncls}{returns the number of cluster, either cell-event cluster or 
+    \item{ncls}{returns the number of clusters, either cell-event cluster or 
     meta-cluster.}
 
     \item{weights}{already generic in \code{stats}. Here, returns the weights 
@@ -130,6 +139,15 @@ The appropriate value for the specific cal (see dection Details).
 
     \item{transformParam}{return an object with transformed mixture model
     parameters.}
+    
+    \item{clusterCoeff}{returns the bhattacharrya coefficient of meta clusters
+    for a meta level.}
+    
+    \item{clusterDist}{returns the bhattacharrya distance of meta clusters for
+    a meta level.}
+    
+    \item{clusterProb}{returns the bhattacharrya probability of meta clusters
+    for a meta level.}
 }
 }
 

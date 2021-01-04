@@ -488,4 +488,50 @@ function(object, remove.empty=FALSE, depth=-1)
 #    transfer(object) <- value
 #})
 
+setMethod("clusterDist", signature="immunoMeta",
+function(object, cls, lvl, par=seq_len(npar(object)) ) {
+    
+    #d <- sapply(cls, function(k) bhattacharyya.dist(prop(object,"M", lvl)[par],
+    #   prop(object, "S", lvl)[par,par],
+    #   mu(object,k,par), sigma(object,k,par)) )
+    
+    d <- vapply(cls, function(k) bhattacharyya.dist(prop(object,"M", lvl)[par],
+        prop(object, "S", lvl)[par,par],
+        mu(object,k,par), sigma(object,k,par)), 0 )
+    
+    names(d) <- sprintf("cls-%d",cls)
+    d
+})
+
+setMethod("clusterCoeff", signature="immunoMeta",
+function(object, cls, lvl, par=seq_len(npar(object)) ) {
+    
+#d <- sapply(cls, function(k) bhattacharyya.coeff(prop(object,"M", lvl)[par],
+#   prop(object, "S", lvl)[par,par],
+#   mu(object,k,par), sigma(object,k,par)) )
+    
+    d <- vapply(cls, function(k) bhattacharyya.coeff(prop(object,"M", lvl)[par],
+        prop(object, "S", lvl)[par,par],
+        mu(object,k,par), sigma(object,k,par)), 0 )
+    
+    
+    names(d) <- sprintf("cls-%d",cls)
+    d
+})
+
+setMethod("clusterProb", signature="immunoMeta",
+function(object, cls, lvl, par=seq_len(npar(object)) ) {
+    
+    #d <- sapply(cls, function(k) bhattacharyya.prob(prop(object,"M", lvl)[par],
+    #   prop(object, "S", lvl)[par,par],
+    #   mu(object,k,par), sigma(object,k,par)) )
+    
+    d <- vapply(cls, function(k) bhattacharyya.prob(prop(object,"M", lvl)[par],
+        prop(object, "S", lvl)[par,par],
+        mu(object,k,par), sigma(object,k,par)), 0 )
+    
+    
+    names(d) <- sprintf("cls-%d",cls)
+    d
+})
 

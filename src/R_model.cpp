@@ -84,7 +84,7 @@ extern "C" {
 		SET_VECTOR_ELT(ret, 6, allocVector(REALSXP, 3));	// out logLike
 		SET_VECTOR_ELT(ret, 7, allocVector(INTSXP, k));		// out history
 		SET_VECTOR_ELT(ret, 8, allocVector(INTSXP, 1));		// out status
-		SET_VECTOR_ELT(ret, 9, allocVector(INTSXP, 1));		// out iteratioms
+		SET_VECTOR_ELT(ret, 9, allocVector(INTSXP, 1));		// out iterations
 		SET_VECTOR_ELT(ret, 10, allocVector(REALSXP, 1));	// out tollerance
 		        
 		setAttrib(ret, R_NamesSymbol, names);
@@ -121,7 +121,7 @@ extern "C" {
 		SET_VECTOR_ELT(ret, 6, allocVector(REALSXP, 3));	// out logLike
 		SET_VECTOR_ELT(ret, 7, allocVector(INTSXP, k));     // out history
 		SET_VECTOR_ELT(ret, 8, allocVector(INTSXP, 1));		// out status
-		SET_VECTOR_ELT(ret, 9, allocVector(INTSXP, 1));		// out iteratioms
+		SET_VECTOR_ELT(ret, 9, allocVector(INTSXP, 1));		// out iterations
 		SET_VECTOR_ELT(ret, 10, allocVector(REALSXP, 1));	// out tollerance
         
 		setAttrib(ret, R_NamesSymbol, names);

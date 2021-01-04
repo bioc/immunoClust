@@ -61,15 +61,7 @@ em_mvt2::init(const double* weights) {
     Y_min = new double[P];
     Y_max = new double[P];
     cblas_dcopy(P, &zero, 0, TRC, 1);
-/*
-    Y_order = new size_t[N*P];
-    for( int p=0; p<P; ++p ) {
-        gsl_sort_index(Y_order + p*N, Y+p, P, N);
-        Y_min[p] = *(Y+(*(Y_order+p*N))*P+p);
-        Y_max[p] = *(Y+(*(Y_order+(p+1)*N-1))*P+p);
-    }
-*/
-    Y_order = 0;
+
     // 2014.04.29: calc trace from total sample co-variance matrix
 	// form mean
 	const double fac = one / T_sum;
@@ -92,29 +84,22 @@ em_mvt2::init(const double* weights) {
 
 	}
     
-    /*
-    for( int p=0; p<P; ++p) {
-        dbg::printf("param %d: %.4lf %.4lf - %.4lf %.4lf", p, Y_min[p], Y_max[p],
-                    *(Y+(*(Y_order+p*N))*P+p), *(Y+(*(Y_order+(p+1)*N-1))*P+p) );
-    }
-     */
-    
  	for( int p=0; p<P; ++p ) {
 		y = Y + p;
 		double* v = tmpP + p;
 		t = T;
- 		for( int i=0; i<N; ++i ) {
+		for( int i=0; i<N; ++i ) {
 			TRC[p] += (*t)*fac * sqr((*y) - (*v));
  			y += P;
 			t += T_inc;
-		}
+ 		}
 	}
     
 	for( int p=0; p<P; ++p ) {
 		TRC[p] = max(EPSMIN, TRC[p]/T_sum);
  	}
  
-    dbg::printf("em_mvt %s: K=%d, P=%d, N=%d (T=%.1lf)", weights? "weighted":"straight", K, P, N, T_sum);
+    dbg::printf("em_mvt2 %s: K=%d, P=%d, N=%d (T=%.1lf)", weights? "weighted":"straight", K, P, N, T_sum);
 }
 
 
@@ -131,7 +116,6 @@ em_mvt2::~em_mvt2()
 	delete[] TRC;
     delete[] Y_min;
     delete[] Y_max;
-    delete[] Y_order;
 }
 				   
 /*
@@ -153,7 +137,7 @@ em_mvt2::e_step()
 	cblas_dcopy(K, &zero, 0, ZU_sum, 1);
 	    
 	const double* y = Y;
-	double* z = Z;
+  double* z = Z;
 	for(i=0;i<N;i++) {        
        
 		double sumLike=0;
@@ -179,7 +163,7 @@ em_mvt2::e_step()
 		} // for k
 	
 		if( sumLike > 0.0 ) {
-			obLike += log(sumLike);
+  		obLike += log(sumLike);
 			cblas_dscal(K, 1.0/sumLike, z, 1);
 		}
 		else {
@@ -195,7 +179,7 @@ em_mvt2::e_step()
 
 		y += P;
 		z += K;
-	} // for n
+    } // for n
 	
 	return obLike;
 
@@ -218,7 +202,7 @@ em_mvt2::we_step()
 	const double* y = Y;
 	const double* t = T;
 	double* z = Z;
-	
+    
 	for(i=0;i<N;i++) {        
 		double sumLike=0.0;
 		
@@ -336,6 +320,7 @@ em_mvt2::et_step()
 		}
 
 		if( sumLike > 0.0 ) {
+            //if(*e == 0)
 			obLike += log(sumLike);
 			cblas_dscal(K, 1.0/sumLike, z, 1);
 		}
@@ -448,7 +433,7 @@ em_mvt2::wet_step()
 		}
 		
 		if( sumLike > 0.0 ) {
-			obLike += (*t)*log(sumLike);
+    		obLike += (*t)*log(sumLike);
 			cblas_dscal(K, 1.0/sumLike, z, 1);
 		}
 		
@@ -486,7 +471,7 @@ em_mvt2::wet_step()
 		t += T_inc;
 		y += P;
 		z += K;
-	}	// for i < N
+ 	}	// for i < N
 	
 	return obLike;
 	
@@ -613,16 +598,6 @@ em_mvt2::m_init()
             y += P;
 		}
         for( p=0; p<P; ++p ) {
-            /*
-            const size_t* o = Y_order + p*N;
-            int i = 0;
-            double m_sum = 0;
-            while( i<(N-1) && m_sum < z_sum/2) {
-                m_sum += *(Z + (*o)*K + k);
-                o++; i++;
-            }
-            m[p] = *(Y + (*o)*P+p);
-            */
             
             if( tmpP[p] > 0 ) {
                 m[p] /= tmpP[p];
@@ -901,16 +876,6 @@ em_mvt2::m_step()
         }
         
         for( p=0; p<P; ++p ) {
-            /*
-            const size_t* o = Y_order + p*N;
-            i = 0;
-            double m_sum = 0;
-            while( i<(N-1) && m_sum < z_sum/2) {
-                m_sum += *(Z + (*o)*K + k);
-                o++; i++;
-            }
-            m[p] = *(Y + (*o)*P+p);
-             */
             
             if( tmpP[p] > 0 ) {
                 m[p] /= tmpP[p];
@@ -1227,7 +1192,7 @@ em_mvt2::_iterate(int& iterations, double& tolerance, em_mvt2::E_STEP estep, em_
 		iter_ok = true;	
 		if( t_step() ) {
 			(this->*estep)();
-			hood = FLT_MAX;
+			hood = FLT_MAX/2;
 			diff = FLT_MAX;
 			iter_ok = false;
 		
@@ -1238,7 +1203,7 @@ em_mvt2::_iterate(int& iterations, double& tolerance, em_mvt2::E_STEP estep, em_
 		}
 
 		if(  m_step() ) {
-			hood = FLT_MAX;
+			hood = FLT_MAX/2;
 			diff = FLT_MAX;
 			iter_ok = false;
 		}
@@ -1353,9 +1318,10 @@ em_mvt2::final(double logLike[3], int* label, int* history)
 		if( maxClust > -1 )
 			tmpK[maxClust] += (*t);
 		
-		if( sumLike > 0.0 ) {
+       if( sumLike > 0.0 ) {
 			cblas_dscal(L, 1./sumLike, z, 1);
 		}
+       
 		obLike += (sumLike>0.0)? (*t) * log(sumLike) : 0.0;
 		icLike += (maxPDF>0.0)? (*t) * log(maxPDF) : 0.0;
 		
