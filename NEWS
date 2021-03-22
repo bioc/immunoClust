@@ -1,7 +1,17 @@
+Changes in version 1.23.2
+- CHANGES
+    * tolerance sufficience in cell-subclustering not required for first model
+      refinement test
+
+Changes in version 1.23.1
+- NEW FEATURES
+    * added methods clusterDist, clusterProb, clusterCoeff for immunoMeta-object
+    * starting with unit tests
+
 Changes in version 1.21.2
 - CHANGES
     * plot of no clusters
-    * soves the deprecated warning from flowCore
+    * solves the deprecated warning from flowCore
     * code cleaning
     
 Changes in version 1.21.1

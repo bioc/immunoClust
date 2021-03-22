@@ -66,7 +66,7 @@ subset(x, \dots)
 
 parameters(object, \dots)
 
-parameters(object, \dots) <- value
+%% parameters(object, \dots) <- value
 
 transformParams(object, \dots)
 
@@ -79,7 +79,7 @@ clusterProb(object, \dots)
 
 \arguments{
 \item{object, x}{an object to apply the function.}
-\item{value}{ a value to apply in replace method.}
+%% \item{value}{ a value to apply in replace method.}
 \item{\dots}{addionional options to be passed to methods}
 }
 

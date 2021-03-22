@@ -36,7 +36,8 @@ state=NULL, K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt"
                 as.double(t(y)), double(0), 
                 as.double(w), as.double(M), as.double(S),
                 as.integer(B), as.double(tol), as.double(bias) )
-
+#if( obj$iterations >= B )
+#    message("EM reached maximal iterations ", B, "(", tol,")")
     .immunoClust2(obj, K, P, N, state=state,
                     expName=expName, parameters=parameters)
 }
@@ -134,7 +135,7 @@ function(x, data, B=50, tol=1e-5, bias=0.5, modelName="mvt" )
     
     e <- strptime(date(), "%a %b %d %H:%M:%S %Y")
     message("EM ", res@K," takes ", format(difftime(e,s,units="min"), digits=2),
-            " minutes\n")
+            ", ", attr(res,"iterations"), " iterations\n")
     
     res
 }
@@ -357,6 +358,7 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
     tst_l <- rep(1, K)
     
     state = model@state
+    duration <- rep(0,K)
     for( k in seq_len(K) ) {
         
 ## get cluster data
@@ -377,6 +379,8 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
                             modelName=modelName) 
         
         ke <- strptime(date(), "%a %b %d %H:%M:%S %Y")
+        
+        duration[k] <- difftime(ke,ks,units="min")
 
         res_l[[k]] <- res
         if( !is.null(res) && length(res) > 1 ) {
@@ -415,19 +419,14 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
 #               model@state[k] <- 0
 #           }
             
-#if( res[[2]]@ICL < -2*bias ) {
-#cat("cluster", k, "state", model@state[k], "=> 1\n")
-#               model@state[k] <- 1
-#            }
         }
         else {
-## state already > 0
-#     model@state[k] <- 2
             icl_l[k] <- 0
             tst_l[k] <- 1
         }
-
-#cat("=>", model@state[k], "\n")
+        #        if( length(res) > 0 )
+        #message("cluster ", k, " (N=", res[[1]]@N,
+        #    ") ICL=", format(icl_l[k],digits=2))
         
     } ## for cluster k
     
@@ -449,8 +448,11 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
         } 
         
         if( res[[l]]@K > 1 ) {
-            message("cluster ", k, " has ", res[[l]]@K, " sub-cluster at ", l, 
-                    ", ICL=", format(icl, digits=2))
+            message("cluster ", k, "(N=", res[[l]]@N, ") has ",
+                res[[l]]@K, " sub-cluster at ", l,
+                " (", attr(res[[l]],"iterations"), ")",
+                ", ICL=", format(icl, digits=2), "<>",
+                format(icl_thres, digits=2) )
         }
         
         icl_l[k] <- cutoff
@@ -461,6 +463,7 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
         break
         
         if( (res@K>1) && (icl>icl_thres) ) {
+            message("split ", k, " into ", res@K, " clusters")
             ins[[k]] <- new("immunoClust", expName="Cluster Refinement", 
                         parameters=res@parameters,
                         K=res@K, w=res@w, mu=res@mu, sigma=res@sigma, 
@@ -484,8 +487,11 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
     attr(model, "trans.scale") <- attr(x,"trans.scale")
     
     e <- strptime(date(), "%a %b %d %H:%M:%S %Y")
+    k <- which.max(duration)
     message("Model Refinement takes ", 
-            format(difftime(e,s,units="min"), digits=2), " minutes\n")
+            format(difftime(e,s,units="min"), digits=2),
+            "(max ", k, ": ", format(duration[k], digits=2),
+            ")")
     
     model
 }
@@ -580,7 +586,7 @@ modelName="mvt"
         return(NULL)
     }
     
-    result <- vector("list", J)
+    result <- vector("list")
     
     label <- rep(1, N)
     
@@ -609,7 +615,8 @@ modelName="mvt"
     result[[1]] <- new("immunoClust", parameters=x@parameters, 
                     K=1, N=N, P=P, w=obj$w, 
                     mu=matrix(obj$m, 1, P, byrow=TRUE), sigma=sigma,
-                    logLike=obj$logLike, BIC=BIC, ICL=ICL)   
+                    logLike=obj$logLike, BIC=BIC, ICL=ICL)
+    attr(result[[1]], "iterations") <- obj$itertations
     
     obj <- NULL 
 # initialization based on hierarchical clustering
@@ -694,17 +701,22 @@ modelName="mvt"
                     as.integer(B), as.double(tol), as.double(bias) ) 
         
 ## 2012.12.12: singularity problems   
-        if( obj$L < 1 || obj$logLike[3] == Inf || obj$tolerance > tol) {
-            res_t = vector("list", k-1)
-            for( l in seq_len(k-1) )
-            res_t[[l]] <- result[[l]]
+        if( obj$L < 1 || obj$logLike[3] == Inf ||
+            (k > 2 && obj$tolerance > tol) ) {
+            #message("TestSubCluster breaks at ", obj$L, ", ", obj$iterations,
+            #", ", obj$tolerance, ">", tol)
+            #res_t = vector("list", k-1)
+            #for( l in seq_len(k-1) )
+            #res_t[[l]] <- result[[l]]
             
-            result <- res_t
+            #result <- res_t
             J = k-1
             break
         }
+    
         
         L <- obj$L
+        
 # output obj$s to sigma
         sigma <- array(0, c(L, P, P))
         s <- matrix(obj$s, k, P * P, byrow=TRUE)
@@ -740,6 +752,13 @@ modelName="mvt"
         result[[k]] <- new("immunoClust", parameters=x@parameters, 
                         K=L, N=N, P=P, w=obj$w[seq_len(L)], mu=mu, sigma=sigma,
                         logLike=obj$logLike, BIC=BIC, ICL=ICL)
+        attr(result[[k]], "iterations") <- obj$iterations
+        
+        if( obj$tolerance > tol ){
+            J = k
+            break
+        }
+        
         obj <- NULL
         
     } ## for k

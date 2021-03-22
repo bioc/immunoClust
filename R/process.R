@@ -291,8 +291,9 @@ sub.standardize=TRUE #, seed=1
     
     
     e <- strptime(date(), "%a %b %d %H:%M:%S %Y")
+    attr(res, "processing_time") <- difftime(e,s,units="min")
     message("Process ", I.buildup, "/", I.final, " takes ", 
-            format(difftime(e,s,units="min"), digits=2), " minutes")
+            format(difftime(e,s,units="min"), digits=2))
     res
 }
 
@@ -396,7 +397,7 @@ trans.proc="vsHtransAw"
     
     e <- strptime(date(), "%a %b %d %H:%M:%S %Y")
     message("Major Iteration (Trans) (", I.buildup, "/", I.final, ") takes ", 
-            format(difftime(e,s,units="min"), digits=2), " minutes")
+            format(difftime(e,s,units="min"), digits=2))
     res
 }
 
