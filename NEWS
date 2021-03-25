@@ -1,3 +1,7 @@
+Changes in version 1.23.3
+- CHANGES
+    * fixes a testthat misspelling
+    
 Changes in version 1.23.2
 - CHANGES
     * tolerance sufficience in cell-subclustering not required for first model
