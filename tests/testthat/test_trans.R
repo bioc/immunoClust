@@ -8,7 +8,7 @@ test_that("transformation", {
   r <- cell.Classify(dat.exp[[1]], dat.trans)
   expect_is(r, "immunoClust")
   t <- trans.FitToData(r, dat.fcs)
-  expect_len(t,14)
+  expect_length(t,14)
 })
 
 

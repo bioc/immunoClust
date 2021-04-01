@@ -38,6 +38,6 @@ test_that("cell.hclust", {
     data(dat.fcs)
     inc <- sample(1:nrow(dat.fcs), 50)
     result <- cell.hclust(exprs(dat.fcs)[inc,])
-    expect_len(result, 98)
+    expect_length(result, 98)
 })
 
