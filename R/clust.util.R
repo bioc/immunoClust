@@ -41,19 +41,42 @@ bhattacharyya.prob <- function(gM,gS, cM,cS, alpha=1)
 }
 
 ## bhattacharyya.dist = -log(bhattacharyya.coeff)
+#bhattacharyya.dist <- function (gM, gS, cM, cS)
+#{
+#   if( is.null(gS) || is.null(cS) ) {
+#
+#        return(0)
+#    }
+#
+#    S <- (gS + cS)/2
+#    d1 <- mahalanobis(gM, cM, S)/8
+#
+#    d2 <- log(det(as.matrix(S))/sqrt(det(as.matrix(gS)) *
+#    det(as.matrix(cS))))/2
+#    ret <- d1 + d2
+#    ret
+#}
+
 bhattacharyya.dist <- function (gM, gS, cM, cS)
 {
     if( is.null(gS) || is.null(cS) ) {
-        
         return(0)
     }
     
-    S <- (gS + cS)/2
-    d1 <- mahalanobis(gM, cM, S)/8
+    det_g <- log(det(gS))
+    det_c <- log(det(cS))
     
-    d2 <- log(det(as.matrix(S))/sqrt(det(as.matrix(gS)) *
-    det(as.matrix(cS))))/2
-    ret <- d1 + d2
+    S <- NULL
+    try( S <- solve((gS+cS) / 2), silent=TRUE)
+    
+    if( is.null(S) ) {
+        return (0)
+    }
+    
+    d1 <- mahalanobis(gM, cM, S, inverted=TRUE)/8
+    d2 <- (log(det(S)) + 0.5*det_g + 0.5*det_c)/2
+    
+    ret <- d1 - d2
     ret
 }
 

@@ -1,3 +1,7 @@
+Changes in version 1.23.6
+- CHANGES
+    * code cleaning
+
 Changes in version 1.23.3
 - CHANGES
     * fixes a testthat misspelling
