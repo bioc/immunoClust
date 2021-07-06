@@ -278,18 +278,21 @@
     pop
 }
 
-.annotate.removeClusters <- function(pop,  clusters, pos=c())
+.annotate.removeClusters <- function(pop,  clusters, pos=c(), renumber=c())
 {
     if( is.null(pop) ) 
     return(pop)
     
     if( length(pos) == 0 ) {
         pop$clusters <- pop$clusters[is.na(match(pop$clusters, clusters))]
+        if( !is.null(renumber) ){
+            pop$clusters <- match(pop$clusters,renumber)
+        }
         if( length(pop$childs) > 0 ) {
             
             for( i in seq_len(length(pop$childs)) ) {
                 pop$childs[[i]] <- .annotate.removeClusters(pop$childs[[i]],
-                                        clusters, pos=pos)
+                                        clusters, pos=pos, renumber=renumber)
             }
         }
         
