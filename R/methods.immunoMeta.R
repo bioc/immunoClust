@@ -365,6 +365,7 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
     y <- x
     if( length(cls) != ncls(x) ) {
         K <- ncls(x)
+        cls <- sort(cls)
         rem <- rep(TRUE,K)
         rem[cls] <- FALSE
         
@@ -391,9 +392,18 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
         y$res.clusters@w <- w
         y$res.clusters@mu <- m
         y$res.clusters@sigma <- s
-        y$res.clusters@label <- x$res.clusters@label[cls]
         
-        y$gating <- .annotate.removeClusters(x$gating,which(rem), c())
+        
+        if( ncls(x) == nobs(x) ) {
+            renumber <- which(!rem)
+            y$res.clusters@label <- match(x$res.clusters@label[cls], renumber)
+        
+            y$gating <- .annotate.removeClusters(x$gating,which(rem), pos=c(),
+                renumber=renumber)
+        }
+        else {
+            y$gating <- .annotate.removeClusters(x$gating,which(rem), pos=c())
+        }
         
     }
     if(length(par) != npar(x)) {
@@ -424,6 +434,8 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
     y$gating <- .pop.restructure(y$gating, subset=params)
     #y$gating <- .annotate.buildModel(y$gating, y$res.clusters)
     y$gating <- .annotate.buildModel(y$gating, weights(y), mu(y), sigma(y))
+    if( !is.null(prop(x,"pscales",c())) )
+        prop(y,"pscales",c()) <- prop(x,"pscales",c())[params]
     }
     
     y
@@ -491,10 +503,6 @@ function(object, remove.empty=FALSE, depth=-1)
 setMethod("clusterDist", signature="immunoMeta",
 function(object, cls, lvl, par=seq_len(npar(object)) ) {
     
-    #d <- sapply(cls, function(k) bhattacharyya.dist(prop(object,"M", lvl)[par],
-    #   prop(object, "S", lvl)[par,par],
-    #   mu(object,k,par), sigma(object,k,par)) )
-    
     d <- vapply(cls, function(k) bhattacharyya.dist(prop(object,"M", lvl)[par],
         prop(object, "S", lvl)[par,par],
         mu(object,k,par), sigma(object,k,par)), 0 )
@@ -505,11 +513,7 @@ function(object, cls, lvl, par=seq_len(npar(object)) ) {
 
 setMethod("clusterCoeff", signature="immunoMeta",
 function(object, cls, lvl, par=seq_len(npar(object)) ) {
-    
-#d <- sapply(cls, function(k) bhattacharyya.coeff(prop(object,"M", lvl)[par],
-#   prop(object, "S", lvl)[par,par],
-#   mu(object,k,par), sigma(object,k,par)) )
-    
+
     d <- vapply(cls, function(k) bhattacharyya.coeff(prop(object,"M", lvl)[par],
         prop(object, "S", lvl)[par,par],
         mu(object,k,par), sigma(object,k,par)), 0 )
@@ -521,11 +525,7 @@ function(object, cls, lvl, par=seq_len(npar(object)) ) {
 
 setMethod("clusterProb", signature="immunoMeta",
 function(object, cls, lvl, par=seq_len(npar(object)) ) {
-    
-    #d <- sapply(cls, function(k) bhattacharyya.prob(prop(object,"M", lvl)[par],
-    #   prop(object, "S", lvl)[par,par],
-    #   mu(object,k,par), sigma(object,k,par)) )
-    
+        
     d <- vapply(cls, function(k) bhattacharyya.prob(prop(object,"M", lvl)[par],
         prop(object, "S", lvl)[par,par],
         mu(object,k,par), sigma(object,k,par)), 0 )

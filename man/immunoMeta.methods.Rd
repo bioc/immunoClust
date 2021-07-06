@@ -298,14 +298,14 @@ mainly to control the plot routine for the levels.
 
     \code{M}        the mean of all clusters in this level
 
-    \code{S}        the co-variance meatirx of all clusters in this level
+    \code{S}        the co-variance matrix of all clusters in this level
 
-    \code{pscales}  a list of \code{npar} entries for the limits and ticksi
+    \code{pscales}  a list of \code{npar} entries for the limits and ticks
     information. Normaly, only set on root-level and then used for all
     sub-levels. But could set and altered at any level.
 
     \code{plot.subset}  an array of parameter indices used as default for the
-    plot this level.
+    plot of this level.
 
     \code{plot.color}   an index in the \code{palette} or other specified
     color used for plots of this level in its parent level.

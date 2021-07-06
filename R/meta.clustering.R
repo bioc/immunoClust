@@ -270,7 +270,7 @@ norm.method=0, norm.blur=2, norm.minG=10
                 " clusters")
         res <- meta.ME(P, N, K, W, tM, tS, label, B=B, tol=tol, 
                         bias=bias, alpha=alpha, method=EM.method)
-        
+        message("=> results in  ", res@K, " clusters")
         label <- res@label 
         
         if( res@K == G ) break
@@ -340,10 +340,10 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
             break
         }
         
-#if( res[[l]]@K > 1 ) {
-#           message("cluster ", k, " has ", res[[l]]@K, " sub-clusters at ", 
-#               l, ", ICL=", format(icl, digits=2))
-#       }
+        if( res[[l]]@K > 1 ) {
+            message(J, "/", sK, ": cluster ", k, " has ", res[[l]]@K, " sub-clusters at ",
+                l, ", ICL=", format(icl, digits=2))
+        }
         
         icl_l[k] <- cutoff
         

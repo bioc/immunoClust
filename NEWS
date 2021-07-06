@@ -1,3 +1,11 @@
+Changes in version 1.25.2
+- CHANGES
+    * bugfix immunoMeta contructor from single immunoClust-object
+
+Changes in version 1.25.1
+- CHANGES
+    * bugfix im subset.immunoMeta-object
+
 Changes in version 1.23.6
 - CHANGES
     * code cleaning

@@ -435,9 +435,10 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
     ins <- vector("list",K)
     sK <- 0
     xK <- max(8,2*x@K)
-    
+
     while( xK > sK ) {
         k <- which.max(icl_l)
+        
         
         res <- res_l[[k]]
         icl <- icl_l[k]

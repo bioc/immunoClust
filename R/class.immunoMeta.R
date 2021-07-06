@@ -21,7 +21,7 @@ immunoMeta <- function(res, dat, gating) {
         dat <- list("P"=res@P, "N"=1, "K"=res@K, 
                     "W"=res@w, "M"=M, "S"=res@sigma,
                     "expNames"=res@expName, 
-                    "expEvents"=length(res@label), 
+                    "expEvents"=sum(!is.na(res@label)),
                     "removedEvents"=sum(is.na(res@label)), 
                     "clsEvents"=clsEvents, "desc"=desc)
         res@label <- seq_len(res@K)
