@@ -55,8 +55,9 @@ parameters,
 #"parameters<-",
 label,
 
-posterior,
+aposteriori,
 events,
+cells,
 subset,
 transformParams
 )
