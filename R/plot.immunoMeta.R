@@ -7,7 +7,11 @@ pscal=NULL,...)
 {
     
     if( is.null(pop) ) {
-        return
+        return(NULL)
+    }
+    #cat(pop$desc, "dontplot=", isTRUE(pop$dontplot), "\n")
+    if( plot.all && isTRUE(pop$dontplot) ) {
+        return(NULL)
     }
     
     if( is.null(pscal) && !is.null(pop$pscales) ) 
@@ -27,8 +31,11 @@ pscal=NULL,...)
         else
         subset=seq_len(length(attributes(res)$param))
         
-        if( is.null(inc.childs) )
+        if( is.null(inc.childs) ) {
         inc.childs <- seq_len(length(pop$childs))
+            if( length(pop$plot.order) == length(pop$childs) )
+                inc.childs <- pop$plot.order
+        }
         
 ## collect clusters and colors
         if( plot.childs && !is.null(pop$plot.childs) && pop$plot.childs ) {
@@ -89,7 +96,8 @@ pscal=NULL,...)
         key <- NULL
         g <- length(pop$childs)
         if( g > 0 ) {
-            key.pch <- rep(1,g)
+            #key.pch <- rep(1,g)
+            key.pch <- rep(16,g)
             key.col <- seq_len(g)+1
             for( i in seq_len(g) ) if( !is.null(pop$childs[[i]]$plot.color) ) {
                 key.col[i] <- pop$childs[[i]]$plot.color
@@ -119,10 +127,11 @@ pscal=NULL,...)
             }
             
             if(plot.all) {
-            print(splom(res, M, include=clusters, subset=subset, col=col,
-                ellipse=plot.ellipse, main=mmain,
-                mean=pop$M[subset], sigma=pop$S[subset, subset],
-                pscales=subpscal, xlab=NULL, key=key, ... ))
+                if( is.null(pop$dontplot) || pop$dontplot==FALSE )
+                print(splom(res, M, include=clusters, subset=subset, col=col,
+                    ellipse=plot.ellipse, main=mmain,
+                    #mean=pop$M[subset], sigma=pop$S[subset, subset],
+                    pscales=subpscal, xlab=NULL, key=key, ... ))
             }
             else {
             return(splom(res, M, include=clusters, subset=subset, col=col,
