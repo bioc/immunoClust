@@ -341,8 +341,8 @@ P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
         }
         
         if( res[[l]]@K > 1 ) {
-            message(J, "/", sK, ": cluster ", k, " has ", res[[l]]@K, " sub-clusters at ",
-                l, ", ICL=", format(icl, digits=2))
+            message(J, "/", sK, ": cluster ", k, " has ", res[[l]]@K, 
+                " sub-clusters at ", l, ", ICL=", format(icl, digits=2))
         }
         
         icl_l[k] <- cutoff

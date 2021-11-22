@@ -64,8 +64,7 @@
     else {
         cls <- g$clusters[is.na(match(g$clusters,pop$clusters))]  
         if( length(cls) > 0 ) {
-            message("found missing clusters in parent ", pop$desc, 
-                    paste(sep=",", cls), "\n")
+            message("found missing clusters in parent\n")
             pop$clusters <- sort(c(pop$clusters,cls))
         }
     }

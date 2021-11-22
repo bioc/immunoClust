@@ -42,8 +42,7 @@
         varNames <- "Not Available"
     }
     else {
-        stop(paste("Object ", as.character(x), 
-                " is not of class flowFrame / matrix / data frame!"))
+        stop("Object is not of class flowFrame / matrix / data frame!")
     }
     
     y
