@@ -82,14 +82,32 @@ function(object, for.sample=NA) {
     object$res.clusters@label[sl:el]
     
 })
-setMethod("posterior", signature(object="immunoMeta"),
+setMethod("aposteriori", signature(object="immunoMeta"),
 function(object){
     object$res.clusters@z
 })
 setMethod("events", signature(object="immunoMeta"),
-function(object,cls=seq_len(ncls(object))) {
+function(object,cls=seq_len(ncls(object)), for.sample=NA) {
     K <- object$dat.clusters$K
     N <- length(K)
+    
+    if( !is.na(for.sample) ) {
+        if( for.sample < 1 || for.sample > length(K) )
+        stop("for.sample option is out of range")
+        
+        n <- for.sample
+        
+        ret <- c()
+        for( j in cls ) {
+            k <- which(label(object)==j)
+            inc <- sum(K[seq_len(n-1)]) < k & k <= sum(K[seq_len(n)])
+            ret <- c(ret, sum(object$dat.clusters$clsEvents[ k[inc] ]))
+        }
+        names(ret) <- sprintf("cls-%d",cls)
+        
+        return (ret)
+    }
+    
     ret <- matrix(0,nrow=N,ncol=0)
     
     for( j in cls ) {

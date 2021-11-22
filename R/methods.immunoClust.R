@@ -39,7 +39,7 @@ setMethod("label", signature(object="immunoClust"),
 function(object) {
     object@label
 })
-setMethod("posterior", signature(object="immunoClust"),
+setMethod("aposteriori", signature(object="immunoClust"),
 function(object) {
     object@z
 })
@@ -50,6 +50,16 @@ function(object,cls=seq_len(ncls(object)) ) {
             sum(!is.na(object@label) & object@label==k), 0 )
     names(ret) <- sprintf("cls-%d",cls)
     ret
+})
+
+setMethod("cells", signature(object="immunoClust"),
+function(object,cls=seq_len(ncls(object)) ) {
+    ret <- c()
+    for( k in cls ) {
+        ret <- c(ret, which(!is.na(object@label) & object@label==k))
+    }
+    
+    sort(ret)
 })
 
 ## immunoClust accessors
