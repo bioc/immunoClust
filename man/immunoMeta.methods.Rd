@@ -33,8 +33,8 @@
 \alias{events}
 \alias{events.immunoMeta}
 \alias{events,immunoMeta-method}
-\alias{posterior.immunoMeta}
-\alias{posterior,immunoMeta-method}
+\alias{aposteriori.immunoMeta}
+\alias{aposteriori,immunoMeta-method}
 \alias{prop}
 \alias{prop<-}
 \alias{prop.immunoMeta}
@@ -256,12 +256,12 @@ the sequence of indices into these sub-levels begining at root level.}
 
 }
 
-\item{posterior}{
-    the posterior probabilities of cluster membership for each cell-cluster
+\item{aposteriori}{
+    the a-posteriori probabilities of cluster membership for each cell-cluster
 
     \emph{Usage:}
 
-    \code{posterior(immunoMeta)}
+    \code{aposteriori(immunoMeta)}
 
 }
 
@@ -272,7 +272,9 @@ the sequence of indices into these sub-levels begining at root level.}
 
     \emph{Usage:}
 
-    \code{events(immunoMeta, ncls=seq_len(ncls(immunoMeta)))}
+    \code{events(immunoMeta, ncls=seq_len(ncls(immunoMeta)), for.sample=NA)}
+    
+    If for.sample is specified, the cell-event numbers for this sample only.
 }
 
 \item{prop, prop<-}{

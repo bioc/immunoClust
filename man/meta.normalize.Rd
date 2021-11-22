@@ -28,12 +28,12 @@ events, of all clusters.}
 \item{S}{The \eqn{totK x P x P}-dimensional matrix of all cluster covariance
 matrices.}
 \item{G}{The number of meta-clusters.}
-\item{Z}{The \eqn{totK x G}-dimensional matrix with the A-Posterior 
+\item{Z}{The \eqn{totK x G}-dimensional matrix with the a-posteriori 
 probabilities for a cell-cluster belonging to a meta-cluster.}
 \item{method}{
 Alternative methods used for the normalization routine. Let \eqn{Y} denote 
 the consensus meta-model build from all cell-event clusters of all experiments
-using the A-posterior \eqn{Z} and \eqn{X} the cell-event clusters in each
+using the a-posteriori \eqn{Z} and \eqn{X} the cell-event clusters in each
 experiment.
 
 0   = no normalization
@@ -52,7 +52,7 @@ experiment.
 \details{
 The regression used the cell-cluster and meta-cluster means weighted by the 
 probabilities for a cell-cluster belonging to the meta-cluster. It builds
-a consensus meta-model from all cell-clusters using the A-posterior 
+a consensus meta-model from all cell-clusters using the a-posteriori 
 probabilities \eqn{Z}. 
 }
 
@@ -87,5 +87,5 @@ data(dat.meta)
 res <- dat.meta$res.clusters
 dat.norm <- meta.Normalize(npar(dat.meta), nsam(dat.meta), 
     sam_ncls(dat.meta), sam_clsEvents(dat.meta), sam_clsMu(dat.meta), 
-    sam_clsSigma(dat.meta), ncls(res), posterior(res))
+    sam_clsSigma(dat.meta), ncls(res), aposteriori(res))
 }

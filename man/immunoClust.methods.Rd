@@ -20,8 +20,10 @@
 \alias{sigma,immunoClust-method}
 \alias{events.immunoClust}
 \alias{events,immunoClust-method}
-\alias{posterior.immunoClust}
-\alias{posterior,immunoClust-method}
+\alias{cells}
+\alias{cells,immunoClust-method}
+\alias{aposteriori.immunoClust}
+\alias{aposteriori,immunoClust-method}
 
 \alias{subset.immunoClust}
 \alias{subset,immunoClust-method}
@@ -130,12 +132,12 @@ Documentation of the accessors and methods for immunoClust-objects
 
 }
 
-\item{posterior}{
-    the posterior probabilities of cluster membership for each event
+\item{aposteriori}{
+    the a-posteriori probabilities of cluster membership for each event
 
     \emph{Usage:}
 
-    \code{posterior(immunoClust)}
+    \code{aposteriori(immunoClust)}
 
 }
 
@@ -145,6 +147,15 @@ Documentation of the accessors and methods for immunoClust-objects
     \emph{Usage:}
 
     \code{events(immunoClust, ncls=seq_len(ncls(immunoClust)))}
+}
+
+\item{cells}{
+    the cell-events indices in the FCS-file for the cluster selection 
+    (all cluster by default)
+
+    \emph{Usage:}
+
+    \code{cells(immunoClust, ncls=seq_len(ncls(immunoClust)))}
 }
 
 }

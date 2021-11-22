@@ -53,7 +53,7 @@ asinh-transformation of each used parameter.\cr
 cluster means.\cr
 \code{sigma} \tab The \eqn{K x P x P}-dimensional matrix of the \eqn{K} 
 estimated cluster covariance matrices.\cr
-\code{z} \tab The \eqn{K x N}-dimensional matrix containing the posterior 
+\code{z} \tab The \eqn{K x N}-dimensional matrix containing the a-posteriori 
 probabilities of cluster membership.\cr
 \code{label} \tab The \eqn{N}-dimensional vector containing the maximum a 
 posteriori estimator for cluster membership.\cr

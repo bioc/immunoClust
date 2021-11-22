@@ -60,10 +60,10 @@ complete covariance matrices are applied. A reasonable value for alpha is 0.5.}
 }
 \item{norm.method}{Normalization function; see \code{\link{meta.Normalize}} for
 details.}
-\item{norm.blur}{For the normalization step the A-posterior probabilites of the
+\item{norm.blur}{For the normalization step the a-posteriori probabilites of the
 cell-clusters belonging to a meta.clusters a used. In order to capture narrow 
 cell-clusters reasonable the co-variance of the cell-clusters is blured for the
-A-posterior probabilities in the normalization step.}
+a-posteriori probabilities in the normalization step.}
 \item{norm.minG}{Minimum number of obtained meta-clusters required to process 
 the normalization step in the major iteration loop.}
 }

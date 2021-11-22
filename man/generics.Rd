@@ -13,7 +13,7 @@
 \alias{mu}
 \alias{sigma}
 \alias{label}
-\alias{posterior}
+\alias{aposteriori}
 \alias{subset}
 \alias{parameters}
 \alias{parameters<-}
@@ -60,7 +60,7 @@ sigma(object, \dots)
 
 label(object, \dots)
 
-posterior(object, \dots)
+aposteriori(object, \dots)
 
 subset(x, \dots)
 
@@ -123,7 +123,7 @@ The appropriate value for the specific cal (see dection Details).
     \item{label}{returns the cluster label, i.e. the assignment of the 
     clustered objects to the clusters.}
     
-    \item{posterior}{returns the posterior probabilities of cluster membership
+    \item{aposteriori}{returns the a posteriori probabilities of cluster membership
     for the clustered objects.}
 
     \item{events}{returns the number of cell-events for the clusters.}

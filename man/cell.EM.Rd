@@ -48,7 +48,7 @@ covariance matrices.}
 
 \details{
 Whereas \code{cell.EM} performs a complete EMt-iteration, \code{cell.Estimate} 
-only calculates the posterior probabilities and the Maximum-A-Posterior 
+only calculates the a-posteriori probabilities and the Maximum-A-Posteriori 
 estimators of cluster membership for all events.
 }
 
