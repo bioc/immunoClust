@@ -1,3 +1,9 @@
+Changes in Version 1.27.1
+- NEW FEATURES
+    * added method cells for immunoClust-object
+    * improvement in plot.immunoMeta
+    * for.sample option in events.immunoClust
+    
 Changes in version 1.25.2
 - CHANGES
     * bugfix immunoMeta contructor from single immunoClust-object
