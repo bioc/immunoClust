@@ -20,8 +20,8 @@ setGeneric("parameters")
 ## label
 label <- function(object,...) UseMethod("label")
 
-## posterior
-posterior <- function(object, ...) UseMethod("posterior")
+## aposteriori
+aposteriori <- function(object, ...) UseMethod("aposteriori")
 
 ##
 ## subset: already S3 in base
@@ -34,6 +34,7 @@ transformParams <- function(object, ... ) UseMethod("transformParams")
 
 ## events
 events <- function(object,...) UseMethod("events")
+cells <- function(object,...) UseMethod("cells")
 
 prop <- function(object, ...) UseMethod("prop")
 "prop<-" <- function(object, ..., value) UseMethod("prop<-")
