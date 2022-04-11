@@ -13,6 +13,15 @@ test_that("bhattacharyya", {
   expect_equal(-log(c), d)
   expect_equal(log(p)+0.125*log(0.25), -d)
   
+  # test 1d case
+  d <- bhattacharyya.dist(0,1,1,2)
+  c <- bhattacharyya.coeff(0,1,1,2)
+  p <- bhattacharyya.prob(0,1,1,2)
+  
+  expect_equal(c,p)
+  expect_equal(-log(c), d)
+  expect_equal(log(p), -d)
+  
 })
 
 
