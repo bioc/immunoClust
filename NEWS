@@ -1,3 +1,24 @@
+Changes in Version 1.27.6
+- CHANGES
+    * bugfix in default scales
+    
+Changes in Version 1.27.5
+- NEW FEATURES
+    * Default-Scale for immunoMeta-objects
+
+Changes in Version 1.27.4
+- CHANGES
+    * problems with immunoMeta-objects with 1 cluster
+    
+Changes in Version 1.27.3
+- CHANGES
+    * fixed problems with NA values in FCS data
+    * default BD plot scales removed from meta.process
+    
+Changes in Version 1.27.2
+- CHANGES
+    * class and parameter information added to methods weights and mu
+    
 Changes in Version 1.27.1
 - NEW FEATURES
     * added method cells for immunoClust-object
