@@ -204,7 +204,7 @@ B=50, tol=1e-5, modelName="mvt"
         if ( (P==1) ) {
             q <- quantile(y, seq(from=0, to=1, by=1/K))
             label <- rep(0, N)
-            q[1] <- q[1]-1
+            q[1] <- q[1]-1 # ???
             for (k in seq_len(K)) label[y>q[k] & y<=q[k+1]] <- k
         }
         else {

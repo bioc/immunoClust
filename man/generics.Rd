@@ -123,8 +123,8 @@ The appropriate value for the specific cal (see dection Details).
     \item{label}{returns the cluster label, i.e. the assignment of the 
     clustered objects to the clusters.}
     
-    \item{aposteriori}{returns the a posteriori probabilities of cluster membership
-    for the clustered objects.}
+    \item{aposteriori}{returns the a posteriori probabilities of cluster 
+    membership for the clustered objects.}
 
     \item{events}{returns the number of cell-events for the clusters.}
 
