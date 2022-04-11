@@ -37,15 +37,29 @@ function(object) {
 })
 setMethod("weights", signature(object="immunoMeta"),
 function(object, cls=seq_len(ncls(object))) {
-    object$res.clusters@w[cls]
+    ret <- object$res.clusters@w[cls]
+    names(ret) <- sprintf("cls-%d",cls)
+    ret
 })
 setMethod("mu", signature(object="immunoMeta"),
 function(object, cls=seq_len(ncls(object)), par=seq_len(npar(object))) {
-    object$res.clusters@mu[cls,par]
+    ret <- object$res.clusters@mu[cls,par]
+    #if( is.null(dim(ret)) ) {
+    #    dim(ret) <- c(length(cls), length(par))
+    #}
+    if( !is.null(dim(ret) ) ) {
+        rownames(ret) <- sprintf("cls-%d",cls)
+        colnames(ret) <- sprintf("par-%d",par)
+    }
+    else {
+        names(ret) <- sprintf("cls-%d",cls)
+    }
+    ret
 })
 setMethod("sigma", signature(object="immunoMeta"),
 function(object, cls=seq_len(ncls(object)), par=seq_len(npar(object))) {
-    object$res.clusters@sigma[cls,par,par]
+    ret <- object$res.clusters@sigma[cls,par,par]
+    ret
 })
 setMethod("parameters", signature(object="immunoMeta"),
 function(object) {
