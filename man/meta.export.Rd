@@ -24,9 +24,9 @@ table.
 }
 
 \usage{
-meta.numEvents(meta, out.all=TRUE, out.removed=FALSE,  out.unclassified=TRUE)
-meta.relEvents(meta, out.all=TRUE)
-meta.relParent(meta, out.all=TRUE, out.removed=FALSE,  out.unclassified=TRUE)
+meta.numEvents(meta, out.all=TRUE, out.removed=FALSE, out.unclassified=TRUE)
+meta.relEvents(meta, out.all=TRUE, out.removed=FALSE, out.unclassified=TRUE)
+meta.relParent(meta, out.all=TRUE, out.removed=FALSE, out.unclassified=TRUE)
 
 meta.parMFI(meta, par, out.all=TRUE)
 

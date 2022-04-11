@@ -291,7 +291,8 @@ meta.numClusters <- function(meta, out.all=TRUE)
 ## meta.relEvents: 
 ##        relative event frequencies (per total events)
 ###
-meta.relEvents <- function(meta, out.all=TRUE)
+meta.relEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
+                    out.unclassified=TRUE)
 {
     N <- meta$dat.clusters$N
     P <- meta$dat.clusters$P
@@ -304,19 +305,26 @@ meta.relEvents <- function(meta, out.all=TRUE)
 ## all
     parEvents <- matrix(NA, nrow=1,ncol=N+P)
     
-    parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents
-    parNames <- c("total")
+    
+    if( out.removed ) {
+        parEvents[1,seq_len(N)] <- meta$dat.clusters$removedEvents
+        rownames(parEvents) <- "removed"
+        tbl <- rbind(tbl, parEvents)
+    }
     
     if( out.all ) {
+        parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents
+        rownames(parEvents) <- "total"
         tbl <- rbind(tbl, parEvents)
-        rownames(tbl) <- parNames
     }
     
     tbl <- rbind(tbl, .meta.numGate(meta, meta$gating, NULL, NULL, 
-                                    out.all=out.all))
+                                    out.all=out.all,
+                                    out.unclassified=out.unclassified))
     
     parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents +
                             meta$dat.clusters$removedEvents
+    rownames(parEvents) <- "measured"
     if( nrow(tbl) > 0 ) {
         for( i in seq_len(nrow(tbl)) ) {
             for( j in seq_len(N) ) {
