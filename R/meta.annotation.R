@@ -4,6 +4,12 @@
         return( list("mu"=NULL, "sigma"=NULL) )
     }
     
+    if( is.null(dim(mu_)) ) {
+        P <- length(mu_)
+        dim(mu_) <- c(1,P)
+        dim(sigma_) <- c(1,P,P)
+    }
+    
     P <- ncol(mu_)
     M <- rep(0, P)
     S <- matrix(0, nrow=P, ncol=P)

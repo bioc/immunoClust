@@ -231,6 +231,7 @@ N=NULL,label=NULL, desc=NULL,...
     gp <- list(...)[["par.settings"]]
         
     y <- data[, params]
+    dim(y) <- c(nrow(data), length(params))
     
     if( is.null(label) ) {
         label <- x@label
