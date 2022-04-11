@@ -37,19 +37,23 @@ trans.parameters=NULL
     
     y <- .exprs(dat, parameters)
     rm.max <- rm.min <- rep(FALSE, nrow(y))
+    rm.na <- apply(y,1,anyNA)
+    
     if (max.count > -1) {
         if (is.null(max)[1]) 
-        max <- apply(y, 2, max)
-        for (p in seq_len(ncol(y)))  if (sum(y[,p]>=max[p]) >= max.count) 
-        rm.max <- rm.max | (y[,p] >= max[p])
+        max <- apply(y[!rm.na,], 2, max)
+        for (p in seq_len(ncol(y)))  
+        if (sum(!rm.na & y[,p]>=max[p]) >= max.count)
+        rm.max <- rm.max | (!rm.na & y[,p] >= max[p])
     }
     if (min.count > -1) {
         if (is.null(min)[1]) 
-        min <- apply(y, 2, min)
-        for (p in seq_len(ncol(y)))  if (sum(y[,p]<=min[p]) >= min.count) 
-        rm.min <- rm.min | (y[,p] <= min[p])
+        min <- apply(y[!rm.na,], 2, min)
+        for (p in seq_len(ncol(y)))  
+        if (sum(!rm.na & y[,p]<=min[p]) >= min.count)
+        rm.min <- rm.min | (!rm.na & y[,p] <= min[p])
     }
-    inc <- !rm.max & !rm.min
+    inc <- !rm.max & !rm.min & !rm.na
     
     message("filtered from above:", sum(rm.max))
     message("filtered from below:", sum(rm.min), "\n")
@@ -132,6 +136,8 @@ trans.parameters=NULL
             label <- rep(NA,N)
             label[inc] <- res@label
             attr(res, "label") <- label
+            if( sum(rm.na) > 0 )
+            attr(res, "removed.na") <- sum(rm.na)
             attr(res, "removed.below") <- sum(rm.min)
             attr(res, "removed.above") <- sum(rm.max)
         }
@@ -141,10 +147,13 @@ trans.parameters=NULL
     attr(res, "call") <- match.call()
     #attr(res, "fcsName") <- description(dat)$`FILENAME`
     attr(res, "fcsName") <- keyword(dat)$`FILENAME`
+    attr(res, "expName") <- basename(keyword(dat)$`FILENAME`)
     
-    par <- parameters(dat)
+    par <- parameters(fcs)
     inc <- match(res@parameters, par@data[,'name'])
     attr(res, "desc") <- par@data[inc, 'desc']
+    limits <- range(fcs)
+    attr(res, "limits") <- limits[,inc]
     
     res
 }
