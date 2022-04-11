@@ -3,6 +3,14 @@
 bhattacharyya.prob <- function(gM,gS, cM,cS, alpha=1)
 {
     ret <- 0
+    if( is.null(gS) || is.null(cS) )
+        return (0)
+        
+    gM <- as.vector(gM)
+    cM <- as.vector(cM)
+    gS <- as.matrix(gS)
+    cS <- as.matrix(cS)
+        
     if( alpha <= 0 ) {
         ret <- bhattacharyya.prob(gM,diag(diag(gS)), cM, diag(diag(cS)))
         return(ret)
@@ -14,11 +22,13 @@ bhattacharyya.prob <- function(gM,gS, cM,cS, alpha=1)
         return(ret)
     }
     
-    if( is.null(gS) || is.null(cS) )
-        return (0)
+    
         
-    det_g <- log(det(gS))
-    det_c <- log(det(cS))
+    suppressWarnings(det_g <- log(det(gS)))
+    suppressWarnings(det_c <- log(det(cS)))
+    # use chol robustness?
+    #det_g <- 2*log(det(chol(gS)))
+    #det_c <- 2*log(det(chol(cS)))
     
     S <- chol((gS+cS)/2)
     S <- chol2inv(S)
@@ -63,8 +73,17 @@ bhattacharyya.dist <- function (gM, gS, cM, cS)
         return(0)
     }
     
-    det_g <- log(det(gS))
-    det_c <- log(det(cS))
+    gM <- as.vector(gM)
+    cM <- as.vector(cM)
+    gS <- as.matrix(gS)
+    cS <- as.matrix(cS)
+    
+    ## use chol: robustness? anyway
+    suppressWarnings(det_g <- log(det(gS)))
+    suppressWarnings(det_c <- log(det(cS)))
+    #det_g <- 2*log(det(chol(gS)))
+    #det_c <- 2*log(det(chol(cS)))
+    
     
     S <- NULL
     try( S <- solve((gS+cS) / 2), silent=TRUE)
@@ -85,9 +104,14 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
 {
     ret <- 0
     if( is.null(gS) || is.null(cS) ) {
-        
         return(0)
     }
+    
+    gM <- as.vector(gM)
+    cM <- as.vector(cM)
+    gS <- as.matrix(gS)
+    cS <- as.matrix(cS)
+    
     if( alpha <= 0 ) {
         ret <- bhattacharyya.coeff(gM,diag(diag(gS)), cM, diag(diag(cS)))
         return(ret)
@@ -100,8 +124,11 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
     }
     
     
-    det_g <- log(det(gS))
-    det_c <- log(det(cS))
+    suppressWarnings(det_g <- log(det(gS)))
+    suppressWarnings(det_c <- log(det(cS)))
+    # use chol robuster? anyway something strange if det < 0
+    #det_g <- 2*log(det(chol(gS)))
+    #det_c <- 2*log(det(chol(cS)))
     
     S <- NULL
     try( S <- solve((gS+cS) / 2), silent=TRUE)
@@ -350,6 +377,62 @@ expName="", parameters=c(), inc=c())
 }
 ## .immunoClust2
 
+## Default_Scales
+Default_Scales <- function(trans.a, limits)
+{
+    if( is.null(trans.a) || is.null(limits) )
+        return (NULL)
+    
+    pscal <- list(length(trans.a))
+    for( p in seq_len(length(trans.a))) {
+        if( trans.a[p] == 0 ) {
+            decades <- round(log(limits[2,p],10))
+            scale <- 10^(decades-2)
+            minor <- 50
+            ticks <- round(limits[2,p]/scale/minor)
+            if( ticks < 4 ) {
+                minor <- 25
+                ticks <- round(limits[2,p]/scale/minor)
+            }
+            at <- c(0,seq_len(ticks))*minor
+            labels <- sprintf("%s", at)
+            i<-2
+            while(i<=length(labels)) {
+                labels[i] <- ""
+                i <- i+2
+            }
+            pscal[[p]] <- list(
+            at=at*scale,
+            labels=labels,
+            limits=limits[,p],
+            unit=sprintf("[/%d]", scale)
+            )
+        }
+        else {
+            a <- trans.a[p]
+            decades <- round(log(limits[2,p],10))
+            linear <- abs(round(log(trans.a[p],10)))
+            if( decades < linear )
+                return (NULL)
+            at <- c(asinh(-10^linear * a), 0, asinh(10^linear * a) )
+            label <- c("", "0", "")
+            for( d in (seq_len(decades-linear)+(linear-1)) ) {
+                at <- c(at, asinh(5*10^d * a), asinh(10^(d+1) * a))
+                label <- c(label, "", parse(text=sprintf("10^%d", d+1)) )
+            }
+            
+            pscal[[p]] <- list(
+                at= at,
+                labels= label,
+                limits=c(asinh(-10^linear * a),asinh(limits[2,p]*a))
+                )
+            
+        }
+    }
+    pscal
+    
+}
+## Default_Scales
 
 
 

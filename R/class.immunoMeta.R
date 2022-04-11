@@ -30,10 +30,16 @@ immunoMeta <- function(res, dat, gating) {
     if( missing(gating) || is.null(gating) ) {
         gating <- list("clusters"=seq_len(res@K), "childs"=c(), 
                         "desc"="all", "partition"=TRUE)
+                        
+        gating$pscales <- Default_Scales(attr(res,"trans.a"), 
+                            attr(res, "limits"))
     }
     #names(res@w) <- sprintf("cls-%d", seq_len(res@K))
-    structure(list("res.clusters"=res, "dat.clusters"=dat, "gating"=gating), 
-        class = "immunoMeta")
+    meta <- structure(list("res.clusters"=res, "dat.clusters"=dat, 
+        "gating"=gating), class = "immunoMeta")
+    
+    
+    meta
     
 }
 

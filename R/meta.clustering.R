@@ -4,7 +4,6 @@
 meta.process <- function(
 exp, dat.subset=c(), meta.iter=10, tol=1e-5, meta.bias=0.2, 
 meta.alpha=.5, norm.method=0, norm.blur=2, norm.minG=10
-#,scatter.subset=c(), scatter.bias=0.25,scatter.prior=6
 ) {
     dat <- meta.exprs(exp, sub=dat.subset)
     
@@ -23,74 +22,22 @@ meta.alpha=.5, norm.method=0, norm.blur=2, norm.minG=10
     }
     
     attr(res, "desc") <- dat$desc
-    
-    #if( length(scatter.subset) > 0 ) {
-    #   scatter <- .meta.scatter.gating(exp, sub=scatter.subset,
-    #                               EM.method=10,
-    #                               EM.bias=scatter.bias,
-    #                               scatter.prior=scatter.prior)
-    #
-    #   res.scatter <- scatter$res
-    #   dat.scatter <- scatter$dat
-    #   attr(res.scatter,"desc") <- dat$desc
-    #
-    #   meta <- list("dat.scatter"=dat.scatter, "res.scatter"=res.scatter,
-    #               "dat.clusters"=dat, "res.clusters"=res)
-    #
-## do auto gating of meta clusters
-#   G <- res.scatter@K
-#       childs <- vector("list", G)
-#       for( g in seq_len(G) ) {
-#           childs[[g]] <- list("desc"=paste(sep="", "P",g),
-#                           "clusters"=.meta.ClustersForScatter(meta,g))
-#       }
-#       meta$gating <- list("clusters"=seq_len(res@K), "plot.childs"=TRUE,
-#           "par"=scatter.subset, "desc"="all", "childs"=childs)
-#
-#       par <- rep(TRUE, dat$P)
-#       par[scatter.subset] <- FALSE
-#       for( g in seq_len(G) ) {
-#           meta$gating <- .meta.gating(meta$res.clusters, meta$gating,
-#                                   paste(sep="","P",g), which(par),
-#                                   c(), iFilter=0)
-#       }
-#   }
-#   else {
-        meta <- list("dat.scatter"=NULL, "res.scatter"=NULL,  
+    if( is.null(dat.subset) )
+        dat.subset <- seq_len(npar(res))
+    attr(res, "trans.a") <- apply( vapply(exp,function(x) x@trans.a[dat.subset],
+                                rep(0.01,npar(res))), 1, mean)
+    attr(res, "trans.b") <- apply( vapply(exp,function(x) x@trans.b[dat.subset],
+                                rep(0.0,npar(res))), 1, mean)
+    attr(res, "limits") <- attr(exp[[1]], "limits")[,dat.subset]
+
+    meta <- list("dat.scatter"=NULL, "res.scatter"=NULL,  
                     "dat.clusters"=dat, "res.clusters"=res)
-        meta$gating <- list("clusters"=seq_len(res@K), "childs"=c(), 
+    meta$gating <- list("clusters"=seq_len(res@K), "childs"=c(),
                     "desc"="all", "partition"=TRUE)
 
-#   }
     
-    # if BD
-    {
-        #trans.a <- apply( sapply(exp,function(x) x@trans.a), 1, mean)
-        trans.a <- apply( vapply(exp,function(x) x@trans.a, 
-            rep(0.01,npar(res))), 1, mean)
-        pscal <- list(length(trans.a))
-        for( p in seq_len(length(trans.a))) {
-            if( trans.a[p] == 0 ) {
-                pscal[[p]] <- list(at=c(50000, 100000,150000, 200000, 250000),
-                labels=c("50", "100", "150", "200", "250"),
-                limits=c(0,260000),
-                unit="[/1000]")
-            }
-            else {
-                a <- trans.a[p]
-                pscal[[p]] <- list(at=c(asinh(-100*a),0,asinh(100*a),
-                asinh(500*a), asinh(1000*a),
-                asinh(5000*a), asinh(10000*a),
-                asinh(50000*a), asinh(100000*a)),
-                labels=c("-100", "0", "100",
-                "",expression(10^3),
-                "",expression(10^4),
-                "",expression(10^5)),
-                limits=c(-1,asinh(260000*a)))
-            }
-        }
-        meta$gating$pscales <- pscal
-    }
+    meta$gating$pscales <- Default_Scales(attr(res, "trans.a"),
+                                        attr(res, "limits"))
     
     class(meta) <- "immunoMeta"
     meta
