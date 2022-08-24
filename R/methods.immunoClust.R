@@ -14,6 +14,7 @@ function(object, ...) {
 setMethod("weights", signature(object="immunoClust"),
 function(object,cls=seq_len(ncls(object))) {
     ret <- object@w[cls]
+    if( !is.null(ret) )
     names(ret) <- sprintf("cls-%d",cls)
     ret
 })
@@ -28,7 +29,8 @@ function(object, cls=seq_len(ncls(object)), par=seq_len(npar(object))) {
         rownames(ret) <- sprintf("cls-%d",cls)
         colnames(ret) <- sprintf("par-%d",par)
     }
-    else {
+    else
+    if( !is.null(ret) ){
         names(ret) <- sprintf("cls-%d",cls)
     }
     ret
@@ -64,6 +66,7 @@ function(object,cls=seq_len(ncls(object)) ) {
     #ret <- sapply(cls, function(k) sum(!is.na(object@label) & object@label==k))
     ret <- vapply(cls, function(k) 
             sum(!is.na(object@label) & object@label==k), 0 )
+    if( !is.null(ret) )
     names(ret) <- sprintf("cls-%d",cls)
     ret
 })

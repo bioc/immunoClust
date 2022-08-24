@@ -60,8 +60,8 @@ public:
 	int build(const int* label, double loglike[3], int* history=0);
 	int start(const int* label);
 	int do_iterate(int& max_iteration, double& max_tolerance);
-	int final(double logLike[3], int* label, int* history=0);
-
+	int final(double logLike[3], int* label, int* history=0, int scale_Z = 1);
+ 
 	
 	int	em(int& max_iteration, double& max_tolerance);
 	int em_t(int& max_iteration, double& max_tolerance);

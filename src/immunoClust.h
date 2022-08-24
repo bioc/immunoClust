@@ -39,7 +39,7 @@ extern "C" {
                      SEXP max_iter, SEXP max_tol, SEXP bias);
     
 	SEXP call_mvnE(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t, 
-                   SEXP w, SEXP m, SEXP s);
+                   SEXP w, SEXP m, SEXP s, SEXP scale_Z);
     SEXP call_mvnM(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t, 
                    SEXP label);
 
@@ -62,7 +62,7 @@ extern "C" {
                      SEXP max_iter, SEXP max_tol, SEXP bias);
     
 	SEXP call_mvtE(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t, 
-                   SEXP w, SEXP m, SEXP s);
+                   SEXP w, SEXP m, SEXP s, SEXP scale_Z);
 
     SEXP call_mvtM(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
                    SEXP label);
@@ -85,7 +85,7 @@ extern "C" {
                      SEXP max_iter, SEXP max_tol, SEXP bias);
     
     SEXP call_mvt2E(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
-                   SEXP w, SEXP m, SEXP s);
+                   SEXP w, SEXP m, SEXP s, SEXP scale_Z);
 
     SEXP call_mvt2M(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
                    SEXP label);

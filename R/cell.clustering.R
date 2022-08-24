@@ -49,7 +49,7 @@ state=NULL, K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt"
 ###
 cell.Estimation <- function(
 data, parameters=NULL, expName="immunoClust Experiment", 
-history=NULL, state=NULL, K, w, m, s, modelName="mvt"
+history=NULL, state=NULL, K, w, m, s, scale_Z=TRUE, modelName="mvt"
 ) {
     
     y <- .exprs(data, parameters)
@@ -77,7 +77,7 @@ history=NULL, state=NULL, K, w, m, s, modelName="mvt"
     obj <- .Call(paste(sep="", "immunoC_", modelName, "E"), 
                 as.integer(N), as.integer(P), as.integer(K), 
                 as.double(t(y)), double(0), 
-                as.double(w), as.double(M), as.double(S) )
+                as.double(w), as.double(M), as.double(S), as.integer(scale_Z) )
 
     .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters);
     

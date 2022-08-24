@@ -91,7 +91,7 @@ em_meta::logdet(const double* a, int& status)
 
 /*
 	burg_divergence
-		clac burg_divergence for cluster i and component j
+		calc burg_divergence for cluster i and component j
  */ 
 double
 em_meta::burg_divergence(int i, int j)
@@ -356,7 +356,7 @@ em_meta::e_step()
             
             // z[j] = (*t) * tmpLike;
             sumLike += tmpLike;
-            
+            // 2022.04.12: MAP tmpLike not tmpPDF?
             if( tmpPDF > maxPDF) {
                 maxPDF = tmpPDF;
                 maxClust = j;
@@ -433,7 +433,7 @@ em_meta::et_step()
             
             // z[j] = (*t) * tmpLike;
             sumLike += tmpLike;
-            
+            // 2022.04.12: MAP tmpLike not tmpPDF?
             if( tmpPDF > maxPDF) {
                 sndLike = maxLike;
                 sndPDF = maxPDF;
@@ -580,7 +580,8 @@ em_meta::fixedN_e_step()
             }
             
             sumLike += tmpLike;
-            
+            // 2022.04.12: MAP tmpLike not tmpPDF?
+            // sieht nach fehler aus
             if( tmpPDF > maxPDF) {
                 maxPDF = tmpPDF;
                 maxClust = j;
@@ -718,7 +719,7 @@ em_meta::fixedN_et_step()
             }
             
             sumLike += tmpLike;
-            
+            // 2022.04.12: MAP tmpLike not tmpPDF?
             if( tmpPDF > maxPDF) {
                 //sndLike = maxLike;
                 sndPDF = maxPDF;
@@ -1206,6 +1207,7 @@ em_meta::final(int* label, double logLike[3], int* history)
                 //sumLike += tmpLike;
                 sumLike += gw * tmpPDF;
                 //if( tmpLike > maxLike ){
+                // 2022.04.12: tmpLike = gw*tmpPDF => maxLike => maxPDF
                 if( tmpPDF > maxPDF ) {
                     //maxLike = tmpLike;
                     maxPDF = tmpPDF;

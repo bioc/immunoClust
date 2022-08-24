@@ -33,7 +33,7 @@ int print_text(const char* txt)
 		{"immunoC_mvnMEt", (DL_FUNC)(&call_mvnMEt), 9},
 		{"immunoC_mvnEM", (DL_FUNC)(&call_mvnEM), 10},
 		{"immunoC_mvnEMt", (DL_FUNC)(&call_mvnEMt), 11},
-		{"immunoC_mvnE", (DL_FUNC)(&call_mvnE), 8},
+		{"immunoC_mvnE", (DL_FUNC)(&call_mvnE), 9},
 		{"immunoC_mvnM", (DL_FUNC)(&call_mvnM), 6},
 		{"immunoC_mvnHC", (DL_FUNC)(&call_mvnHC), 4},
 		
@@ -43,7 +43,7 @@ int print_text(const char* txt)
 		{"immunoC_mvtEM", (DL_FUNC)(&call_mvtEM), 10},
 		{"immunoC_mvtEMt", (DL_FUNC)(&call_mvtEMt), 11},
         {"immunoC_mvtM", (DL_FUNC)(&call_mvtM), 6},
-		{"immunoC_mvtE", (DL_FUNC)(&call_mvtE), 8},
+		{"immunoC_mvtE", (DL_FUNC)(&call_mvtE), 9},
 		
         /* mvt2 */
         {"immunoC_mvt2ME", (DL_FUNC)(&call_mvt2ME), 8},
@@ -51,7 +51,7 @@ int print_text(const char* txt)
         {"immunoC_mvt2EM", (DL_FUNC)(&call_mvt2EM), 10},
         {"immunoC_mvt2EMt", (DL_FUNC)(&call_mvt2EMt), 11},
         {"immunoC_mvt2M", (DL_FUNC)(&call_mvt2M), 6},
-        {"immunoC_mvt2E", (DL_FUNC)(&call_mvt2E), 8},
+        {"immunoC_mvt2E", (DL_FUNC)(&call_mvt2E), 9},
 		
 		/* HTrans */
 		{"immunoC_vsHtrans_l", (DL_FUNC)(&call_vsHtrans_l), 10},

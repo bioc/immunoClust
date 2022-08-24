@@ -1149,7 +1149,7 @@ em_gaussian::_iterate(int& iterations, double& tolerance, em_gaussian::E_STEP es
  do cluster labeling
  */
 int 
-em_gaussian::final(double logLike[3], int* label, int* history)
+em_gaussian::final(double logLike[3], int* label, int* history, int scale_Z)
 {
 	int i, k, l;
 	
@@ -1229,7 +1229,7 @@ em_gaussian::final(double logLike[3], int* label, int* history)
 		if( maxClust > -1 )
 			Z_sum[maxClust] += (*t);
 		
-		if( sumLike > 0.0 ) {
+		if( scale_Z && sumLike > 0.0 ) {
 			cblas_dscal(L, 1./sumLike, z, 1);
 		}
 				

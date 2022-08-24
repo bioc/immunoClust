@@ -30,7 +30,13 @@ bhattacharyya.prob <- function(gM,gS, cM,cS, alpha=1)
     #det_g <- 2*log(det(chol(gS)))
     #det_c <- 2*log(det(chol(cS)))
     
-    S <- chol((gS+cS)/2)
+    S <- NULL
+    suppressWarnings(S <- chol((gS+cS)/2))
+    
+    if( is.null(S) ) {
+        return(0)
+    }
+    
     S <- chol2inv(S)
     
     logD <- log(det(S))

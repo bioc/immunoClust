@@ -1224,7 +1224,7 @@ em_mvt::_iterate(int& iterations, double& tolerance, em_mvt::E_STEP estep, em_mv
  do cluster labeling
  */
 int
-em_mvt::final(double logLike[3], int* label, int* history)
+em_mvt::final(double logLike[3], int* label, int* history, int scale_Z)
 {
 	int i, k, l;
 	
@@ -1302,7 +1302,7 @@ em_mvt::final(double logLike[3], int* label, int* history)
 		if( maxClust > -1 )
 			tmpK[maxClust] += (*t);
 		
-		if( sumLike > 0.0 ) {
+		if( scale_Z && sumLike > 0.0 ) {
 			cblas_dscal(L, 1./sumLike, z, 1);
 		}
 		obLike += (sumLike>0.0)? (*t) * log(sumLike) : 0.0;
@@ -1351,6 +1351,7 @@ em_mvt::final(double logLike[3], int* label, int* history)
 	return L;
 	
 }	// em_mvt::final
+
 
 
 

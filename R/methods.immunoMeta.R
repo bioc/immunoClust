@@ -38,6 +38,7 @@ function(object) {
 setMethod("weights", signature(object="immunoMeta"),
 function(object, cls=seq_len(ncls(object))) {
     ret <- object$res.clusters@w[cls]
+    if( !is.null(ret) )
     names(ret) <- sprintf("cls-%d",cls)
     ret
 })
@@ -51,7 +52,8 @@ function(object, cls=seq_len(ncls(object)), par=seq_len(npar(object))) {
         rownames(ret) <- sprintf("cls-%d",cls)
         colnames(ret) <- sprintf("par-%d",par)
     }
-    else {
+    else
+    if( !is.null(ret) ){
         names(ret) <- sprintf("cls-%d",cls)
     }
     ret
@@ -117,6 +119,7 @@ function(object,cls=seq_len(ncls(object)), for.sample=NA) {
             inc <- sum(K[seq_len(n-1)]) < k & k <= sum(K[seq_len(n)])
             ret <- c(ret, sum(object$dat.clusters$clsEvents[ k[inc] ]))
         }
+        if( !is.null(ret) )
         names(ret) <- sprintf("cls-%d",cls)
         
         return (ret)

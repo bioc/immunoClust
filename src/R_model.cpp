@@ -336,7 +336,7 @@ extern "C" {
 	
 	// only estimation according to model
 	SEXP call_mvnE(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
-				   SEXP w, SEXP m, SEXP s)  
+				   SEXP w, SEXP m, SEXP s, SEXP scale_Z)
 	{
 		int status;		
 		SEXP ret = _EM_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], w, m, s);
@@ -347,7 +347,10 @@ extern "C" {
 		
 		status = em.start(0);
 		if( status == 0 ) {
-			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
+			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)),
+                                                     INTEGER(VECTOR_ELT(ret,5)),
+                                                     INTEGER(VECTOR_ELT(ret,7)),
+                                                     INTEGER(scale_Z)[0]);
 		}
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 	
@@ -524,7 +527,7 @@ extern "C" {
 	
 	// only estimation according to model parameter
 	SEXP call_mvtE(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
-			  SEXP w, SEXP m, SEXP s)  
+			  SEXP w, SEXP m, SEXP s, SEXP scale_Z)
 	{
 		int status;		
 				
@@ -536,7 +539,10 @@ extern "C" {
 		
 		status = em.start(0);
 		if( status == 0 ) {
-			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
+			INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)),
+                                                     INTEGER(VECTOR_ELT(ret,5)),
+                                                     INTEGER(VECTOR_ELT(ret,7)),
+                                                     INTEGER(scale_Z)[0]);
 		}
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 		
@@ -715,7 +721,7 @@ extern "C" {
     
     // only estimation according to model parameter
     SEXP call_mvt2E(SEXP N, SEXP P, SEXP K, SEXP y, SEXP t,
-                   SEXP w, SEXP m, SEXP s)
+                   SEXP w, SEXP m, SEXP s, SEXP scale_Z)
     {
         int status;
         
@@ -727,7 +733,10 @@ extern "C" {
         
         status = em.start(0);
         if( status == 0 ) {
-            INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)), INTEGER(VECTOR_ELT(ret,5)), INTEGER(VECTOR_ELT(ret,7)));
+            INTEGER(VECTOR_ELT(ret,0))[0] = em.final(REAL(VECTOR_ELT(ret,6)),
+                                                     INTEGER(VECTOR_ELT(ret,5)),
+                                                     INTEGER(VECTOR_ELT(ret,7)),
+                                                     INTEGER(scale_Z)[0]);
         }
         INTEGER(VECTOR_ELT(ret,8))[0] = status;
         
