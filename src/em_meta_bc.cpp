@@ -234,7 +234,7 @@ em_meta::bc_et_step()
         cblas_dcopy(G, &zero, 0, z, 1);
         
         double sumLike = 0.0;
-        double maxLike = 0.0;
+        //double maxLike = 0.0;
         //double sndLike = 0.0;
         double maxPDF = 0.0;
         double sndPDF = 0.0;
@@ -264,7 +264,7 @@ em_meta::bc_et_step()
                 //sndLike = maxLike;
                 sndPDF = maxPDF;
                 sndClust = maxClust;
-                maxLike = tmpLike;
+                //maxLike = tmpLike;
                 maxPDF = tmpPDF;
                 maxClust = j;
             }
@@ -520,7 +520,7 @@ em_meta::bc_fixedN_et_step()
         cblas_dcopy(G, &zero, 0, z, 1);
         
         double sumLike = 0.0;
-        double maxLike = 0.0;
+        //double maxLike = 0.0;
         //double sndLike = 0.0;
         double maxPDF = 0.0;
         double sndPDF = 0.0;
@@ -549,7 +549,7 @@ em_meta::bc_fixedN_et_step()
                 //sndLike = maxLike;
                 sndPDF = maxPDF;
                 sndClust = maxClust;
-                maxLike = tmpLike;
+                //maxLike = tmpLike;
                 maxPDF = tmpPDF;
                 maxClust = j;
             }

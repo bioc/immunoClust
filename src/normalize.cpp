@@ -272,9 +272,9 @@ normalize::scale_X(int kb, int kn)
     if( L < COEFF )
         return 1;
     
-	int k, j, p;
-	const double *xw, *xm, *yw, *ym, *z;
-	// build X^T * X and X^T * Y
+    int k, j, p;
+    const double *xw, *xm, *yw, *ym, *z;
+    // build X^T * X and X^T * Y
     for( p=0; p<P; ++p ) {
         xw = W + kb;
         xm = M + kb*P + p;
@@ -377,9 +377,9 @@ normalize::linear_Y(int kb, int kn)
     if( L < COEFF )
         return 1;
     
-	int k, j, p;
-	const double *xw, *xm, *yw, *ym, *z;
-	// build X^T * X and X^T * Y
+    int k, j, p;
+    const double *xw, *xm, *yw, *ym, *z;
+    // build X^T * X and X^T * Y
     for( p=0; p<P; ++p ) {
         xw = W + kb;
         xm = M + kb*P + p;
@@ -458,9 +458,9 @@ normalize::scale_Y(int kb, int kn)
     if( L < COEFF )
         return 1;
     
-	int k, j, p;
-	const double *xw, *xm, *yw, *ym, *z;
-	// build Y^T * Y and Y^T * X
+    int k, j, p;
+    const double *xw, *xm, *yw, *ym, *z;
+    // build Y^T * Y and Y^T * X
     for( p=0; p<P; ++p ) {
         xw = W + kb;
         xm = M + kb*P + p;

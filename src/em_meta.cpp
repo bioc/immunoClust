@@ -408,8 +408,8 @@ em_meta::et_step()
         cblas_dcopy(G, &zero, 0, z, 1);
         
         double sumLike = 0.0;
-        double maxLike = 0.0;
-        double sndLike = 0.0;
+        //double maxLike = 0.0;
+        //double sndLike = 0.0;
         double maxPDF = 0.0;
         double sndPDF = 0.0;
         int maxClust = -1, sndClust = -1;
@@ -435,16 +435,16 @@ em_meta::et_step()
             sumLike += tmpLike;
             // 2022.04.12: MAP tmpLike not tmpPDF?
             if( tmpPDF > maxPDF) {
-                sndLike = maxLike;
+                //sndLike = maxLike;
                 sndPDF = maxPDF;
                 sndClust = maxClust;
-                maxLike = tmpLike;
+                //maxLike = tmpLike;
                 maxPDF = tmpPDF;
                 maxClust = j;
             }
             else
             if( tmpPDF > sndPDF ) {
-                sndLike = tmpLike;
+                //sndLike = tmpLike;
                 sndPDF = tmpPDF;
                 sndClust = j;
             }
@@ -695,7 +695,7 @@ em_meta::fixedN_et_step()
         cblas_dcopy(G, &zero, 0, z, 1);
         
         double sumLike = 0.0;
-        double maxLike = 0.0;
+        //double maxLike = 0.0;
         //double sndLike = 0.0;
         double maxPDF = 0.0;
         double sndPDF = 0.0;
@@ -724,7 +724,7 @@ em_meta::fixedN_et_step()
                 //sndLike = maxLike;
                 sndPDF = maxPDF;
                 sndClust = maxClust;
-                maxLike = tmpLike;
+                //maxLike = tmpLike;
                 maxPDF = tmpPDF;
                 maxClust = j;
             }

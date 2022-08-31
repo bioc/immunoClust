@@ -21,7 +21,7 @@ cell.EM(data, parameters=NULL, expName="immunoClust Experiment",
 
 cell.Estimation(data, parameters=NULL, expName="immunoClust Experiment",  
     history=NULL, state=NULL,
-    K, w, m, s, modelName="mvt")
+    K, w, m, s, scale_Z=TRUE, modelName="mvt")
 }
 
 \arguments{
@@ -42,6 +42,7 @@ covariance matrices.}
 \item{B}{The maximum number of EMt-iterations.}
 \item{tol}{The tolerance used to assess the convergence of the EMt-algorithms.}
 \item{bias}{The ICL-bias used in the EMt-algorithm.}
+\item{scale_Z}{Scale the returned a-posteriori probabilities to one for each observed event.}
 \item{modelName}{Used mixture model; either \code{"mvt"} or \code{"mvn"} for a 
 \eqn{t}- or Gaussian mixture model respectively.}
 }
