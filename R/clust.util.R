@@ -166,7 +166,7 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
 ## clust.hclass
 ##  retrieve group membership from hcPairs structure
 ###
-.clust.partconv <- function(x, consec = TRUE)
+.clust.partconv <- function(x, consec=TRUE)
 {
     n <- length(x)
     y <- numeric(n)
@@ -196,7 +196,7 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
     select <- k - G
     
     if (length(select) == 1 && !select) 
-    return(matrix(initial, ncol = 1, dimnames = list(NULL, as.character(G))))
+    return(matrix(initial, ncol=1, dimnames=list(NULL, as.character(G))))
     
     bad <- select < 0 | select >= k
     if (any(bad)) 
@@ -204,7 +204,7 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
     
 ## number of groupings to be labeled
     L <- length(select)
-    cl <- matrix(NA, nrow = n, ncol = L, dimnames = list(NULL, as.character(G)))
+    cl <- matrix(NA, nrow=n, ncol=L, dimnames=list(NULL, as.character(G)))
     if (select[1]) { 
         m <- 1
     }
@@ -225,7 +225,7 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
             m <- m + 1
         }
     }
-    apply(cl[, L:1, drop = FALSE], 2, .clust.partconv, consec = TRUE)
+    apply(cl[, L:1, drop=FALSE], 2, .clust.partconv, consec=TRUE)
 }
 ## clust.hclass
 
@@ -239,11 +239,11 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
 # n <- length(li)
 # obj <- .Fortran("hcass2", n=as.integer(n+1), 
 #         ia=as.integer(li), ib=as.integer(lj),
-#         order = integer(n+1), iia = integer(n+1), iib = integer(n+1),
+#         order=integer(n+1), iia=integer(n+1), iib=integer(n+1),
 #         PACKAGE="stats")
-# hcls <- list(merge = cbind(obj$iia[1L:n], obj$iib[1L:n]), 
-#        height = crit, crit=crit, order = obj$order, 
-#        labels = 1:n)
+# hcls <- list(merge=cbind(obj$iia[1L:n], obj$iib[1L:n]), 
+#        height=crit, crit=crit, order=obj$order, 
+#        labels=1:n)
 # class(hcls) <- "hclust"
 # hcls
 #}
@@ -323,7 +323,7 @@ expName="", parameters=c(), inc=c())
     sigma <- array(0, c(L, P, P))
     s <- matrix(obj$s, K, P * P, byrow=TRUE)
     for (k in seq_len(L))
-    sigma[k,,] <- matrix(s[k,], P, P, byrow = TRUE)
+    sigma[k,,] <- matrix(s[k,], P, P, byrow=TRUE)
 
     
 # output mu    

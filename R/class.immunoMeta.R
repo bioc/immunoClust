@@ -52,7 +52,6 @@ function(object, ...){
     .level.summary <- function(pop, idx, depth=0)
     {
         if( is.null(pop) ) {
-            ##cat("\tempty\n")
             return (c())
         }
         

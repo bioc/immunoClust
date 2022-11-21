@@ -16,7 +16,7 @@ returns the fitted mixture model parameter in an object of class immunoClust.
 
 \usage{
 meta.Clustering(P, N, K, W, M, S, label=NULL, I.iter=10, B=500, tol=1e-5,
-                bias=0.25, alpha=0.5, EM.method=20,
+                bias=0.25, sub.thres = bias, alpha=0.5, EM.method=20,
                 norm.method=0, norm.blur=2, norm.minG=10)
 }
 
@@ -38,6 +38,9 @@ matrices.}
 \item{tol}{The tolerance used to assess the convergence of the 
 EM(t)-algorithms.}
 \item{bias}{The ICL-bias used in the EMt-iteration of the meta-clustering.}
+\item{sub.thres}{Defines the threshold, below which an ICL-increase is
+meaningless. The threshold is given as the multiple (or fraction) of the costs
+for a single cluster.}
 \item{alpha}{A value between 0 and 1 used to balance the bhattacharrya 
 probabilities calculated with either the full covariance matrices or using only
 the diagonal elements of it. When working with uncompensated FC data very high 

@@ -152,9 +152,10 @@ meta.numEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
     if( out.all ) {
 ## all
         parEvents <- matrix(NA, nrow=1,ncol=N+P)    
-        parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents
+        parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents +
+            meta$dat.clusters$removedEvents
     
-        parNames <- c("total")
+        parNames <- c("measured")
     
         tbl <- rbind(tbl, parEvents)
         rownames(tbl) <- parNames
@@ -176,7 +177,6 @@ meta.numEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
 .meta.clsGate <- function(meta, gating, name, out.linage=TRUE, out.all=TRUE)
 {
     
-##    cat("num clusters\n")
     N <- meta$dat.clusters$N
     P <- meta$dat.clusters$P
     K <- meta$dat.clusters$K
@@ -313,8 +313,9 @@ meta.relEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
     }
     
     if( out.all ) {
-        parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents
-        rownames(parEvents) <- "total"
+        parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents  +
+            meta$dat.clusters$removedEvents
+        rownames(parEvents) <- "measured"
         tbl <- rbind(tbl, parEvents)
     }
     
@@ -342,7 +343,8 @@ meta.relEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
 ## meta.parMFI: 
 ###
 .meta.parGate <- 
-function(meta, gating, par, pre, name, out.linage=TRUE, out.all=TRUE)
+function(meta, gating, par, pre, name,
+out.linage=TRUE, out.all=TRUE, out.unclassified=TRUE)
 {    
     N <- meta$dat.clusters$N
     P <- meta$dat.clusters$P
@@ -377,10 +379,11 @@ function(meta, gating, par, pre, name, out.linage=TRUE, out.all=TRUE)
                     numEvents[,N+p] <- M[p]
                 }
             
+            }
             
 ## get numEvents for all experiment
-                k <- 0
-                for( i in seq_len(N) ) {
+            k <- 0
+            for( i in seq_len(N) ) {
                 l <- k+1
                 k <- k+K[i]
                 ine <- inc[(inc>=l) & (inc<=k)]
@@ -388,18 +391,19 @@ function(meta, gating, par, pre, name, out.linage=TRUE, out.all=TRUE)
                 numEvents[1,i] <- sum(meta$dat.clusters$clsEvents[ine]*
                                     meta$dat.clusters$M[ine,par])/
                                     sum(meta$dat.clusters$clsEvents[ine])
-                }
             }
             
             if( out.all || length(gating$clusters) == 1 ) {
                 tbl <- rbind(tbl, numEvents)
-                if( length(gating$clusters) == 1 )
+                if( out.unclassified && length(gating$clusters) == 1 )
                 name <- paste(sep=".", name, gating$clusters, 
                             .cls_colors()[(gating$clusters%%8)+1])
                 rownames(tbl) <- paste(sep=".", pre, name)
-                if( length(gating$clusters) == 1 ) 
-                    clusters <- c(clusters, gating$clusters)
             }
+            
+            if( length(gating$clusters) == 1 )
+                clusters <- c(clusters, gating$clusters)
+            
         }
         
 
@@ -417,14 +421,16 @@ function(meta, gating, par, pre, name, out.linage=TRUE, out.all=TRUE)
                 pre_pos <- paste(sep=".", pre, i)
                 
                 tbl <- rbind(tbl, .meta.parGate(meta, gating$childs[[i]], 
-                                        par, pre_pos, name, 
-                                        out.linage=c>1, out.all=out.all))
+                                    par, pre_pos, name,
+                                    out.linage=(c>1||out.unclassified==FALSE),
+                                    out.all=out.all,
+                                    out.unclassified=out.unclassified))
             }
             
         }
         clusters <- gating$clusters[ is.na(match(gating$clusters, clusters)) ]
         
-        if( length(clusters) > 0 ) {
+        if( length(clusters) > 0 && out.unclassified ) {
             rn <- rownames(tbl)
 
             for( cls in clusters ) {
@@ -458,7 +464,7 @@ function(meta, gating, par, pre, name, out.linage=TRUE, out.all=TRUE)
 #    meta.parGate
 ##
 
-meta.parMFI <- function(meta, par, out.all=TRUE)
+meta.parMFI <- function(meta, par, out.all=TRUE, out.unclassified=TRUE)
 {
     N <- meta$dat.clusters$N
     P <- meta$dat.clusters$P
@@ -487,7 +493,7 @@ meta.parMFI <- function(meta, par, out.all=TRUE)
     }
     
     tbl <- rbind(tbl, .meta.parGate(meta, meta$gating, par, NULL, NULL, 
-                                out.all=out.all))
+                            out.all=out.all, out.unclassified=out.unclassified))
     
     colnames(tbl) <- c(meta$dat.clusters$expNames, parDesc)
     tbl
@@ -500,7 +506,6 @@ meta.parMFI <- function(meta, par, out.all=TRUE)
 .meta.freqGate <- function(meta, gating, totEvents, name, out.linage=TRUE)
 {
     
-##    cat("gate frequencies:", nrow(totEvents), "\n")
     N <- meta$dat.clusters$N
     K <- meta$dat.clusters$K
     P <- meta$dat.clusters$P
@@ -655,8 +660,6 @@ meta.freqTable <- function(meta)
     inc <- c()
     for( i in clusters ) {
         j <- which(res@label==i)
-        #if( i < 1 || i > nrow(res@mu))
-        #cat("out of bound", i, ":", clusters, "\n")
         M <- M + res@mu[i,] * sum(dat$clsEvents[j])
         inc <- c(inc, j )
     }
@@ -684,7 +687,6 @@ meta.freqTable <- function(meta)
 .meta.relParent <- function(meta, gating, pre, name,
     out.linage=TRUE, out.all=TRUE, out.unclassified=TRUE)
 {
-    #cat(gating$desc, ":", gating$clusters, "\n")
     N <- meta$dat.clusters$N
     P <- meta$dat.clusters$P
     K <- meta$dat.clusters$K
@@ -710,7 +712,6 @@ meta.freqTable <- function(meta)
             parDesc <- "measured"
         }
         
-        ##cat( paste(collapse=".", gating$position), parDesc, "\n")
         clusters <- c()
         classified <- .annotate.retrieveClassified(gating,c())
         if( out.linage && length(gating$clusters)>=0 ) {
@@ -856,8 +857,9 @@ function(meta, out.all=TRUE, out.removed=FALSE, out.unclassified=TRUE)
     else
     if( out.all ) {
         parEvents <- matrix(NA, nrow=1,ncol=N+P)
-        parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents
-        parNames <- c("total")
+        parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents +
+            meta$dat.clusters$removedEvents
+        parNames <- c("measured")
         
         tbl <- rbind(tbl, parEvents)
         rownames(tbl) <- parNames

@@ -430,7 +430,7 @@
     if( is.null(pop) )
         return (pop)
     
-    pop$position = pos
+    pop$position <- pos
     
     if( !is.null(subset) ) {
         plot.subset <- c()
@@ -573,7 +573,6 @@ meta.alpha=0.5, norm.method=3, norm.blur=2, norm.minG=10, verbose=FALSE)
             rest <- anno$clusters
         }
         ## test not jet respected meta-clusters
-        #       cat("\t", tst$pos, "test rest", rest, "\n")
         t <- tst
         for( c in rest ) {
             t$prop <- bhattacharyya.prob(src.M[c,], src.S[c,,], M, S)
@@ -590,7 +589,7 @@ meta.alpha=0.5, norm.method=3, norm.blur=2, norm.minG=10, verbose=FALSE)
         t <- find.pop(anno.src, dst.M[k,], dst.S[k,,], 
                         list("pos"=c(), "prop"=0))
         if( verbose )
-        cat("cls", k, "moveto", t$pos, t$prop, "\n")
+        message("cls ", k, " moveto ", t$pos, t$prop)
         prop[[k]] <- t
         anno.dst <- .annotate.moveClusters(anno.dst, c(k), t$pos)
     }
@@ -607,8 +606,8 @@ meta.alpha=0.5, norm.method=3, norm.blur=2, norm.minG=10, verbose=FALSE)
                             list("pos"=c(), "prop"=0))
             if( t$prop > prop[[k]]$prop ) {
                 if( verbose )
-                cat("cls", k, "move from", prop[[k]]$pos, prop[[k]]$prop,
-                "to", t$pos, t$prop, "\n")
+                message("cls ", k, " move from ", prop[[k]]$pos, prop[[k]]$prop,
+                " to ", t$pos, t$prop)
                 if( (t$prop / prop[[k]]$prop) > 2 )
                 anno.dst <- .annotate.moveClusters(anno.dst, c(k), t$pos)
             }

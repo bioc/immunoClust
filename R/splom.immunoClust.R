@@ -109,8 +109,8 @@ npoints=501, add=FALSE, gates=NULL, mean=NULL, sigma=NULL, ...)
     
 # plot gates    
     if( !is.null(gates) ) {
-        x.limits = c(min(x[!flagFiltered],-1), max(x[!flagFiltered],10))
-        y.limits = c(min(y[!flagFiltered],-1), max(y[!flagFiltered],10))
+        x.limits <- c(min(x[!flagFiltered],-1), max(x[!flagFiltered],10))
+        y.limits <- c(min(y[!flagFiltered],-1), max(y[!flagFiltered],10))
         thres <- gates[subset,]
         for( j in seq_len(length(thres[1,])) ) {
             if( !is.na(thres[1,j]) ) {

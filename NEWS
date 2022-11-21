@@ -1,3 +1,12 @@
+Changes in Version 1.31.1
+- CHANGES
+    * additional option thres to control meta.SubClustering process
+    * code cleaning
+
+Changes in Version 1.29.3
+- CHANGES
+    * respect ICL im meta.SubClustering process
+
 Changes in Version 1.29.2
 - CHANGES
     * code cleaning

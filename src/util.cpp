@@ -504,7 +504,7 @@ namespace dbg {
 		static char tmp[1024];
 		va_list a;
 		va_start (a, f);
-		vsprintf (tmp,f, a);
+		vsnprintf (tmp, 1024, f, a);
 		print_text (tmp);
 		va_end (a);
 		return 0;
@@ -515,7 +515,8 @@ namespace dbg {
 		char tmp[1024];
 		size_t s = 0;
 		for( int q=0; q<P; ++q ) {
-			s += sprintf(tmp+s, "%g,", *(V+q));
+			s += snprintf(tmp+s, 1024-s, "%g,", *(V+q));
+            if( s > 1024 ) break;
 		}
 		print_text(tmp);
 		return 0;
@@ -527,7 +528,8 @@ namespace dbg {
         for( int n=0; n<N; ++n ) {
             size_t s = 0;
             for( int q=0; q<P; ++q ) {
-			s += sprintf(tmp+s, "%.2lf, ", *(V+n*P+q));
+			s += snprintf(tmp+s, 1024-s, "%.2lf, ", *(V+n*P+q));
+                if(s > 1024) break;
             }
             print_text(tmp);
         }

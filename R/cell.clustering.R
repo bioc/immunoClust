@@ -18,7 +18,7 @@ state=NULL, K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt"
     if (nrow(s)) {
         S <- rep(0,length(s))
         for(k in seq_len(K)){
-            S[(1+(k-1)*P*P):(k*P*P)] = c(s[k,,])
+            S[(1+(k-1)*P*P):(k*P*P)] <- c(s[k,,])
         }
     }
     else {
@@ -61,7 +61,7 @@ history=NULL, state=NULL, K, w, m, s, scale_Z=TRUE, modelName="mvt"
     if (nrow(s)) {
         S <- rep(0,length(s))
         for(k in seq_len(K)){
-            S[(1+(k-1)*P*P):(k*P*P)] = c(s[k,,])
+            S[(1+(k-1)*P*P):(k*P*P)] <- c(s[k,,])
         }
     }
     else {
@@ -269,9 +269,9 @@ B=50, tol=1e-5, modelName="mvt"
     
     if( k>1 ) {
         for( i in seq_len(k-1) ){ 
-            W[i] = x@w[i]
-            M[i,] = x@mu[i,]
-            S[i,,] = x@sigma[i,,]
+            W[i] <- x@w[i]
+            M[i,] <- x@mu[i,]
+            S[i,,] <- x@sigma[i,,]
             if( !is.null(x@history) ) {
                 history[i] <- x@history[i]
             }
@@ -282,9 +282,9 @@ B=50, tol=1e-5, modelName="mvt"
     }
     if( k<K ) {
         for( i in (k+1):K ) {
-            W[L+i-1] = x@w[i]
-            M[L+i-1,] = x@mu[i,]
-            S[L+i-1,,] = x@sigma[i,,]
+            W[L+i-1] <- x@w[i]
+            M[L+i-1,] <- x@mu[i,]
+            S[L+i-1,,] <- x@sigma[i,,]
             if( !is.null(x@history) ) {
                 history[L+i-1] <- x@history[i]
             }
@@ -295,9 +295,9 @@ B=50, tol=1e-5, modelName="mvt"
     }
     
     for( i in seq_len(L) ){
-        W[k-1+i] = x@w[k]*y@w[i]
-        S[k-1+i,,] = y@sigma[i,,]
-        M[k-1+i,] = y@mu[i,]
+        W[k-1+i] <- x@w[k]*y@w[i]
+        S[k-1+i,,] <- y@sigma[i,,]
+        M[k-1+i,] <- y@mu[i,]
         if( !is.null(x@history) ) {
             history[k-1+i] <- x@history[k]
         }
@@ -357,7 +357,7 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
     icl_l <- rep(0, K)
     tst_l <- rep(1, K)
     
-    state = model@state
+    state <- model@state
     duration <- rep(0,K)
     for( k in seq_len(K) ) {
         
@@ -526,12 +526,12 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
 {
     P <- ncol(y)
     N <- nrow(y)
-    K = x@K
+    K<- x@K
     
     if (nrow(x@sigma)) {
         S <- rep(0,length(x@sigma))
         for(k in seq_len(K)){
-            S[(1+(k-1)*P*P):(k*P*P)] = c(x@sigma[k,,])
+            S[(1+(k-1)*P*P):(k*P*P)] <- c(x@sigma[k,,])
         }
     }
     else {
@@ -603,14 +603,14 @@ modelName="mvt"
 # output obj$s to sigma
     sigma <- array(0, c(1, P, P))
     s <- matrix(obj$s, 1, P * P, byrow=TRUE)
-    sigma[1,,] <- matrix(s[1,], P, P, byrow = TRUE)
+    sigma[1,,] <- matrix(s[1,], P, P, byrow=TRUE)
     
     
 # output BIC & ICL
     BIC <- obj$logLike[1]
     ICL <- 0
     logLike <- obj$logLike[3]
-    iclLike <- obj$logLike[2]
+    ##iclLike <- obj$logLike[2]
     
 # outp    
     result[[1]] <- new("immunoClust", parameters=x@parameters, 
@@ -706,12 +706,12 @@ modelName="mvt"
             (k > 2 && obj$tolerance > tol) ) {
             #message("TestSubCluster breaks at ", obj$L, ", ", obj$iterations,
             #", ", obj$tolerance, ">", tol)
-            #res_t = vector("list", k-1)
+            #res_t <- vector("list", k-1)
             #for( l in seq_len(k-1) )
             #res_t[[l]] <- result[[l]]
             
             #result <- res_t
-            J = k-1
+            J <- k-1
             break
         }
     
@@ -722,7 +722,7 @@ modelName="mvt"
         sigma <- array(0, c(L, P, P))
         s <- matrix(obj$s, k, P * P, byrow=TRUE)
         for (l in seq_len(L))
-        sigma[l,,] <- matrix(s[l,], P, P, byrow = TRUE)
+        sigma[l,,] <- matrix(s[l,], P, P, byrow=TRUE)
         
         mu <- matrix(obj$m, k, P, byrow=TRUE)[seq_len(L),]
         dim(mu) <- c(L,P)
@@ -756,7 +756,7 @@ modelName="mvt"
         attr(result[[k]], "iterations") <- obj$iterations
         
         if( obj$tolerance > tol ){
-            J = k
+            J <- k
             break
         }
         
@@ -799,7 +799,7 @@ cell.hclust <- function(data, weights=NULL)
     
     structure(t(cbind(obj$li,obj$lj)), 
             initialPatition=partition, change=obj$crit,
-            dimensions=c(N,P), modelName = "mvn", 
-            call = match.call())
+            dimensions=c(N,P), modelName="mvn", 
+            call=match.call())
 }
 ### cell.hclust

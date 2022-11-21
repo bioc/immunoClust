@@ -310,7 +310,7 @@ cell.MajorIterationTrans <- function(
 fcs, x=NULL, parameters=NULL, I.buildup=6, I.final=4, I.trans=I.buildup, 
 modelName="mvt", tol=1e-5, bias=0.3,
 sub.bias=bias, sub.thres=0.0, sub.tol=1e-4, sub.samples=1500, 
-sub.extract=0.8, sub.weights=1, sub.EM="MEt", sub.standardize=TRUE, #seed=1,   
+sub.extract=0.8, sub.weights=1, sub.EM="MEt", sub.standardize=TRUE, #seed=1, 
 trans.minclust=5, trans.a=0.01, trans.decade=-1, trans.scale=1.0, 
 trans.proc="vsHtransAw" 
 ) {

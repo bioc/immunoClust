@@ -28,7 +28,7 @@ meta.numEvents(meta, out.all=TRUE, out.removed=FALSE, out.unclassified=TRUE)
 meta.relEvents(meta, out.all=TRUE, out.removed=FALSE, out.unclassified=TRUE)
 meta.relParent(meta, out.all=TRUE, out.removed=FALSE, out.unclassified=TRUE)
 
-meta.parMFI(meta, par, out.all=TRUE)
+meta.parMFI(meta, par, out.all=TRUE, out.unclassified = TRUE)
 
 meta.numClusters(meta, out.all=TRUE)
 

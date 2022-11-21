@@ -9,13 +9,12 @@ pscal=NULL,...)
     if( is.null(pop) ) {
         return(NULL)
     }
-    #cat(pop$desc, "dontplot=", isTRUE(pop$dontplot), "\n")
     if( plot.all && isTRUE(pop$dontplot) ) {
         return(NULL)
     }
     
     if( is.null(pscal) && !is.null(pop$pscales) ) 
-        pscal = pop$pscales
+        pscal <- pop$pscales
     
     if( nchar(main) > 0 && nchar(pop$desc) > 0 )
     main <- paste(sep="_", main, pop$desc)
@@ -29,7 +28,7 @@ pscal=NULL,...)
         if( !is.null(pop$plot.subset) ) 
         subset <- pop$plot.subset
         else
-        subset=seq_len(length(attributes(res)$param))
+        subset <- seq_len(length(attributes(res)$param))
         
         if( is.null(inc.childs) ) {
         inc.childs <- seq_len(length(pop$childs))
@@ -173,7 +172,6 @@ pscal=NULL,...)
     }
     else
     if( plot.all ) {
-        #cat(paste(pop$position,collapse="."), pop$plot.endLevel, "\n")
         if( !is.null(pop$plot.endLevel) && pop$plot.endLevel ) {
             return(NULL)
         }

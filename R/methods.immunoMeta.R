@@ -172,7 +172,6 @@ function(object, name, pos, for.level=TRUE, for.sublevels=FALSE, ..., value)
 setMethod("desc", signature(object="immunoMeta"),
 function(object, pos=c())
 {
-    #   cat("immunoMeta", which, "\n")
     pop <- .annotate.getPop(object$gating, pos)
     pop[["desc"]]
 })
@@ -272,7 +271,6 @@ function(object, pos)
 #signature=signature(object="immunoMeta", value="ANY"),
 #definition=function(object, pos=NA, desc="new level", ..., value)
 #{
-#    cat("addLvel", pos,"\n")
 #    if( length(pos) > 0 && !all(is.integer(pos)) ) {
 #        stop("level position has to be specified integer array")
 #    }
@@ -411,11 +409,9 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
         colnames(m) <- colnames(x$dat.clusters$M)
         s <- x$res.clusters@sigma
         dim(s) <- c(K,P*P)
-        #cat("dim S", dim(s), "\n")
         s <- s[cls,]
         
         K <- length(cls)
-        #cat("dim S", dim(s), "K", K, "P", P, "\n")
         y$dat.clusters$K <- K
         y$dat.clusters$W <- w
         y$dat.clusters$M <- m

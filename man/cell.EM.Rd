@@ -42,7 +42,8 @@ covariance matrices.}
 \item{B}{The maximum number of EMt-iterations.}
 \item{tol}{The tolerance used to assess the convergence of the EMt-algorithms.}
 \item{bias}{The ICL-bias used in the EMt-algorithm.}
-\item{scale_Z}{Scale the returned a-posteriori probabilities to one for each observed event.}
+\item{scale_Z}{Scale the returned a-posteriori probabilities to one for each 
+    observed event.}
 \item{modelName}{Used mixture model; either \code{"mvt"} or \code{"mvn"} for a 
 \eqn{t}- or Gaussian mixture model respectively.}
 }

@@ -18,7 +18,7 @@ meta.RegNorm(y, x, method=1, alpha=0.5)
 
 \arguments{
 \item{y}{ immunoClust-object with the destination clusters.}
-\item{x}{ immunoClust-object woth the cluster to normalize.}
+\item{x}{ immunoClust-object with the cluster to normalize.}
 \item{method}{
 Alternative methods used for the normalization routine. 
 

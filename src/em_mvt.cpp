@@ -22,7 +22,7 @@ using std::min;
 
 using std::fpclassify;
 
-#define TRIAL_JUNE_2014_n 1
+//#define TRIAL_JUNE_2014_n 1
 
 /*
  C´STR, D´STR
@@ -315,27 +315,7 @@ em_mvt::et_step()
 		
 		if( sndClust > -1 ) {
 			
-#ifdef TRIAL_JUNE_2014
-			// tmpK -> delta likelihood
-			tmpK[maxClust] += z[maxClust] * (log(maxPDF) - log(sndPDF));
-			tmpNk[maxClust] += z[maxClust];	// events in cluster maxClust
-			// 2014.06.30: ?replace one by fraction z[maxClust]? 			
-			
-			double* unNk = tmpNk + K;		// nk for k-unlikelihood
-			
-			for( k=0; k<K; ++k ) {
-				if( k == maxClust ) {
-					unNk[sndClust] += z[maxClust];	// nk for k-unlikelihood: += t[i] instead of 1
-					// 2014.06.30: ?replace one by fraction z[maxClust]					
-				}
-				else {
-					unNk[maxClust] += z[maxClust];	// nk for k-unlikelihood += t[i] instead of 1
-					// 2014.06.30: ?replace one by fraction z[maxClust] 					
-				}
-				unNk += K;
-				
-			} // for k
-#else
+
 			// tmpK -> delta likelihood
 			tmpK[maxClust] += log(maxPDF) - log(sndPDF);
 			tmpNk[maxClust] += one;	// events in cluster maxClust
@@ -355,7 +335,7 @@ em_mvt::et_step()
 				unNk += K;
 				
 			} // for k
-#endif			
+		
 		}	// sndClust > -1
 				
 		for(k=0;k<K;k++) {
@@ -447,26 +427,7 @@ em_mvt::wet_step()
 		}
 		
 		if( sndClust > -1 ) {
-#ifdef TRAIL_JUNE_2014
-			// tmpK -> delta likelihood
-			tmpK[maxClust] += (z[maxClust])*(log(maxPDF) - log(sndPDF));
-			tmpNk[maxClust] += z[maxClust];	// events in cluster maxClust
-			// 2014.06.30: ?replace *t by z[maxClust]			
-			
-			double* unNk = tmpNk + K;		// nk for k-unlikelihood
-			for( k=0; k<K; ++k ) {
-				if( k == maxClust ) {
-					unNk[sndClust] += z[maxClust];	// nk for k-unlikelihood: += t[i] instead of 1
-					// 2014.06.30: ?replace (*t) by z[maxClust]					
-				}
-				else {
-					unNk[maxClust] += z[maxClust];	// nk for k-unlikelihood: += t[i] instead of 1
-					// 2014.06.30: ?replace (*t) by z[maxClust]					
-				}
-				unNk += K;
-				
-			} // for k
-#else
+
 			// tmpK -> delta likelihood
 			tmpK[maxClust] += (*t)*(log(maxPDF) - log(sndPDF));
 			tmpNk[maxClust] += *t;	// events in cluster maxClust
@@ -485,7 +446,6 @@ em_mvt::wet_step()
 				unNk += K;
 				
 			} // for k
-#endif			
 		}	// sndClust > -1
 		
 		

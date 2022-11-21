@@ -20,6 +20,10 @@
 
 using std::fpclassify;
 
+// 2022.10.21: alt MAP_WITH_WEIGHTSn, USE_CLUSTER_WEIGHTSn
+// correct?
+#define MAP_WITH_WEIGHTSn 1
+#define USE_CLUSTER_WEIGHTS 1
 /*
 	C´STR, D´STR
  */
@@ -46,9 +50,15 @@ em_meta::em_meta(int n, int p, int g,
 	
 	Z_sum = new double[G];
 	
+#ifdef USE_CLUSTER_WEIGHTS
+    T = W;
+    T_inc = 1;
+    T_sum = cblas_ddot(N, T, 1, &one, 0);
+#else
 	T = &one;
 	T_inc = 0;
 	T_sum = N;
+#endif
     fixedN = 0;
 	//dbg::printf("meta.EM P=%d, N=%d, G=%d (alpha=%.2lf)", P, N, G, ALPHA);
 	
@@ -333,8 +343,11 @@ em_meta::e_step()
         cblas_dcopy(G, &zero, 0, z, 1);
         
         double sumLike = 0.0;
-        // double maxLike = 0.0;
+#ifdef MAP_WITH_WEIGHTS
+        double maxLike = 0.0;
+#else
         double maxPDF = 0.0;
+#endif
         int maxClust = -1;
         
         for(j=0;j<G;j++) {
@@ -356,11 +369,18 @@ em_meta::e_step()
             
             // z[j] = (*t) * tmpLike;
             sumLike += tmpLike;
-            // 2022.04.12: MAP tmpLike not tmpPDF?
+            // 2022.04.12: ???MAP tmpLike not tmpPDF???
+#ifdef MAP_WITH_WEIGHTS
+            if( tmpLike > maxLike) {
+                maxLike = tmpLike;
+                maxClust = j;
+            }
+#else
             if( tmpPDF > maxPDF) {
                 maxPDF = tmpPDF;
                 maxClust = j;
             }
+#endif
         } // for j
         
         if( sumLike > 0.0 ) {
@@ -408,10 +428,13 @@ em_meta::et_step()
         cblas_dcopy(G, &zero, 0, z, 1);
         
         double sumLike = 0.0;
-        //double maxLike = 0.0;
-        //double sndLike = 0.0;
+#ifdef MAP_WITH_WEIGHTS
+        double maxLike = 0.0;
+        double sndLike = 0.0;
+#endif
         double maxPDF = 0.0;
         double sndPDF = 0.0;
+
         int maxClust = -1, sndClust = -1;
         
         for(j=0;j<G;j++) {
@@ -434,20 +457,34 @@ em_meta::et_step()
             // z[j] = (*t) * tmpLike;
             sumLike += tmpLike;
             // 2022.04.12: MAP tmpLike not tmpPDF?
-            if( tmpPDF > maxPDF) {
-                //sndLike = maxLike;
+#ifdef MAP_WITH_WEIGHTS
+            if( tmpLike > maxLike) {
+                sndLike = maxLike;
                 sndPDF = maxPDF;
                 sndClust = maxClust;
-                //maxLike = tmpLike;
+                maxLike = tmpLike;
                 maxPDF = tmpPDF;
                 maxClust = j;
             }
             else
             if( tmpPDF > sndPDF ) {
-                //sndLike = tmpLike;
+                sndLike = tmpLike;
                 sndPDF = tmpPDF;
                 sndClust = j;
             }
+#else
+            if( tmpPDF > maxPDF) {
+                sndPDF = maxPDF;
+                sndClust = maxClust;
+                maxPDF = tmpPDF;
+                maxClust = j;
+            }
+            else
+            if( tmpPDF > sndPDF ) {
+                sndPDF = tmpPDF;
+                sndClust = j;
+            }
+#endif
             
         } // for j
         
@@ -559,7 +596,11 @@ em_meta::fixedN_e_step()
         cblas_dcopy(G, &zero, 0, z, 1);
         
         double sumLike = 0.0;
+#ifdef MAP_WITH_WEIGHTS
+        double maxLike = 0.0;
+#else
         double maxPDF = 0.0;
+#endif
         int maxClust = -1;
         
         for(j=0;j<G;j++) {
@@ -580,12 +621,19 @@ em_meta::fixedN_e_step()
             }
             
             sumLike += tmpLike;
-            // 2022.04.12: MAP tmpLike not tmpPDF?
+            // 2022.04.12: ?? MAP tmpLike not tmpPDF?
             // sieht nach fehler aus
+#ifdef MAP_WITH_WEIGHTS
+            if( tmpLike > maxLike) {
+                maxLike = tmpLike;
+                maxClust = j;
+            }
+#else
             if( tmpPDF > maxPDF) {
                 maxPDF = tmpPDF;
                 maxClust = j;
             }
+#endif
         } // for j
         
         if( sumLike > 0.0 ) {
@@ -695,8 +743,10 @@ em_meta::fixedN_et_step()
         cblas_dcopy(G, &zero, 0, z, 1);
         
         double sumLike = 0.0;
-        //double maxLike = 0.0;
-        //double sndLike = 0.0;
+#ifdef MAP_WITH_WEIGHTS
+        double maxLike = 0.0;
+        double sndLike = 0.0;
+#endif
         double maxPDF = 0.0;
         double sndPDF = 0.0;
         int maxClust = -1, sndClust = -1;
@@ -719,7 +769,24 @@ em_meta::fixedN_et_step()
             }
             
             sumLike += tmpLike;
-            // 2022.04.12: MAP tmpLike not tmpPDF?
+#ifdef MAP_WITH_WEIGHTS
+            // 2022.04.12: ??MAP tmpLike not tmpPDF??
+            if( tmpLike > maxLike) {
+                sndLike = maxLike;
+                sndPDF = maxPDF;
+                sndClust = maxClust;
+                maxLike = tmpLike;
+                maxPDF = tmpPDF;
+                maxClust = j;
+            }
+            else
+            if( tmpLike > sndLike ) {
+                sndLike = tmpLike;
+                sndPDF = tmpPDF;
+                sndClust = j;
+            }
+#else
+            // 2022.04.12: ??MAP tmpLike not tmpPDF??
             if( tmpPDF > maxPDF) {
                 //sndLike = maxLike;
                 sndPDF = maxPDF;
@@ -734,7 +801,7 @@ em_meta::fixedN_et_step()
                 sndPDF = tmpPDF;
                 sndClust = j;
             }
-            
+#endif
         } // for j
         
         if( sumLike > 0.0 ) {
@@ -1177,7 +1244,9 @@ em_meta::final(int* label, double logLike[3], int* history)
     {
         double sumLike = 0;
         double maxPDF = 0;
-        //double maxLike = 0;
+#ifdef MAP_WITH_WEIGHTS
+        double maxLike = 0;
+#endif
         int maxClust = -1;
         
         for(j=0;j<L;j++)
@@ -1187,7 +1256,7 @@ em_meta::final(int* label, double logLike[3], int* history)
             // classification likelihood: sumLike = max(tmpLike)
             // integrated classification likelihood: sumLike = max(tmpLike) without proportion
             double gw = gW[j];
-            //double tmpLike = 0.0;
+            double tmpLike = 0.0;
             double tmpPDF = 0.0;
             if( gw > 0.0 ){
                 
@@ -1201,18 +1270,27 @@ em_meta::final(int* label, double logLike[3], int* history)
                 
                 
                 // 2015.03.05: has to be pdf w/o mixture weight
-                //tmpLike = gw * tmpPDF;
+                tmpLike = gw * tmpPDF;
                 //tmpLike = tmpPDF;
                 // 2018.09.25: correction sumLike has to be with mixture weight
-                //sumLike += tmpLike;
-                sumLike += gw * tmpPDF;
-                //if( tmpLike > maxLike ){
+                sumLike += tmpLike;
+                //sumLike += gw * tmpPDF;
                 // 2022.04.12: tmpLike = gw*tmpPDF => maxLike => maxPDF
+     
+#ifdef MAP_WITH_WEIGHTS
+                if( tmpLike > maxLike ) {
+                    maxLike = tmpLike;
+                    maxPDF = tmpPDF;
+                    maxClust = j;
+                }
+#else
                 if( tmpPDF > maxPDF ) {
                     //maxLike = tmpLike;
                     maxPDF = tmpPDF;
                     maxClust = j;
                 }
+#endif
+                
             }
             
             //z[j] = tmpLike;

@@ -203,7 +203,7 @@ plot(meta, c(1))
 @
 and we identify the clusters for the particular populations successivley
 by their expression levels.
-<<stage2annotation, echo=TRUE>>=
+<<stage2annotation1, echo=TRUE>>=
 cls <- clusters(meta,c(1))
 sort(mu(meta,cls,7))        ## CD3 expression
 inc <- mu(meta,cls,7) > 5   ## CD3+ clusters
@@ -246,7 +246,7 @@ centre values in a particular parameter.
 We see here, that for sample \texttt{12546} where the CD15-cells are depleted, 
 the CD14-population is missing.
 Anyway, this missing cluster could be in the so far unclassified clusters.
-<<stage2annotation, echo=TRUE>>=
+<<stage2annotation2, echo=TRUE>>=
 move(meta,c(1,4)) <- 13
 @
 <<stage2final, fig=TRUE>>=

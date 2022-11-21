@@ -34,11 +34,58 @@
     sa <- sin(al)
     
     xy.new <- xy %*% rbind(c(ca, sa), c(-sa, ca))
-    if (small==2) xy.new[,2]=xy.new[,2]/ratio
-    if (small==1) xy.new[,1]=xy.new[,1]/ratio
+    if (small==2) xy.new[,2]<-xy.new[,2]/ratio
+    if (small==1) xy.new[,1]<-xy.new[,1]/ratio
     xy.new + cbind(rep(loc[1],n), rep(loc[2],n))
 }
 
+.plot_ellipses <- function(S, M, limits, cc=NULL, lty=3, col=NA, npoints=501)
+{
+    if( is.null(S) ) return()
+    
+    if( is.null(cc) )
+        cc <- qt(0.95,5)
+        
+    if( is.null(limits) ) {
+        eigenPair <- eigen(S)
+        l1 <- sqrt(eigenPair$values[1]) * sqrt(cc)
+        l2 <- sqrt(eigenPair$values[2]) * sqrt(cc)
+        angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1])
+        angle <- angle * 180/pi
+        
+        points(.ellipsePoints(a=l1, b=l2, alpha=angle,
+                loc=M, n=npoints),
+                type="l", lty=lty, col=col)
+    }
+    else {
+        scale <- diag(1/limits)
+     
+        if( is.null(S) ) return ()
+        
+        S_scale <- scale %*% S %*% scale
+        e <- eigen(S_scale)
+            
+        l1 <- sqrt(e$values[1]) * cc
+        l2 <- sqrt(e$values[2]) * cc
+
+        sa <- e$vectors[2,1]
+        ca <- e$vectors[1,1]
+        d2 <- (l1-l2)*(l1+l2)
+
+        phi <- 2*pi*seq(0,1, len = npoints)
+        sp <- sin(phi)
+        cp <- cos(phi)
+
+        r <- l1*l2 / sqrt(l2^2 + d2 * sp^2)
+        xy <- r * cbind(cp, sp)
+        xy <- xy %*% rbind(c(ca,sa), c(-sa,ca))
+        #xy[,1] <- xy[,1] / scale
+        xy <- xy %*% diag(limits)
+        xy <- xy + cbind(rep(M[1],npoints), rep(M[2],nPoints))
+
+        polygon(xy[,1], xy[,2], border = "black",  lty=lty, col=col)
+    }
+}
 
 setGeneric("plot")
 
@@ -82,6 +129,7 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
     data <- data[,subset]
     label <- x@label
     
+    limits <- NULL
     if (!add) {
         if( !is.null(pscales) ) {
 
@@ -98,6 +146,9 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
             cex.axis <- par("cex.axis")
             mtext(pscales[[ subset[1] ]]$unit, 1, line=3, adj=1, cex=cex.axis)
             mtext(pscales[[ subset[2] ]]$unit, 2, line=3, adj=1, cex=cex.axis)
+            
+            limits <- vapply(pscales, function(x)x$limits, numeric(2))
+            
         }
         else {
             plot(data, type="n", main=main, xlab=lab[1], ylab=lab[2], ...)
@@ -141,35 +192,39 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
         elty <- matrix(elty, length(include))
         
         cc <- qt(0.9, 5)
-        
         j <- 0
-## cc <- rep(cc, length.out=x@K)
         for (i in include) {
-            eigenPair <- eigen(x@sigma[i,subset,subset])
-            l1 <- sqrt(eigenPair$values[1]) * sqrt(cc)
-            l2 <- sqrt(eigenPair$values[2]) * sqrt(cc)
-            angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1])
-            angle <- angle * 180/pi
+            #eigenPair <- eigen(x@sigma[i,subset,subset])
+            #l1 <- sqrt(eigenPair$values[1]) * sqrt(cc)
+            #l2 <- sqrt(eigenPair$values[2]) * sqrt(cc)
+            #angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1])
+            #angle <- angle * 180/pi
+            #
+            #points(.ellipsePoints(a=l1, b=l2, alpha=angle,
+            #        loc=x@mu[i,subset], n=npoints),
+            #        type="l", lty=elty[j <- j+1], col=ecol[j])
             
-            points(.ellipsePoints(a=l1, b=l2, alpha=angle,
-                    loc=x@mu[i,subset], n=npoints),
-                    type="l", lty=elty[j <- j+1], col=ecol[j])
+            .plot_ellipses(x@sigma[i,subset,subset], x@mu[i,subset],
+                limits=limits, cc=cc,
+                lty <- elty[j<-j+1], col=ecol[j], npoints=npoints)
         }
     }
     
     #ellipse.merged <- FALSE
     if( isTRUE(more.par$ellipsis.merged) ) {
-        cc <- qt(0.95, 5)
+        #cc <- qt(0.95, 5)
         merged <- .clust.mergedClusters(x, include)
-        eigenPair <- eigen(merged$sigma[subset,subset])
-        l1 <- sqrt(eigenPair$values[1]) * sqrt(cc)
-        l2 <- sqrt(eigenPair$values[2]) * sqrt(cc)
-        angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1])
-        angle <- angle * 180/pi
-        
-        points(.ellipsePoints(a=l1, b=l2, alpha=angle,
-        loc=merged$mu[subset], n=npoints),
-        type="l", lty=3, col="black")
+        #eigenPair <- eigen(merged$sigma[subset,subset])
+        #l1 <- sqrt(eigenPair$values[1]) * sqrt(cc)
+        #l2 <- sqrt(eigenPair$values[2]) * sqrt(cc)
+        #angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1])
+        #angle <- angle * 180/pi
+        #
+        #points(.ellipsePoints(a=l1, b=l2, alpha=angle,
+        #loc=merged$mu[subset], n=npoints),
+        #type="l", lty=3, col="black")
+        .plot_ellipses(merged$sigma[subset,subset], merged$mu[subset],
+            limits=limits, cc=qt(0.95,5), lty=3, col="black", npoints=npoints)
     }
     
     if( !is.null(more.par$ellipses.mean) &&
@@ -186,23 +241,26 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
             col <- more.par$ellipses.col
             
         for( l in seq_len(nrow(more.par$ellipses.mean)) ) {
-            eigenPair <- eigen(more.par$ellipses.sigma[l,subset,subset])
-            l1 <- sqrt(eigenPair$values[1]) * cc[l]
-            l2 <- sqrt(eigenPair$values[2]) * cc[l]
-            angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1])
-            angle <- angle * 180/pi
-            points(.ellipsePoints(a=l1, b=l2, alpha=angle,
-            loc=more.par$ellipses.mean[l,subset], n=npoints),
-            type="l", lty=3, col=col[l])
+            #eigenPair <- eigen(more.par$ellipses.sigma[l,subset,subset])
+            #l1 <- sqrt(eigenPair$values[1]) * cc[l]
+            #l2 <- sqrt(eigenPair$values[2]) * cc[l]
+            #angle <- atan(eigenPair$vectors[2,1] / eigenPair$vectors[1,1])
+            #angle <- angle * 180/pi
+            #points(.ellipsePoints(a=l1, b=l2, alpha=angle,
+            #loc=more.par$ellipses.mean[l,subset], n=npoints),
+            #type="l", lty=3, col=col[l])
+            .plot_ellipses(more.par$ellipses.sigma[l,subset,subset],
+                more.par$ellipses.mean[l,subset], limits=limits,
+                cc=cc[l], lty=3, col=col[l], npoints=npoints)
         }
     }
     
     
 # plot gates    
     if( !is.null(gates) ) {
-        x.limits = c(min(data[!flagFiltered,1],-1),
+        x.limits <- c(min(data[!flagFiltered,1],-1),
                     max(data[!flagFiltered,1],10))
-        y.limits = c(min(data[!flagFiltered,2],-1),
+        y.limits <- c(min(data[!flagFiltered,2],-1),
                     max(data[!flagFiltered,2],10))
         thres <- gates[subset,]
         for( j in seq_len(length(thres[1,])) ) {   
