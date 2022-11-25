@@ -35,7 +35,7 @@ extern "C" {
 		mat::traceW(*N, *P, y, trace);
 	}
 	
-	
+   
 	//
 	
 	// .Call interface
@@ -877,6 +877,8 @@ extern "C" {
 		return _vsHtransA(N, P, K, y, z, a, b, max_iterations, tol, certainty, vs_htrans::trail);
 	}
 	// << HTrans
+
+  
 	
 	// >> cluster data extraction ...
 	

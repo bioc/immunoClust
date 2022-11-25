@@ -151,13 +151,13 @@ dat.transformed <- trans.ApplyToData(res.fcs, dat.fcs)
 @
 A scatter plot matrix of all used parameters for clustering is obtained by the 
 \Rfunction{splom} method.
-<<stage1splom,fig=TRUE>>=
+<<stage1splom,fig=TRUE, png=TRUE>>=
 splom(res.fcs, dat.transformed, N=1000)
 @
 For a scatter plot of 2 particular parameters the \Rfunction{plot} method can 
 be used, where parameters of interest are specified in the \Rcode{subset} 
 argument.
-<<stage1plot, fig=TRUE>>=
+<<stage1plot, fig=TRUE, png=TRUE>>=
 plot(res.fcs, data=dat.transformed, subset=c(1,2))
 @
 

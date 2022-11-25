@@ -17,7 +17,7 @@ returns the fitted mixture model parameter in an object of class immunoClust.
 \usage{
 meta.Clustering(P, N, K, W, M, S, label=NULL, I.iter=10, B=500, tol=1e-5,
                 bias=0.25, sub.thres = bias, alpha=0.5, EM.method=20,
-                norm.method=0, norm.blur=2, norm.minG=10)
+                norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE)
 }
 
 \arguments{
@@ -69,6 +69,7 @@ cell-clusters reasonable the co-variance of the cell-clusters is blured for the
 a-posteriori probabilities in the normalization step.}
 \item{norm.minG}{Minimum number of obtained meta-clusters required to process 
 the normalization step in the major iteration loop.}
+\item{verbose}{detailed messages during process}
 }
 
 \details{

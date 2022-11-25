@@ -41,7 +41,7 @@ dat.res <- cell.process(dat.fcs)
 dat.fcs.transformed <- trans.ApplyToData(dat.res, dat.fcs)
 
 ## plot results
-splom(dat.res, dat.fcs.transformed)
+splom(dat.res, dat.fcs.transformed,N=1000)
 }
 
 \keyword{datasets}

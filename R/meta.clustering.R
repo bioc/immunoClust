@@ -164,7 +164,7 @@ bias=0.25, alpha=0.5, min.class=0
 meta.Clustering <- function(
 P, N, K, W, M, S, label=NULL, I.iter=10, B=500, tol=1e-5, 
 bias=0.25, sub.thres=bias, alpha=0.5, EM.method=20,
-norm.method=0, norm.blur=2, norm.minG=10
+norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
 ) {
 
     totK <- sum(K)
@@ -219,7 +219,9 @@ norm.method=0, norm.blur=2, norm.minG=10
         label <- meta.SubClustering(res, P, totK, W, tM, tS,
                                     tol=tol,
                                     bias=sub_bias, thres=sub.thres, alpha=alpha,
-                                    EM.method=subEM.method)
+                                    EM.method=subEM.method,
+                                    verbose=verbose)
+        
         message("Fit Model ", i, " of ", I.iter, " with ",
                 length(unique(label)), " clusters")
         res <- meta.ME(P, N, K, W, tM, tS, label, B=B, tol=tol, 
@@ -238,7 +240,8 @@ norm.method=0, norm.blur=2, norm.minG=10
 #meta.SubClustering <- function(
 #P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
 meta.SubClustering <- function(
-x, P, N, W, M, S, tol=1e-5, bias=0.25, thres=bias, alpha=1.0, EM.method=20
+x, P, N, W, M, S, tol=1e-5, bias=0.25, thres=bias, alpha=1.0, EM.method=20,
+verbose=FALSE
 ) {
     
     label <- x@label
@@ -264,7 +267,7 @@ x, P, N, W, M, S, tol=1e-5, bias=0.25, thres=bias, alpha=1.0, EM.method=20
             res <- meta.TestSubCluster(x,
                     P, length(inc), W[inc], M[inc,], S[inc,],
                     J=min(length(inc),J), tol=tol,
-                    bias=bias, alpha=alpha, EM.method=EM.method)
+                    bias=bias, alpha=alpha, EM.method=EM.method )
         }
         else {
             res <- NULL
@@ -304,7 +307,7 @@ x, P, N, W, M, S, tol=1e-5, bias=0.25, thres=bias, alpha=1.0, EM.method=20
             break
         }
         
-        if( res[[l]]@K > 1 ) {
+        if( res[[l]]@K > 1 && verbose ) {
             message(J, "/", sK, ": cluster ", k, " has ", res[[l]]@K, 
                 " sub-clusters at ", l, ", ICL=", format(icl, digits=2), "<>",
                 format(icl_thres, digits=2))
@@ -348,12 +351,12 @@ x, P, N, W, M, S, tol=1e-5, bias=0.25, thres=bias, alpha=1.0, EM.method=20
 
 meta.TestSubCluster<-
 function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
-        EM.method=2, HC.samples=2000) 
+        EM.method=2, HC.samples=2000)
 {
 #message("meta.TestSubCluster: ", "N=", N, " J=", J, 
 #           " dim=", paste(sep="", dim(M), collapes=","))
     if( J > N ) {
-        message("\t???", J, "sub >", N, "clusters")
+        warning("\t???", J, "sub >", N, "clusters")
         return (NULL)
     }
 

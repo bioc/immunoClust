@@ -88,7 +88,7 @@ data(dat.fcs)
 data(dat.exp)
 dat.res <- dat.exp[[1]]
 dat.trans <- trans.ApplyToData(dat.res, dat.fcs)
-plot(dat.res, dat=dat.trans)
+plot(dat.res, dat=dat.trans,N=1000)
 }
 
 \keyword{graphs}

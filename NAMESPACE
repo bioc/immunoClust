@@ -4,7 +4,8 @@ import(methods)
 
 
 importFrom(stats, density, mahalanobis, qt, quantile, sd, qchisq)
-importFrom(graphics, plot, pairs, points, hist, title, axis, mtext, legend)
+importFrom(graphics, plot, pairs, points, polygon,
+    hist, title, axis, mtext, legend)
 
 importFrom(grid, get.gpar, grid.points, current.viewport)
 importFrom(lattice, panel.points, splom, diag.panel.splom)
@@ -38,8 +39,10 @@ S3method("plot", "immunoMeta")
 #S3method("parameters", "immunoMeta")
 #S3method("parameters<-", "immunoMeta")
 
+
 exportClasses(immunoClust)
 exportClasses(immunoMeta)
+
 exportMethods(show, summary, plot, splom)
 
 ## immunoClust + immunoMeta
@@ -121,6 +124,11 @@ meta.Clustering,
 meta.SubClustering,
 meta.TestSubCluster,
 meta.hclust
+)
+## meta.SON
+export(
+meta.SON.combineClustering,
+meta.SON.clustering
 )
 ## meta.export
 export(

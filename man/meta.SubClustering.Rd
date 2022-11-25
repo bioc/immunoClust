@@ -15,7 +15,7 @@ sub-clusters and returns the refined cluster memberships in an integer array.s
 
 \usage{
 meta.SubClustering(x, P, N, W, M, S, tol=1e-5, bias=0.25, thres=bias, 
-    alpha=1.0, EM.method=20)
+    alpha=1.0, EM.method=20, verbose=FALSE)
 
 meta.TestSubCluster(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, 
     alpha=1.0, EM.method=2, HC.samples=2000) 
@@ -56,6 +56,7 @@ meta.TestSubCluster(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5,
 }
 \item{HC.samples}{The number of samples used for initial hierarchical 
     clustering.}
+\item{verbose}{detailed messages during process}
 }
 
 \details{

@@ -141,9 +141,14 @@ meta.numEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
     
     if( out.removed ) {
         parEvents <- matrix(NA, nrow=2,ncol=N+P)
+        if( !is.null(meta$dat.clusters$removedEvents) ) {
         parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents + 
                             meta$dat.clusters$removedEvents
         parEvents[2,seq_len(N)] <- meta$dat.clusters$removedEvents
+        }
+        else {
+            parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents
+        }
         parNames <- c("measured", "removed")
         tbl <- rbind(tbl, parEvents)
         rownames(tbl) <- parNames
@@ -151,10 +156,14 @@ meta.numEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
     else
     if( out.all ) {
 ## all
-        parEvents <- matrix(NA, nrow=1,ncol=N+P)    
+        parEvents <- matrix(NA, nrow=1,ncol=N+P)
+        if( !is.null(meta$dat.clusters$removedEvents) ) {
         parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents +
             meta$dat.clusters$removedEvents
-    
+        }
+        else {
+            parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents
+        }
         parNames <- c("measured")
     
         tbl <- rbind(tbl, parEvents)
@@ -313,8 +322,13 @@ meta.relEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
     }
     
     if( out.all ) {
+        if( !is.null(meta$dat.clusters$removedEvents) ) {
         parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents  +
             meta$dat.clusters$removedEvents
+        }
+        else {
+        parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents
+        }
         rownames(parEvents) <- "measured"
         tbl <- rbind(tbl, parEvents)
     }
@@ -322,9 +336,14 @@ meta.relEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
     tbl <- rbind(tbl, .meta.numGate(meta, meta$gating, NULL, NULL, 
                                     out.all=out.all,
                                     out.unclassified=out.unclassified))
-    
+                                    
+    if( !is.null(meta$dat.clusters$removedEvents) ) {
     parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents +
                             meta$dat.clusters$removedEvents
+    }
+    else {
+        parEvents[1,seq_len(N)] <- meta$dat.clusters$expEvents
+    }
     rownames(parEvents) <- "measured"
     if( nrow(tbl) > 0 ) {
         for( i in seq_len(nrow(tbl)) ) {

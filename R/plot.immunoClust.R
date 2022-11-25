@@ -59,30 +59,30 @@
     }
     else {
         scale <- diag(1/limits)
-     
+        
         if( is.null(S) ) return ()
         
         S_scale <- scale %*% S %*% scale
         e <- eigen(S_scale)
-            
+        
         l1 <- sqrt(e$values[1]) * cc
         l2 <- sqrt(e$values[2]) * cc
-
+        
         sa <- e$vectors[2,1]
         ca <- e$vectors[1,1]
         d2 <- (l1-l2)*(l1+l2)
-
+        
         phi <- 2*pi*seq(0,1, len = npoints)
         sp <- sin(phi)
         cp <- cos(phi)
-
+        
         r <- l1*l2 / sqrt(l2^2 + d2 * sp^2)
         xy <- r * cbind(cp, sp)
         xy <- xy %*% rbind(c(ca,sa), c(-sa,ca))
         #xy[,1] <- xy[,1] / scale
         xy <- xy %*% diag(limits)
-        xy <- xy + cbind(rep(M[1],npoints), rep(M[2],nPoints))
-
+        xy <- xy + cbind(rep(M[1],npoints), rep(M[2],npoints))
+        
         polygon(xy[,1], xy[,2], border = "black",  lty=lty, col=col)
     }
 }
@@ -128,6 +128,10 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
     P <- ncol(data)
     data <- data[,subset]
     label <- x@label
+    
+    if( !is.null(more.par$N) && more.par$N < length(label) ) {
+        label <- label[seq_len(more.par$N)]
+    }
     
     limits <- NULL
     if (!add) {

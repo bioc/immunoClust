@@ -8,14 +8,19 @@
  */
 
 #include "em_meta.h"
+#include "meta_SON.h"
+
 #include "hc_meta.h"
 #include "dist_mvn.h"
 
+#include "util.h"
+
 #include "meta_scale.h"
-//#include "meta_gpa.h"
+
 #include "normalize.h"
 #include "meta_norm.h"
 
+#include <gsl/gsl_cblas.h>
 
 #include <R.h>
 #include <Rinternals.h>
@@ -25,6 +30,7 @@
 extern "C" {
 #endif	
 	
+    
 	
 	// metaScale
 	void metaScale(int* p, int* n, int* k, double* w, double* m, double* s, int* label, int* method)
@@ -100,12 +106,24 @@ extern "C" {
     //
     // call methods
     //
-    
+    static void _copyMixtureModel(SEXP res_cluster, double* W, double* M, double* S)
+    {
+        int K = INTEGER(R_do_slot(res_cluster, install("K")))[0];
+        int P = INTEGER(Rf_getAttrib(res_cluster, install("P")))[0];
+        cblas_dcopy(K, REAL(R_do_slot(res_cluster, install("w"))), 1, W, 1);
+        const double* mu = REAL(R_do_slot(res_cluster, install("mu")));
+        const double* sigma =  REAL(R_do_slot(res_cluster, install("sigma")));
+        
+        for( int k=0; k<K; ++k ) {
+            cblas_dcopy(P, mu+k, K, M+k*P, 1);
+            cblas_dcopy(P*P, sigma+k, K, S+k*P*P, 1);
+        }
+    }
     static SEXP _ME_ret(int n, int p, int k) 
 	{
         
-		SEXP ret = Rf_protect(allocVector(VECSXP, 11));
-		SEXP names = Rf_protect(allocVector(STRSXP, 11));
+		SEXP ret = Rf_protect(allocVector(VECSXP, 12));
+		SEXP names = Rf_protect(allocVector(STRSXP, 12));
 		
 		SET_STRING_ELT(names, 0, mkChar("L"));
 		SET_STRING_ELT(names, 1, mkChar("z"));
@@ -118,7 +136,8 @@ extern "C" {
 		SET_STRING_ELT(names, 8, mkChar("status"));
 		SET_STRING_ELT(names, 9, mkChar("iterations"));
 		SET_STRING_ELT(names, 10, mkChar("tolerance"));
-		
+        SET_STRING_ELT(names, 11, mkChar("normedM"));
+        
 		SET_VECTOR_ELT(ret, 0, allocVector(INTSXP, 1));		// out L
 		SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, n*k));	// out z (!not initialzed!)
 		SET_VECTOR_ELT(ret, 2, allocVector(REALSXP, k));	// out w
@@ -129,8 +148,10 @@ extern "C" {
 		SET_VECTOR_ELT(ret, 7, allocVector(INTSXP, k));		// out history
 		SET_VECTOR_ELT(ret, 8, allocVector(INTSXP, 1));		// out status
 		SET_VECTOR_ELT(ret, 9, allocVector(INTSXP, 1));		// out iteratioms
-		SET_VECTOR_ELT(ret, 10, allocVector(REALSXP, 1));	// out tollerance
+		SET_VECTOR_ELT(ret, 10, allocVector(REALSXP, 1));	// out tolerance
 		
+        SET_VECTOR_ELT(ret, 11, allocVector(REALSXP, n*p));   //normedM
+        
     	setAttrib(ret, R_NamesSymbol, names);
 		
 		Rf_unprotect(1);	// unproctedt names
@@ -224,6 +245,265 @@ extern "C" {
         
 	}
     
+    // >> SON clustering
+    SEXP call_SON_combineClustering(SEXP res_model, SEXP res_sample,
+                                    SEXP map_cluster, SEXP use_cluster,
+                                    SEXP alpha, //SEXP scale_factor, SEXP scale_steps,
+                                    SEXP meta_cycles, SEXP meta_bias, SEXP meta_iter, SEXP meta_tol,
+                                    SEXP SON_cycles, SEXP SON_rlen, SEXP SON_deltas, SEXP SON_blurring,
+                                    SEXP traceG, SEXP traceK
+                                    )
+    {
+        
+        int G = INTEGER(R_do_slot(res_model, install("K")))[0];
+        int K = INTEGER(Rf_getAttrib(res_sample, install("K")))[0];
+        int P = INTEGER(Rf_getAttrib(res_model, install("P")))[0];
+        int N = G+K;
+        
+        dbg::printf("SON_combineClustering: G=%d, K=%d, P=%d, N=%d", G, K, P, N);
+        
+        SEXP ret = _ME_ret(N, P, G);
+        
+        double* nW = new double[N];
+        double* nEvts = new double[N];
+        //double* nM = new double[N*P];
+        double* nM = REAL(VECTOR_ELT(ret,11));  // like to return normalized values N*P
+        double* nS = new double[N*P*P];
+        
+        
+        cblas_dcopy(G, REAL(R_do_slot(res_model, install("evts"))), 1, nEvts, 1);
+        _copyMixtureModel(res_model, nW, nM, nS);
+   
+        cblas_dcopy(K, REAL(R_do_slot(res_sample, install("evts"))), 1, nEvts+G, 1);
+        _copyMixtureModel(res_sample, nW+G, nM+G*P, nS+G*P*P);
+        
+        int* label = INTEGER(VECTOR_ELT(ret,5));
+        for( int i=0; i<G; ++i)
+            label[i] = i+1;
+        for( int i=0; i<K; ++i)
+            label[G+i] = 0;
+        
+        // 0: = L
+        int L = G;
+        
+        double* z = REAL(VECTOR_ELT(ret,1));        // 1: Z N*G
+        double* w = REAL(VECTOR_ELT(ret,2));        // 2: w G
+        double* mappedM = REAL(VECTOR_ELT(ret,3));  // 3: m G*P
+        double* s = REAL(VECTOR_ELT(ret,4));        // 4: s G*P*P
+     
+        double* clusterM = new double[K*P];
+        double* normedM = nM+G*P;
+        
+        // mappedM (=gM in SON) will be changed by em
+        // ... initialize mappedM
+        cblas_dcopy(G*P, nM, 1, mappedM, 1);
+        // nM part for clusters will be changed by SON normStep
+        // ... so copy kM part to clusterM
+        //cblas_dcopy(K*P, nM+G*P, 1, clusterM, 1);
+        cblas_dcopy(K*P, normedM, 1, clusterM, 1);
+        
+        int* gTrace = INTEGER(traceG);
+        if( gTrace ) {
+            int* t = gTrace;
+            while( *t > 0 )
+                *t++ -= 1;
+            *t -= 1;
+        }
+        int* kTrace = INTEGER(traceK);
+        if( kTrace ) {
+            int* t = kTrace;
+            while( *t > 0 )
+                *t++ -= 1;
+            *t -= 1;
+            
+        }
+        
+        meta_SON son(P,
+                     G, nW, mappedM, nS,
+                     K, nW+G, clusterM, nS+G*P*P,
+                     normedM,
+                     REAL(alpha)[0],
+                     gTrace, kTrace, 0);
+        em_meta em(N, P, G, nEvts, nM, nS,
+                   z, w, mappedM, s,   // output
+                   REAL(meta_bias)[0], REAL(alpha)[0] );
+        
+        // double maxLike = -1e100;
+        // son.scaleModel(REAL(scale_factor)[0], INTEGER(scale_steps)[0]);
+        // em with scaled model sigma too?
+        for( int cycle=0; cycle < INTEGER(meta_cycles)[0]; ++cycle) {
+            
+            //dbg::printf("meta cycle %d", cycle);
+            // re-label map_cluster?? obsolete because fixedN clustering
+            // map.cluster <- unique(label[map_cluster])
+            
+            // obtain son.normedM = cell cluster part in nM by son-norm
+            // use em.gM = mappedM for SON
+            // 2018.12.10: ??? use always originals or continue with normalized
+            // v23(R implementation)=v29 use originals
+            // bei meta_cycles=1=v23 ohne unterschied
+            cblas_dcopy(K*P, clusterM, 1, normedM, 1);
+            son.normStep(INTEGER(map_cluster),
+                         INTEGER(use_cluster),
+                         
+                         INTEGER(SON_cycles)[0],
+                         INTEGER(SON_rlen)[0],
+                         REAL(SON_deltas),
+                         REAL(SON_blurring)
+                         );
+            
+            // change mappedM (=em.gM = son.gM) within em-iteration
+            // use son.normedM for clustering
+            // start weighted
+            em.start(label, true);
+            
+            int max_iteration = INTEGER(meta_iter)[0];
+            double max_tolerance = REAL(meta_tol)[0];
+            // keep model cluster fixed
+            em.bc_fixedN_classify(max_iteration, max_tolerance, G);
+            
+            //double logLike[3];
+            
+            INTEGER(VECTOR_ELT(ret,0))[0] = em.final(label,
+                                                     REAL(VECTOR_ELT(ret,6)),
+                                                     INTEGER(VECTOR_ELT(ret,7)));
+            
+            dbg::printf("em results in %d cluster (%d,%d: %.1lf)",
+                        INTEGER(VECTOR_ELT(ret,0))[0], INTEGER(meta_iter)[0],
+                        max_iteration, REAL(VECTOR_ELT(ret,6))[1]);
+            
+        }
+        
+        L = INTEGER(VECTOR_ELT(ret,0))[0];
+        for( int i=0; i<G; ++i ) {
+            double max_z = 0;
+            int    max_j = -1;
+            for( int j=0; j<L; ++j ) {
+                double j_coeff = son.bc_coeff( mappedM + j*P, s+j*P*P, nM+i*P, nS+i*P*P );
+                *(z+i*L+j) = j_coeff;
+                if( j_coeff > max_z) {
+                    max_z = j_coeff;
+                    max_j = j;
+                }
+                label[i] = max_j+1;
+            }
+            
+        }
+        for( int i=0; i<K; ++i ) {
+            double max_z = 0;
+            int    max_j = -1;
+            for( int j=0; j<L; ++j ) {
+                double j_coeff = son.bc_coeff( mappedM + j*P, s+j*P*P, nM+(G+i)*P, nS+(G+i)*P*P );
+                *(z+(G+i)*L+j) = j_coeff;
+                if( j_coeff > max_z) {
+                    max_z = j_coeff;
+                    max_j = j;
+                }
+                label[G+i] = max_j+1;
+            }
+        }
+        
+        delete[] clusterM;
+        //delete[] mapS;
+        delete[] nS;
+        delete[] nW;
+        delete[] nEvts;
+        
+        
+        Rf_unprotect(1);
+        return ret;
+    }
+    // << call_SON_combineClustering
+
+    // >> call_SON_normalize
+    SEXP call_SON_normalize(SEXP res_model,
+                            SEXP n, SEXP k, SEXP w, SEXP m, SEXP s,
+                            SEXP alpha, SEXP scale_factor, SEXP scale_steps,
+                            SEXP meta_iter, SEXP meta_tol,
+                            SEXP SON_cycles, SEXP SON_rlen, SEXP SON_deltas, SEXP SON_blurring
+                            )
+    {
+        int P = INTEGER(Rf_getAttrib(res_model, install("P")))[0];
+        int G = INTEGER(Rf_getAttrib(res_model, install("K")))[0];
+        
+        double* gW = new double[G];
+        double* gM = new double[G*P];
+        double* gS = new double[G*P*P];
+        
+        _copyMixtureModel(res_model, gW, gM, gS);
+        
+        int  N = INTEGER(n)[0];
+        const int* K = INTEGER(k);
+        const double* W = REAL(w);
+        const double* M = REAL(m);
+        const double* S = REAL(s);
+        //const double* tM = REAL(tm);
+        int totK = 0;
+        for( int i=0; i<N; ++i)
+            totK += K[i];
+        
+        int*  label = new int[totK];
+        double* z = new double[totK*G];
+        
+        SEXP ret = Rf_protect(allocVector(REALSXP, totK*P));
+        
+        double* normedM = REAL(ret);
+        int* nLabel = label;
+        const double* nW = W;
+        const double* nM = M;
+        const double* nS = S;
+        for( int n=0; n<N; ++n) {
+            dbg::printf("SON_normalize: sample=%02d of %02d, K=%d <= %d (P=%d)", n, N, K[n], G, P);
+            // norm nth sample
+            int L = G;
+            int max_iteration = INTEGER(meta_iter)[0];
+            double max_tolerance = REAL(meta_tol)[0];
+            
+            if( max_iteration > 0 ) {
+                em_meta em(totK, P, G, W, M, S,
+                           z, gW, gM, gS,   // output
+                           0, REAL(alpha)[0] ); // BIAS not used in here
+                
+                memcpy(label, INTEGER(Rf_getAttrib(res_model, install("label"))), totK*sizeof(int));
+                memset(nLabel, 0, K[n]*sizeof(int));
+                
+                em.bc_maximize(max_iteration, max_tolerance);
+                double logLike[3];
+                L = em.final(label, logLike, 0);
+            }
+            
+            meta_SON son(P, L, gW, gM, gS,
+                         K[n], nW, nM, nS,
+                         normedM,
+                         REAL(alpha)[0], 0, 0, FALSE);
+            // mayby scale first
+            if(INTEGER(scale_steps)[0] > 0)
+                son.scaleStep(REAL(scale_factor)[0], INTEGER(scale_steps)[0] );
+            // map
+            son.normStep( 0, 0,
+                         INTEGER(SON_cycles)[0], INTEGER(SON_rlen)[0],
+                         REAL(SON_deltas), REAL(SON_blurring));
+            
+            nLabel += K[n];
+            nW += K[n];
+            nM += K[n]*P;
+            nS += K[n]*P*P;
+            normedM += K[n]*P;
+        }
+        
+        delete[] z;
+        delete[] label;
+        delete[] gW;
+        delete[] gM;
+        delete[] gS;
+        
+        Rf_unprotect(1);
+        return ret;
+    }
+    // call_SON_normalize
+
+    // << SON clustering
+
     // dist_mvn
     SEXP call_mvnDist(SEXP P, SEXP K, SEXP W, SEXP M, SEXP S)
     {

@@ -15,9 +15,9 @@ extern "C" {
 
 int print_text(const char* txt) 
 {
-#ifdef DEBUG
-//	Rprintf("%s\n", txt);
-#endif
+//#ifdef DEBUG
+	//Rprintf("%s\n", txt);
+//#endif
 	return 0;
 }
 	
@@ -68,6 +68,16 @@ int print_text(const char* txt)
         /* meta */
         {"immunoC_metaME", (DL_FUNC)(&call_metaME), 13},
         {"immunoC_mvnDist", (DL_FUNC)(&call_mvnDist), 5},
+        
+        /* model scale
+        {"immunoC_modelScale", (DL_FUNC)(&call_modelScale), 13},
+        {"immunoC_modelScale2", (DL_FUNC)(&call_modelScale2), 13},
+        {"immunoC_modelScale3", (DL_FUNC)(&call_modelScale3), 13},
+        */
+        /* SOM */
+        {"immunoC_SON_combineClustering", (DL_FUNC)(&call_SON_combineClustering), 15},
+        {"immunoC_SON_normalize", (DL_FUNC)(&call_SON_normalize), 15},
+        
 		{NULL, NULL, 0}
 	};
 	

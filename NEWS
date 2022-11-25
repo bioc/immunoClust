@@ -1,3 +1,11 @@
+Changes in Version 1.31.3
+- NEW FEATURE
+    * introduces meta-clustering with SON/ormalization
+
+Changes in Version 1.31.2
+- CHANGES
+    * bugfix in meta.export functions
+
 Changes in Version 1.31.1
 - CHANGES
     * additional option thres to control meta.SubClustering process

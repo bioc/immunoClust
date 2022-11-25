@@ -1,4 +1,4 @@
-###
+
 ##
 bhattacharyya.prob <- function(gM,gS, cM,cS, alpha=1)
 {
@@ -311,6 +311,39 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
     
     list("mu"=M,"sigma"=S)
 }
+
+## min KL merged cluster
+.clust.mergedClusters2 <- function(w, mu_, sigma_, cls)
+{
+    if( length(cls) == 0 ) {
+        return( list("mu"=NULL, "sigma"=NULL) )
+    }
+    
+    P <- ncol(mu_)
+    M <- rep(0, P)
+    S <- matrix(0, nrow=P, ncol=P)
+    
+    if( length(cls) > 1 ) {
+        for( p in seq_len(P) )
+        M[p] <- sum(w[cls] * mu_[cls,p]) / sum(w[cls])
+    }
+    else {
+        M <- mu_[cls,]
+    }
+    
+    for( i in cls ) {
+        for( p in seq_len(P) ) {
+            for( q in seq_len(P) ) {
+                S[p,q] <- S[p,q] + (w[i]) * ( sigma_[i, p, q] +
+                                    (mu_[i,p]-M[p])*(mu_[i,q]-M[q]) )
+            }
+        }
+    }
+    S <- S/sum(w[cls])
+    
+    list("mu"=M,"sigma"=S, "weight"=sum(w[cls]))
+}
+## min KL merged cluster
 
 ###
 ##
