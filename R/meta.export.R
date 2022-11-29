@@ -52,7 +52,7 @@ c("black","red","green3","blue","cyan","magenta","yellow","gray")
                 numEvents[1,i] <- sum(meta$dat.clusters$clsEvents[ine])
             }
             
-            if( out.all || length(gating$clusters) == 1 ) {
+            if( out.all || out.linage || length(gating$clusters) == 1 ) {
                 tbl <- rbind(tbl, numEvents)
                 if( out.unclassified && length(gating$clusters) == 1 )
                 name <- paste(sep=".", name, gating$clusters, 
@@ -217,7 +217,7 @@ meta.numEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
                 numClusters[1,i] <- sum((inc>=l) & (inc<=k))
             }
             
-            if( out.all || length(gating$clusters) == 1 ) {
+            if( out.all || out.linage || length(gating$clusters) == 1 ) {
                 tbl <- rbind(tbl, numClusters)
                 if( length(gating$clusters) == 1 )
                 name <- paste(sep=".", name, gating$clusters, 
@@ -412,7 +412,7 @@ out.linage=TRUE, out.all=TRUE, out.unclassified=TRUE)
                                     sum(meta$dat.clusters$clsEvents[ine])
             }
             
-            if( out.all || length(gating$clusters) == 1 ) {
+            if( out.all || out.linage || length(gating$clusters) == 1 ) {
                 tbl <- rbind(tbl, numEvents)
                 if( out.unclassified && length(gating$clusters) == 1 )
                 name <- paste(sep=".", name, gating$clusters, 
