@@ -212,7 +212,6 @@ In the plot of this level the three major scatter population are seen easily
 <<stage2plot2, fig=TRUE>>=
 plot(meta, c(1))
 @
-
 and we identify the clusters for the particular populations successivley
 by their expression levels.
 
@@ -245,11 +244,11 @@ values on the CD14-population is explained by spillover of FITC into PE.
 
 The event numbers of each meta-cluster and each sample are extracted in a 
 numeric matrix by the \Rfunction{meta.numEvents} function.
-
 <<stage2export, echo=TRUE>>=
 tbl <- meta.numEvents(meta, out.all=FALSE, out.unclassified=F)
 tbl[,1:5]
 @
+
 Each row denotes an annotated hierarchical level or/and meta-cluster and each
 column a data sample used in meta-clustering. The row names give the annotated
 population name.
@@ -265,6 +264,7 @@ Anyway, this missing cluster could be in the so far unclassified clusters.
 <<stage2final, fig=TRUE>>=
 plot(meta, c(1,2,1))
 @
+
 We see the CD14 population of sample \texttt{12546} shifted in
 FSC and CD3 expression levels, probably due to technical variation in the
 measurement of the CD15-depleted sample, where the granulocytes are
