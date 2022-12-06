@@ -161,7 +161,6 @@ argument.
 plot(res.fcs, data=dat.transformed, subset=c(1,2))
 @
 
-
 \subsection{Meta Clustering} \label{meta-clustering}
 For meta-clustering the cell-clustering results of all FC samples obtained by 
 the \Rfunction{cell.process} function are collected in a \Robject{vector} of 
@@ -187,14 +186,10 @@ With the default \Rcode{plot.ellipse=TRUE} argument the meta-clusters are
 outlined by ellipses of the 90\% quantile.
 
 \subsection{Meta Annotation} \label{meta-annotation}
-We take a look on the event numbers of all meta-clusters in each sample
-<<stage2events, echo=TRUE>>=
-cls <- clusters(meta,c())
-events(meta,cls)
-@
-and first sort the meta-clusters according to the scatter parameter
-into of the five major areas
+We take a look and first sort the meta-clusters according to the scatter 
+parameter into five major areas
 <<stage2scatter, echo=TRUE>>=
+cls <- clusters(meta,c())
 inc <- (mu(meta,cls,1)) > 20000 & mu(meta,cls,1) < 150000
 addLevel(meta,c(1),"leucocytes") <- cls[inc]
 
@@ -215,37 +210,14 @@ plot(meta, c(1))
 and we identify the clusters for the particular populations successivley
 by their expression levels.
 
-<<stage2annotation, echo=TRUE>>=
-cls <- clusters(meta,c(1,1))
-sort(mu(meta,cls,7))        ## CD3 expression
-sort(mu(meta,cls,6))   ## CD4 expression
-inc <- mu(meta,cls,7) > 5 & mu(meta,cls,6) > 4
-addLevel(meta,c(1,1,1), "CD3+CD4+") <- cls[inc]
-inc <- mu(meta,cls,7) > 5 & mu(meta,cls,6) < 4
-addLevel(meta,c(1,1,2), "CD3+CD4-") <- cls[inc]
-cls <- unclassified(meta,c(1,1))
-sort(mu(meta,cls,4))
-inc <- (mu(meta,cls,4)) > 3
-addLevel(meta,c(1,1,3), "CD19+") <- cls[inc]
-
-cls <- clusters(meta,c(1,2))
-sort(mu(meta,cls,3))        ## CD14 expression
-inc <- mu(meta,cls,3) > 5
-addLevel(meta,c(1,2,1), "CD14+") <- cls[inc]
-
-cls <- clusters(meta,c(1,3))
-sort(mu(meta,cls,5))        ## CD15 expression
-inc <- mu(meta,cls,5) > 3
-addLevel(meta,c(1,3,1), "CD15+") <- cls[inc]
-@
-
 The whole analysis is performed on uncompensated FC data, thus the high CD19 
 values on the CD14-population is explained by spillover of FITC into PE.
 
 The event numbers of each meta-cluster and each sample are extracted in a 
 numeric matrix by the \Rfunction{meta.numEvents} function.
+
 <<stage2export, echo=TRUE>>=
-tbl <- meta.numEvents(meta, out.all=FALSE, out.unclassified=F)
+tbl <- meta.numEvents(meta, out.all=FALSE, out.unclassified=FALSE)
 tbl[,1:5]
 @
 
@@ -260,10 +232,6 @@ centre values in a particular parameter.
 We see here, that for sample \texttt{12546} where the CD15-cells are depleted, 
 the CD14-population is missing.
 Anyway, this missing cluster could be in the so far unclassified clusters.
-
-<<stage2final, fig=TRUE>>=
-plot(meta, c(1,2,1))
-@
 
 We see the CD14 population of sample \texttt{12546} shifted in
 FSC and CD3 expression levels, probably due to technical variation in the
