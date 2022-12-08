@@ -179,7 +179,7 @@ in a hierarchical mannner using methods of the \Robject{immunoMeta}-object.
 A scatter plot matrix of the meta-clustering is obtained by the 
 \Rfunction{plot} method. 
 <<stage2plot1, fig=TRUE>>=
-plot(meta, c())
+plot(meta, c(), plot.subset=c(1,2))
 @
 In these scatter plots each cell-cluster is marked by a point of its centre. 
 With the default \Rcode{plot.ellipse=TRUE} argument the meta-clusters are 
