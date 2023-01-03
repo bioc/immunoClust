@@ -526,7 +526,7 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
 {
     P <- ncol(y)
     N <- nrow(y)
-    K<- x@K
+    K <- x@K
     
     if (nrow(x@sigma)) {
         S <- rep(0,length(x@sigma))
@@ -610,7 +610,8 @@ modelName="mvt"
     BIC <- obj$logLike[1]
     ICL <- 0
     logLike <- obj$logLike[3]
-    ##iclLike <- obj$logLike[2]
+    
+    iclLike <- obj$logLike[2]
     
 # outp    
     result[[1]] <- new("immunoClust", parameters=x@parameters, 
@@ -704,13 +705,7 @@ modelName="mvt"
 ## 2012.12.12: singularity problems   
         if( obj$L < 1 || obj$logLike[3] == Inf ||
             (k > 2 && obj$tolerance > tol) ) {
-            #message("TestSubCluster breaks at ", obj$L, ", ", obj$iterations,
-            #", ", obj$tolerance, ">", tol)
-            #res_t <- vector("list", k-1)
-            #for( l in seq_len(k-1) )
-            #res_t[[l]] <- result[[l]]
-            
-            #result <- res_t
+        
             J <- k-1
             break
         }
@@ -799,7 +794,7 @@ cell.hclust <- function(data, weights=NULL)
     
     structure(t(cbind(obj$li,obj$lj)), 
             initialPatition=partition, change=obj$crit,
-            dimensions=c(N,P), modelName="mvn", 
+            dimensions=c(N,P), modelName="mvn",
             call=match.call())
 }
 ### cell.hclust

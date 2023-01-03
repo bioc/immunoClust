@@ -1,3 +1,7 @@
+Changes in Version 1.31.8
+- CHANGES
+    * bugfic in plot.immunoClust
+    
 Changes in Version 1.31.5
 - CHANGES
     * bugfix in meta.export

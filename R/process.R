@@ -37,7 +37,8 @@ trans.parameters=NULL
     
     y <- .exprs(dat, parameters)
     rm.max <- rm.min <- rep(FALSE, nrow(y))
-    rm.na <- apply(y,1,anyNA)
+    #rm.na <- apply(y,1,anyNA)
+    rm.na <- apply(y,1, function(r) !all(is.finite(r)))
     
     if (max.count > -1) {
         if (is.null(max)[1]) 
@@ -307,12 +308,12 @@ sub.standardize=TRUE #, seed=1
 }
 
 cell.MajorIterationTrans <- function(
-fcs, x=NULL, parameters=NULL, I.buildup=6, I.final=4, I.trans=I.buildup, 
+fcs, x=NULL, parameters=NULL, I.buildup=6, I.final=4, I.trans=I.buildup,
 modelName="mvt", tol=1e-5, bias=0.3,
-sub.bias=bias, sub.thres=0.0, sub.tol=1e-4, sub.samples=1500, 
-sub.extract=0.8, sub.weights=1, sub.EM="MEt", sub.standardize=TRUE, #seed=1, 
-trans.minclust=5, trans.a=0.01, trans.decade=-1, trans.scale=1.0, 
-trans.proc="vsHtransAw" 
+sub.bias=bias, sub.thres=0.0, sub.tol=1e-4, sub.samples=1500,
+sub.extract=0.8, sub.weights=1, sub.EM="MEt", sub.standardize=TRUE,
+trans.minclust=5, trans.a=0.01, trans.decade=-1, trans.scale=1.0,
+trans.proc="vsHtransAw"
 ) {
     
     data <- fcs

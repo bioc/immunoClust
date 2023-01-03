@@ -1262,7 +1262,7 @@ em_mvt::final(double logLike[3], int* label, int* history, int scale_Z)
 		if( maxClust > -1 )
 			tmpK[maxClust] += (*t);
 		
-		if( scale_Z && sumLike > 0.0 ) {
+		if( scale_Z > 0 && sumLike > 0.0 ) {
 			cblas_dscal(L, 1./sumLike, z, 1);
 		}
 		obLike += (sumLike>0.0)? (*t) * log(sumLike) : 0.0;

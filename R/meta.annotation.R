@@ -88,14 +88,14 @@
     
     if( length(pos) == 1 ) {
         if( !is.null(g) ) {
-            message("add level ", p, " (", g$desc, ")\n\tto ", pop$desc, "\n")
+            #message("add level ", p, " (", g$desc, ")\n\tto ", pop$desc, "\n")
             g$plot.subset <- pop$plot.subset
             g$parent.position <- pop$parent.position
             pop$childs[[ p ]] <- g
             pop$plot.childs <- TRUE
         }
         else {
-            message("remove level ", p, "\n\tfrom ", pop$desc, "\n")
+            #message("remove level ", p, "\n\tfrom ", pop$desc, "\n")
             pop$childs[[ p ]] <- NULL
         }
 

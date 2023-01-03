@@ -63,7 +63,12 @@
         if( is.null(S) ) return ()
         
         S_scale <- scale %*% S %*% scale
-        e <- eigen(S_scale)
+        e <- NULL
+        try( e <- eigen(S_scale) )
+        if( is.null(e) ) {
+            #cat(S, "\n", limits, "\n")
+            return()
+        }
         
         l1 <- sqrt(e$values[1]) * cc
         l2 <- sqrt(e$values[2]) * cc
@@ -83,7 +88,7 @@
         xy <- xy %*% diag(limits)
         xy <- xy + cbind(rep(M[1],npoints), rep(M[2],npoints))
         
-        polygon(xy[,1], xy[,2], border = "black",  lty=lty, col=col)
+        polygon(xy[,1], xy[,2], border = col,  lty=lty, col=NA)
     }
 }
 
@@ -209,7 +214,7 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
             #        type="l", lty=elty[j <- j+1], col=ecol[j])
             
             .plot_ellipses(x@sigma[i,subset,subset], x@mu[i,subset],
-                limits=limits, cc=cc,
+                limits=limits[2,subset], cc=cc,
                 lty <- elty[j<-j+1], col=ecol[j], npoints=npoints)
         }
     }
@@ -228,7 +233,7 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
         #loc=merged$mu[subset], n=npoints),
         #type="l", lty=3, col="black")
         .plot_ellipses(merged$sigma[subset,subset], merged$mu[subset],
-            limits=limits, cc=qt(0.95,5), lty=3, col="black", npoints=npoints)
+            limits=limits[2,subset], cc=qt(0.95,5), lty=3, col="black", npoints=npoints)
     }
     
     if( !is.null(more.par$ellipses.mean) &&
@@ -254,7 +259,7 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
             #loc=more.par$ellipses.mean[l,subset], n=npoints),
             #type="l", lty=3, col=col[l])
             .plot_ellipses(more.par$ellipses.sigma[l,subset,subset],
-                more.par$ellipses.mean[l,subset], limits=limits,
+                more.par$ellipses.mean[l,subset], limits=limits[2,subset],
                 cc=cc[l], lty=3, col=col[l], npoints=npoints)
         }
     }
