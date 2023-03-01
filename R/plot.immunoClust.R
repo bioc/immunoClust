@@ -184,11 +184,12 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
     
     for (i in include) { 
         pts <- data[!flagFiltered & label==i,]
+        j <- j+1
         if( is(pts, "matrix") ) {
-        points(pts, pch=pch[j <- j+1], col=col[j], cex=cex[j])
+        points(pts, pch=pch[j], col=col[j], cex=cex[j])
         }
         else {
-        points(pts[1],pts[2], pch=pch[j <- j+1], col=col[j], cex=cex[j])
+        points(pts[1],pts[2], pch=pch[j], col=col[j], cex=cex[j])
         }
     }
 # plot filtered points (from above or below)
@@ -212,10 +213,10 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
             #points(.ellipsePoints(a=l1, b=l2, alpha=angle,
             #        loc=x@mu[i,subset], n=npoints),
             #        type="l", lty=elty[j <- j+1], col=ecol[j])
-            
+            j <- j+1
             .plot_ellipses(x@sigma[i,subset,subset], x@mu[i,subset],
                 limits=limits[2,subset], cc=cc,
-                lty <- elty[j<-j+1], col=ecol[j], npoints=npoints)
+                lty <- elty[j], col=ecol[j], npoints=npoints)
         }
     }
     

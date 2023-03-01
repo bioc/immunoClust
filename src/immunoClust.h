@@ -120,22 +120,7 @@ extern "C" {
 	
     SEXP call_mvnDist(SEXP P, SEXP K, SEXP W, SEXP M, SEXP S);
 
-    /* model scale
-    SEXP call_modelScale(SEXP P,
-                         SEXP G, SEXP gW, SEXP gM, SEXP gS,
-                         SEXP K, SEXP kW, SEXP kM, SEXP kS,
-                         SEXP factor, SEXP steps, SEXP alpha, SEXP verbose);
-
-    SEXP call_modelScale2(SEXP P,
-                     SEXP G, SEXP gW, SEXP gM, SEXP gS,
-                     SEXP K, SEXP kW, SEXP kM, SEXP kS,
-                     SEXP factor, SEXP steps, SEXP alpha, SEXP verbose);
-
-    SEXP call_modelScale3(SEXP P,
-                 SEXP G, SEXP gW, SEXP gM, SEXP gS,
-                 SEXP K, SEXP kW, SEXP kM, SEXP kS,
-                 SEXP factor, SEXP steps, SEXP alpha, SEXP verbose);
-     */
+   
     /* SOM meta */
     SEXP call_SON_combineClustering(
                 SEXP res_model, SEXP res_cluster,

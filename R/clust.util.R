@@ -1,4 +1,4 @@
-
+    
 ##
 bhattacharyya.prob <- function(gM,gS, cM,cS, alpha=1)
 {

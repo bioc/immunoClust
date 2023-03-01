@@ -17,7 +17,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_sf_log.h>
 
-
+using std::max;
 
 meta_SON::meta_SON(int p,
                    int g, const double* gw, const double* gm, const double* gs,
@@ -36,7 +36,8 @@ ALPHA(alpha), gTrace(traceG), kTrace(traceK), verbose(v)
     tmpS = new double[P*P];
     tmpP = new double[P];
     
-    neighbourProbs = new double[G*G];
+    int L = max(G,K);
+    neighbourProbs = new double[L*L];
     clusterProbs = new double[K];
     
     //pScale = new double[P];
@@ -44,8 +45,6 @@ ALPHA(alpha), gTrace(traceG), kTrace(traceK), verbose(v)
     
     cblas_dcopy(G*P, gM, 1, mappedM, 1);
     cblas_dcopy(K*P, kM, 1, normedM, 1);
-    
-    //initMapped();
     
 }
 
@@ -63,27 +62,7 @@ meta_SON::~meta_SON()
     
     //delete[] pScale;
 }
-/*
-void
-meta_SON::initMapped()
-{
-    cblas_dcopy(G*P, gM, 1, mappedM, 1);
-    for(int p=0; p<P; ++p )
-        cblas_dscal(G, pScale[p], mappedM+p, P);
-    
-    cblas_dcopy(G*P*P, gS, 1, scaledS, 1);
-    double* s = scaledS;
-    for( int j=0; j<G; ++j ) {
-        for( int p=0; p<P; ++p) {
-            for(int q=0; q<P; ++q) {
-                *(s+p*P+q) *= pScale[p]*pScale[q];
-            }
-        }
-        s += P*P;
-        
-    }
-}
-*/
+
 /*
  meta_SON::mapStep <= meta.SON.map
  copy meta.res@mu in meta.SON.map to mappedM before call
@@ -155,8 +134,7 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
         cblas_dcopy(G*P*P, gS, 1, blurredS, 1);
         cblas_dscal(G*P*P, blur, blurredS, 1);
         
-        //buildBlurredS(blurredS, blurring, double(iter)/(rlen-1));
-        buildNeighbourProbabilities(blurredS);
+        buildModelNeighbourProbabilities(blurredS);
         
         for( int l=0; l<K; ++l ) if( !use_cluster || use_cluster[l] ) {
             int k=0;
@@ -248,6 +226,141 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
 }
 // meta_SON::mapStep
 
+/*
+ meta_SON::alignStep
+
+ 
+int
+meta_SON::alignStep(const int* map_cluster, const int* use_cluster,
+                  int rlen, double deltas[2], double blurring[2])
+{
+    int i, j, p;
+    
+    if(verbose)
+    dbg::printf("SON_align");
+    
+    // mapped = model
+    //cblas_dcopy(P*G, gM, 1, mappedM, 1);
+    
+    if( deltas[0] <= 0.0 ) deltas[0] = 1.0/rlen;
+    if( deltas[1] <= deltas[0]) deltas[1] = deltas[0];
+    
+  
+   
+    
+    double* mapW = new double[G];
+    cblas_dcopy(G, gW, 1, mapW, 1);
+    double sumW = 0;
+    for(j=0; j<G; ++j ) {
+        
+        if( !map_cluster || map_cluster[j] ){
+            sumW += mapW[j];
+        }
+        else {
+            mapW[j] = 0;
+        }
+    }
+    cblas_dscal(G,  1.0/sumW, mapW, 1);
+    
+    double* iterW = new double[K];
+    cblas_dcopy(K, kW, 1, iterW, 1);
+    sumW = 0;
+    for(int i=0; i<K; ++i ) {
+           
+        if( !use_cluster || use_cluster[i]){
+            sumW += iterW[i];
+        }
+        else {
+            iterW[i] = 0;
+        }
+    }
+    //cblas_dscal(K, 1.0/sumW, iterW, 1 );
+    
+    
+    double* blurredS = new double[K*P*P];
+    
+    long totIter = rlen*K;
+    long curIter = 0;
+    for( long iter = 0; iter < rlen; ++iter ) {
+        
+        double blur = blurring[0] - (blurring[0] - blurring[1]) * double(iter)/(rlen-1);
+        if(verbose)
+        dbg::printf("SON %d: blur=%.1lf", iter, blur);
+        
+        cblas_dcopy(K*P*P, kS, 1, blurredS, 1);
+        cblas_dscal(K*P*P, blur, blurredS, 1);
+        
+        buildClusterNeighbourProbabilities(blurredS);
+        
+        for( int l=0; l<K; ++l ) if( !use_cluster || use_cluster[l] ) {
+            int k=0;
+            double maxW = 0;
+            for( i=0; i<K; ++i) if( !use_cluster || use_cluster[i]) {
+                if(iterW[i] > maxW) {
+                    maxW = iterW[i];
+                    k = i;
+                }
+            }
+            
+            if( doTrace(-1, k) ) {
+                dbg::printf("%d/%d (%d) : %d <> %.4lf", curIter, totIter, iter, k, iterW[k] );
+            }
+            
+            double factor = double(curIter) / double(totIter-1);
+            
+            double delta = deltas[0] - (deltas[0] - deltas[1]) * factor;
+            
+            BMU bmu = bestMatchingUnit(k, map_cluster, mappedM);
+            
+            double weight = (1-factor)*sqrt( iterW[k]/sumW * mapW[bmu.index] ) + factor;
+         
+            ++curIter;
+            iterW[k] /= 2;
+            sumW -= iterW[k];
+            //cblas_dscal(K, 1.0/(1-iterW[k]), iterW, 1);
+            
+            delta *= weight;
+            
+            if(doTrace(bmu.index, k))
+                dbg::printf("bmu %d: %d <= %d (%.4lf) %.4lf", iter, k, bmu.index, bmu.probability, blur );
+            
+            if( bmu.probability > 0 ) {
+                
+                const double* neighbourP = neighbourProbs + k*K;
+                
+                for( i=0; i < K; ++i ) {
+                    double prob = bmu.probability * (*neighbourP++); // * bmu.probability * weight * delta;
+                    // clusterProbe (i,k) with blur * bmu.probability * weight
+                        
+                    if( doTrace(bmu.index, i) ){
+                        dbg::printf("%d: move %d => %d (%.4lf)", iter, i, bmu.index, prob);
+                    }
+         
+                    for( int p=0; p<P; ++p )
+                        *(normedM+k*P+p) += prob * delta * (*(gM+bmu.index*P+p) - *(normedM+k*P+p));
+                        
+                } // for i
+        
+            }
+            else {
+                if(verbose)
+                dbg::printf("no BMU %ld, %d, %d", curIter, k, bmu.index);
+            }
+            
+        }
+        
+    }
+    
+    delete[] iterW;
+    delete[] mapW;
+    delete[] blurredS;
+    
+  
+    
+    return 0;
+}
+// meta_SON::alignStep
+*/
 /*
  meta_SON::scaleModel
     scale model to best match clusters
@@ -366,7 +479,7 @@ meta_SON::bestMatchingUnit(int k, const int* map_cluster, const double* mappedM)
 }
 
 void
-meta_SON::buildNeighbourProbabilities(const double* blurredS)
+meta_SON::buildModelNeighbourProbabilities(const double* blurredS)
 {
     cblas_dcopy(G*G, &zero, 0, neighbourProbs, 1);
     for( int i=0; i<G; ++i )
@@ -407,6 +520,27 @@ meta_SON::buildClusterProbabilities(int j)
     cblas_dscal(K, 1.0/sum, clusterProbs, 1);
 }
 
+void
+meta_SON::buildClusterNeighbourProbabilities(const double* blurredS)
+{
+    cblas_dcopy(K*K, &zero, 0, neighbourProbs, 1);
+    for( int i=0; i<K; ++i ) {
+        double sum=0;
+        double* prob = neighbourProbs + i*K;
+        for( int j=0; j<K; ++j ) {
+            // with!!! or without alpha?
+            prob[j] = bc_measure(kM+i*P, blurredS+i*P*P, kM+j*P, blurredS+j*P*P);
+            if( verbose ) {
+                int pc = fpclassify( prob[j] );
+                if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
+                    dbg::printf("neighbour %d<>%d: NaN (%d) ", j, i, pc);
+                }
+            }
+            sum += prob[j];
+        }
+        //cblas_dscal(K, 1.0/sum, prob, 1);
+    }
+}
 /*
 void
 meta_SON::buildBlurredS(double* blurredS, double blurring[2], double lambda)

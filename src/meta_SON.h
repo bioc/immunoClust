@@ -79,7 +79,14 @@ public:
                      int cycles,int rlen,
                      double deltas[2], double blurring[2] );
     
+    /*
+    int     alignStep(const int* map_cluster, const int* use_cluster,
+                    int rlen,
+                    double deltas[2], double blurring[2] );
+    
+    */
     int     scaleStep(double factor, int steps);
+    
     
     //int     scaleModel(double factor, int steps);
     
@@ -97,7 +104,8 @@ private:
     //void    buildBlurredS(double* blurredS, double blurring[2], double lambda);
   
     BMU    bestMatchingUnit(int k, const int* map_cluster, const double* mappedM );
-    void   buildNeighbourProbabilities(const double* blurredS);
+    void   buildModelNeighbourProbabilities(const double* blurredS);
+    void   buildClusterNeighbourProbabilities(const double* blurredS);
     void   buildClusterProbabilities(int j);
 	
     int    doTrace(int j, int k) const;

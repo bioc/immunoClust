@@ -342,7 +342,7 @@ extern "C" {
             // 2018.12.10: ??? use always originals or continue with normalized
             // v23(R implementation)=v29 use originals
             // bei meta_cycles=1=v23 ohne unterschied
-            cblas_dcopy(K*P, clusterM, 1, normedM, 1);
+            // 2023.01.30: removed cblas_dcopy(K*P, clusterM, 1, normedM, 1);
             son.normStep(INTEGER(map_cluster),
                          INTEGER(use_cluster),
                          
@@ -501,7 +501,7 @@ extern "C" {
         return ret;
     }
     // call_SON_normalize
-
+   
     // << SON clustering
 
     // dist_mvn
