@@ -2,6 +2,8 @@
 ## cell event clustering routines
 ####
 
+
+
 ###
 ##  cell.EM
 ##  fits model to sample data, initial estimation given by K, w, m, s
@@ -36,8 +38,7 @@ state=NULL, K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt"
                 as.double(t(y)), double(0), 
                 as.double(w), as.double(M), as.double(S),
                 as.integer(B), as.double(tol), as.double(bias) )
-#if( obj$iterations >= B )
-#    message("EM reached maximal iterations ", B, "(", tol,")")
+
     .immunoClust2(obj, K, P, N, state=state,
                     expName=expName, parameters=parameters)
 }
@@ -123,7 +124,7 @@ function(x, data, B=50, tol=1e-5, bias=0.5, modelName="mvt" )
 {
     s <- strptime(date(), "%a %b %d %H:%M:%S %Y")
     
-    res <- cell.EM(data, parameters=x@parameters, 
+    res <- cell.EM(data, parameters=x@parameters,
                 history=attr(x, "history"), state=attr(x,"state"),
                 K=x@K, w=x@w, m=x@mu, s=x@sigma, 
                 B=B, tol=tol, bias=bias, modelName=modelName)
