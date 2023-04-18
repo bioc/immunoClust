@@ -428,10 +428,10 @@ meta_SON::normStep( const int* map_cluster, const int* use_cluster,
         //  mapped.res <- m$mapped.res ==> mappedM
  
 // transform cell clusters to meta cluster using mapped clusters
-// 2017.09.29: prob gegebenfalls normalisieren nach cell.clusters
-// hat den nachteil, dass cluster ohne nennenswerte aehlichkeit zu
-// 100% irgendwohin geschoben werden
-// anders: durch die maximale prob normieren. Dann bleiben die relationen erhalten
+// 2017.09.29: prob gegebenfalls normalisieren nach sample.clusters
+// hat den nachteil, dass cluster ohne irgendeine nennenswerte aehnlichkeit zu
+// einem model.cluster (rausch cluster) zu 100% irgendwohin geschoben werden
+// anders: durch die maximale prob normieren. Dann bleiben die relationen erhalten?
 // 2017.10.02: mehrer durchlaeufe machen
 // 2017.10.23: try use only map.cluster (to focus) => SON17
 // 2017.10.23: not really a differnce, so turn back
@@ -439,7 +439,12 @@ meta_SON::normStep( const int* map_cluster, const int* use_cluster,
 // 2020.01.21: check whether only mapped clusters in model (gW > 0) to use for normalization
         
         for( int j=0; j<G; ++j ) if( gW[j] > 0.0 ){
-           
+            // 2023.03.23: in dieser Variante ist die Summe der
+            // cluster-Bewegungen zum model cluster hin = 1
+            // eine andere Variante wäre die die Summe der
+            // cluster-zugehörigkeiten zu den model clustern = 1 zu setzen
+            // aktuell (wieder) nicht ganz geklärt, dennoch comment vom 2017.09.29
+            // nicht ganz unsinnig
             buildClusterProbabilities(j);
             for( int k=0; k < K; ++k ) {
                 double prob = clusterProbs[k];

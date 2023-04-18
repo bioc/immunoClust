@@ -15,8 +15,8 @@
 #include <gsl/gsl_math.h>
 #include <algorithm>
 #include <gsl/gsl_errno.h>
-#include "gsl/gsl_sf_gamma.h"
-#include "gsl/gsl_sort.h"
+#include <gsl/gsl_sf_gamma.h>
+#include <gsl/gsl_sort.h>
 
 using std::max;
 using std::min;

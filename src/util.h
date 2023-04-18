@@ -11,7 +11,7 @@
 #define util_h_included
 
 #include <cmath>
-#include "gsl/gsl_vector.h"
+#include <gsl/gsl_vector.h>
 
 inline double sqr(double x) { return x*x; }
 inline double quiet_sqrt(double x) { return (x >= 0.0) ? sqrt(x) : NAN; }

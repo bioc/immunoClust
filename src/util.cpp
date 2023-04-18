@@ -8,12 +8,12 @@
  */
 
 #include "util.h"
-#include "gsl/gsl_cblas.h"
-#include "gsl/gsl_sf_gamma.h"
+#include <gsl/gsl_cblas.h>
+#include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_sf_log.h>
-#include "gsl/gsl_vector.h"
-#include "gsl/gsl_matrix.h"
-#include "gsl/gsl_linalg.h"
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_linalg.h>
 
 #include <stdarg.h>
 #include <stdio.h>
