@@ -1,5 +1,6 @@
 \name{cell.ME}
 \alias{cell.ME}
+\alias{cell.Mstep}
 
 \encoding{utf8}
 
@@ -17,6 +18,9 @@ object of class \code{\link[=immunoClust.object]{immunoClust}}.
 \usage{
 cell.ME(data, parameters=NULL, expName="immunoClust Experiment", 
         history=NULL, state=NULL, label, B=50, tol=1e-5, modelName="mvt")
+
+cell.Mstep(data, label, parameters=NULL,
+    expName="immunoClust Mstep", modelName="mvt")
 }
 
 \arguments{

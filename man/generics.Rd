@@ -95,7 +95,7 @@ The appropriate value for the specific cal (see dection Details).
     \item{sam_clsWeights}{returns the cluster weights of all samples 
     cell-clusters.}
 
-    \item{sam_clsEVents}{returns the cluster event numbers of all samples 
+    \item{sam_clsEvents}{returns the cluster event numbers of all samples 
     cell-clusters.}
 
     \item{sam_clsMu}{returns the cluster means of all samples cell-clusters.}

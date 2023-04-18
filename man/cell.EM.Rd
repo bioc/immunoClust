@@ -1,6 +1,7 @@
 \name{cell.EM}
 \alias{cell.EM}
 \alias{cell.Estimation}
+\alias{cell.Estep}
 
 \encoding{utf8}
 
@@ -22,6 +23,9 @@ cell.EM(data, parameters=NULL, expName="immunoClust Experiment",
 cell.Estimation(data, parameters=NULL, expName="immunoClust Experiment",  
     history=NULL, state=NULL,
     K, w, m, s, scale_Z=TRUE, modelName="mvt")
+    
+cell.Estep(data, K, w, m, s, parameters=NULL,
+    expName="immunoClust Estep", scale_Z=TRUE, modelName="mvt")
 }
 
 \arguments{

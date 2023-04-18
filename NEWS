@@ -1,3 +1,7 @@
+Changes in Version 1.31.12
+- CHANGES
+    * introducing single E,M-steps
+
 Changes in Version 1.31.8
 - CHANGES
     * bugfix in plot.immunoClust

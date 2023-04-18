@@ -33,6 +33,28 @@ test_that("cell.ClustData", {
     expect_is(res, "immunoClust")
 })
 
+test_that("cell.Estep", {
+    data(dat.fcs)
+    data(dat.exp)
+    ## cell.clustering result for dat.fcs
+    r1 <- dat.exp[[1]]
+    dat.trans <- trans.ApplyToData(r1, dat.fcs)
+    r2 <- cell.Estep(dat.trans, K=ncls(r1),
+                w=weights(r1),m=mu(r1),s=sigma(r1),
+                parameters(r1))
+    expect_is(r2, "immunoClust")
+})
+test_that("cell.Mstep", {
+    data(dat.fcs)
+    data(dat.exp)
+    ## cell.clustering result for dat.fcs
+    r1 <- dat.exp[[1]]
+    dat.trans <- trans.ApplyToData(r1, dat.fcs)
+    r2 <- cell.Mstep(dat.trans, r1@label,
+                parameters(r1))
+    expect_is(r2, "immunoClust")
+})
+
 test_that("cell.hclust", {
 
     data(dat.fcs)

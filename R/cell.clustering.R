@@ -85,6 +85,67 @@ history=NULL, state=NULL, K, w, m, s, scale_Z=TRUE, modelName="mvt"
 }
 ### cell.Estimation
 
+## single Estep, Mstep
+cell.Estep <- function(
+data, K, w, m, s, parameters=NULL,
+expName="immunoClust Estep", scale_Z=TRUE,
+modelName="mvt"
+) {
+    
+    y <- .exprs(data, parameters)
+    
+    y <- as.matrix(y)
+    N <- nrow(y)
+    P <- ncol(y)
+    
+    if (nrow(s)) {
+        S <- rep(0,length(s))
+        for(k in seq_len(K)){
+            S[(1+(k-1)*P*P):(k*P*P)] <- c(s[k,,])
+        }
+    }
+    else {
+        S <- s
+    }
+    if (nrow(m)) {
+        M <- c(t(m))
+    }
+    else{
+        M <- m
+    }
+    
+    obj <- .Call(paste(sep="", "immunoC_", modelName, "E"),
+                as.integer(N), as.integer(P), as.integer(K),
+                as.double(t(y)), double(0),
+                as.double(w), as.double(M), as.double(S), as.integer(scale_Z) )
+
+    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters);
+    
+}
+cell.Mstep <-function(
+data, label, parameters=NULL,
+expName="immunoClust Mstep",
+modelName="mvt"
+) {
+    
+    y <- .exprs(data, parameters);
+    
+    inc <- !is.na(label)
+    y <- as.matrix(y[inc,])
+    label <- label[inc]
+    
+    N <- nrow(y)
+    P <- ncol(y)
+    K <- max(label)
+    
+    obj <- .Call(paste(sep="", "immunoC_", modelName, "M"),
+            as.integer(N), as.integer(P), as.integer(K),
+            as.double(t(y)), NULL,  as.integer(label) )
+
+    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters, inc=inc)
+}
+
+
 
 ### cell.ME
 ###

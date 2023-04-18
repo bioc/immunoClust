@@ -106,7 +106,9 @@ cell.classifyAll)
 export(
 cell.EM,
 cell.Estimation,
+cell.Estep,
 cell.ME,
+cell.Mstep,
 cell.FitModel,
 cell.Classify,
 cell.ClustData,

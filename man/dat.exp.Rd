@@ -20,7 +20,7 @@ cell clustering results of 5 FC samples.
     \item{\code{[[2]]}}{CD15 MACS-depleted cells}
     \item{\code{[[3]]}}{CD14 MACS-depleted cells}
     \item{\code{[[4]]}}{CD4 MACS-depleted cells}
-    \item{\code{[[4]]}}{CD3 MACS-depleted cells}
+    \item{\code{[[5]]}}{CD3 MACS-depleted cells}
 }
 }
 
