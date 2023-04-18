@@ -234,7 +234,8 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
         #loc=merged$mu[subset], n=npoints),
         #type="l", lty=3, col="black")
         .plot_ellipses(merged$sigma[subset,subset], merged$mu[subset],
-            limits=limits[2,subset], cc=qt(0.95,5), lty=3, col="black", npoints=npoints)
+            limits=limits[2,subset], cc=qt(0.95,5), lty=3, col="black",
+            npoints=npoints)
     }
     
     if( !is.null(more.par$ellipses.mean) &&
