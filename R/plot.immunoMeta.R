@@ -52,6 +52,9 @@ pscal=NULL,...)
                         rep(pop.color, length(pop$childs[[i]]$clusters)))
                 }
                 
+                rest.color <- "gray95"
+                if( !is.null(pop$plot.color.unclassified) )
+                    rest.color <- pop$plot.color.unclassified
                 rest <- pop$clusters[ is.na( match(pop$clusters, clusters) ) ]
                 if( plot.unclassified ) {
                     col <- c(rep("gray95", length(clusters)), rest + 1 )
@@ -59,7 +62,8 @@ pscal=NULL,...)
                 }
                 else {
                     clusters <- c(rest, clusters)
-                    col <- c(rep("gray95", length(rest)), col)
+                    #col <- c(rep("gray95", length(rest)), col)
+                    col <- c(rep(rest.color, length(rest)), col)
                 }
             }
             else {
@@ -84,10 +88,13 @@ pscal=NULL,...)
             else
                 parent.clusters <- pop$plot.parent
                 
+            parent.color <- "gray95"
+            if( !is.null(pop$plot.color.parent) )
+                rest.color <- pop$plot.color.parent
             if( length(parent.clusters) > 0 ) {
                 rest <- parent.clusters[is.na(match(parent.clusters, clusters))]
                 clusters <- c(rest, clusters)
-                col <- c(rep("gray95", length(rest)),col)
+                col <- c(rep(parent.color, length(rest)),col)
             }
         }
 

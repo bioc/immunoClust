@@ -505,7 +505,7 @@ em_meta::bc_fixedN_et_step()
             for( j=0; j<G; ++j ) {
                 if( j != maxClust )
                 unNk[maxClust] += (*t);    // nk for g-unlikelihood
-                // if maxClust is removed the vents are gone
+                // if maxClust is removed the events are gone
                 unNk += G;
             } // for j
         } // maxClust > -1
@@ -620,6 +620,7 @@ int
 em_meta::bc_fixedN_classify(int& iterations, double& tolerance, int fixed_n)
 {
     fixedN = fixed_n;
+    //minG = fixed_n;
     //dbg::printf("EM-BCoeff classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );
     return _iterate(iterations, tolerance, &em_meta::bc_fixedN_e_step, &em_meta::bc_fixedN_et_step);
 }

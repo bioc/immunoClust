@@ -127,7 +127,8 @@ extern "C" {
                 SEXP map_cluster, SEXP use_cluster,
                 SEXP alpha, //SEXP scale_factor, SEXP scale_steps,
                 SEXP meta_bias, SEXP meta_cycles, SEXP meta_iter, SEXP meta_tol,
-                SEXP SON_cycles, SEXP SON_rlen, SEXP SON_deltas, SEXP SON_blurring,
+                SEXP SON_cycles, SEXP SON_rlen, SEXP SON_deltas,
+                SEXP SON_blurring, SEXP SON_norm,
                 SEXP traceG, SEXP traceK);
 
     SEXP call_SON_normalize(SEXP res_model,

@@ -248,9 +248,11 @@ extern "C" {
     // >> SON clustering
     SEXP call_SON_combineClustering(SEXP res_model, SEXP res_sample,
                                     SEXP map_cluster, SEXP use_cluster,
-                                    SEXP alpha, //SEXP scale_factor, SEXP scale_steps,
-                                    SEXP meta_cycles, SEXP meta_bias, SEXP meta_iter, SEXP meta_tol,
-                                    SEXP SON_cycles, SEXP SON_rlen, SEXP SON_deltas, SEXP SON_blurring,
+                                    SEXP alpha,
+                                    SEXP meta_cycles, SEXP meta_bias,
+                                    SEXP meta_iter, SEXP meta_tol,
+                                    SEXP SON_cycles, SEXP SON_rlen, SEXP SON_deltas,
+                                    SEXP SON_blurring, SEXP SON_norm,
                                     SEXP traceG, SEXP traceK
                                     )
     {
@@ -318,19 +320,23 @@ extern "C" {
             
         }
         
+      
         meta_SON son(P,
-                     G, nW, mappedM, nS,
-                     K, nW+G, clusterM, nS+G*P*P,
-                     normedM,
+                     G, nW, nEvts, mappedM, nS,
+                     K, nW+G, nEvts+G, clusterM, nS+G*P*P,
+                     normedM, // output normedM = cluster part of nM in em
                      REAL(alpha)[0],
                      gTrace, kTrace, 0);
+        
         em_meta em(N, P, G, nEvts, nM, nS,
-                   z, w, mappedM, s,   // output
+                   z, w, mappedM, s,   // output mappedM = gM in son
                    REAL(meta_bias)[0], REAL(alpha)[0] );
+    
         
         // double maxLike = -1e100;
         // son.scaleModel(REAL(scale_factor)[0], INTEGER(scale_steps)[0]);
-        // em with scaled model sigma too?
+     
+            
         for( int cycle=0; cycle < INTEGER(meta_cycles)[0]; ++cycle) {
             
             //dbg::printf("meta cycle %d", cycle);
@@ -343,15 +349,52 @@ extern "C" {
             // v23(R implementation)=v29 use originals
             // bei meta_cycles=1=v23 ohne unterschied
             // 2023.01.30: removed cblas_dcopy(K*P, clusterM, 1, normedM, 1);
-            son.normStep(INTEGER(map_cluster),
-                         INTEGER(use_cluster),
-                         
-                         INTEGER(SON_cycles)[0],
-                         INTEGER(SON_rlen)[0],
-                         REAL(SON_deltas),
-                         REAL(SON_blurring)
-                         );
+            switch(INTEGER(SON_norm)[0]) {
+                case 2:
+                son.normStep2(INTEGER(map_cluster),
+                             INTEGER(use_cluster),
+                             
+                             INTEGER(SON_cycles)[0],
+                             INTEGER(SON_rlen)[0],
+                             REAL(SON_deltas),
+                             REAL(SON_blurring)
+                             );
+                    break;
             
+                case 3:
+                son.normStep3(INTEGER(map_cluster),
+                             INTEGER(use_cluster),
+                             
+                             INTEGER(SON_cycles)[0],
+                             INTEGER(SON_rlen)[0],
+                             REAL(SON_deltas),
+                             REAL(SON_blurring)
+                             );
+                    break;
+                    
+                case 4:
+                son.normStep4(INTEGER(map_cluster),
+                             INTEGER(use_cluster),
+                             
+                             INTEGER(SON_cycles)[0],
+                             INTEGER(SON_rlen)[0],
+                             REAL(SON_deltas),
+                             REAL(SON_blurring)
+                             );
+                    break;
+                    
+                case 1:
+                default:
+                son.normStep(INTEGER(map_cluster),
+                             INTEGER(use_cluster),
+                             
+                             INTEGER(SON_cycles)[0],
+                             INTEGER(SON_rlen)[0],
+                             REAL(SON_deltas),
+                             REAL(SON_blurring)
+                             );
+                    break;
+            }
             // change mappedM (=em.gM = son.gM) within em-iteration
             // use son.normedM for clustering
             // start weighted
@@ -456,6 +499,9 @@ extern "C" {
             dbg::printf("SON_normalize: sample=%02d of %02d, K=%d <= %d (P=%d)", n, N, K[n], G, P);
             // norm nth sample
             int L = G;
+            
+            // to ignore =>
+            // meta_iter = 0 by default
             int max_iteration = INTEGER(meta_iter)[0];
             double max_tolerance = REAL(meta_tol)[0];
             
@@ -471,9 +517,10 @@ extern "C" {
                 double logLike[3];
                 L = em.final(label, logLike, 0);
             }
+            // <= to ignore
             
-            meta_SON son(P, L, gW, gM, gS,
-                         K[n], nW, nM, nS,
+            meta_SON son(P, L, gW, 0, gM, gS,
+                         K[n], nW, 0, nM, nS,
                          normedM,
                          REAL(alpha)[0], 0, 0, FALSE);
             // mayby scale first
