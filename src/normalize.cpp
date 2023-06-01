@@ -70,13 +70,13 @@ normalize::build_consensus()
     
 	int k,j;
 	const double* z;
-	const double *w, *m, *s;
+	const double /* *w,*/ *m, *s;
     
 	int u = 0;
     
 	// mean
 	z = Z;
-	w = W;
+	//w = W;
 	m = M;
 	for( k=0; k<totK; ++k ) {
         for( j=0; j<L; ++j ) {
@@ -91,7 +91,7 @@ normalize::build_consensus()
 		}
  		// next cell cluster
         z += L;
-		++w;
+		//++w;
 		m += P;
 	}
 	for( j=0; j<L; ++j ) {
@@ -102,7 +102,7 @@ normalize::build_consensus()
     
 	// sigma
 	z = Z;
-	w = W;
+	//w = W;
 	m = M;
 	s = S;
 	for( k=0; k<totK; ++k ) {
@@ -123,7 +123,7 @@ normalize::build_consensus()
 
 		// next cell cluster
         z += L;
-		++w;
+		//++w;
 		m += P;
 		s += P*P;
 	}
@@ -159,10 +159,10 @@ normalize::linear_X(int kb, int kn)
     
     
     int k, j, p;
-	const double *xw, *xm, *yw, *ym, *z;
+	const double /* *xw,*/ *xm, *yw, *ym, *z;
 	// build X^T * X and X^T * Y
     for( p=0; p<P; ++p ) {
-        xw = W + kb;
+        //xw = W + kb;
         xm = M + kb*P + p;
         z = Z + kb*L;
         //cblas_dcopy(COEFF*COEFF, &zero, 0, X, 1);
@@ -213,7 +213,7 @@ normalize::linear_X(int kb, int kn)
             }
     
             // next cell cluster
-            ++xw;
+            //++xw;
             xm += P;
             z += L;
         
@@ -281,7 +281,7 @@ normalize::scale_X(int kb, int kn)
         z = Z + kb*L;
         //cblas_dcopy(COEFF*COEFF, &zero, 0, X, 1);
         //cblas_dcopy(COEFF, &zero, 0, Y, 1);
-        double sw = 0;
+        //double sw = 0;
         double sxx = 0;
         double syy = 0;
         double sxy = 0;
@@ -294,7 +294,7 @@ normalize::scale_X(int kb, int kn)
                     if( *yw > 0.0 ) {
                         // add point
                         double v = z[j];
-                        sw += v;
+                        //sw += v;
                         sxx += v * sqr(*xm);
                         syy += v * sqr(*ym);
                         sxy += v * (*xm)*(*ym);
@@ -378,10 +378,10 @@ normalize::linear_Y(int kb, int kn)
         return 1;
     
     int k, j, p;
-    const double *xw, *xm, *yw, *ym, *z;
+    const double /* *xw,*/ *xm, *yw, *ym, *z;
     // build X^T * X and X^T * Y
     for( p=0; p<P; ++p ) {
-        xw = W + kb;
+        //xw = W + kb;
         xm = M + kb*P + p;
         z = Z + kb*L;
 
@@ -414,7 +414,7 @@ normalize::linear_Y(int kb, int kn)
             }
             
             // next cell cluster
-            ++xw;
+            //++xw;
             xm += P;
             z += L;
             
@@ -521,11 +521,11 @@ normalize::linear_transform(int kb, int kn)
 {    
 	int k, p, q;
     
-	double *w, *m, *s;
+	double /* *w,*/ *m, *s;
 	
 	// mean
     
-	w = W + kb;
+	//w = W + kb;
 	m = M + kb*P;
 	s = S + kb*P*P;
 	
@@ -551,7 +551,7 @@ normalize::linear_transform(int kb, int kn)
         // */
         
         // next cluster
-		++w;
+		//++w;
 		m += P;
 		s += P*P;
 	}

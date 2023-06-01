@@ -272,13 +272,13 @@ meta_norm::scale_Y()
         double sxx = 0;
         double syy = 0;
         double sxy = 0;
-        double sw = 0;
+        //double sw = 0;
         for( k=0; k<cK; ++k) {
             ym = gM + p;
             for( j=0; j<gK; ++j ) {
                 // add point
                         double v = z[j];
-                        sw += v;
+                        //sw += v;
                         sxx += v * (*xm) * (*xm);
                         v *= (*ym);
                         syy += v * (*ym);

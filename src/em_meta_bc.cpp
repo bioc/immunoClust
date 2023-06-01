@@ -620,7 +620,7 @@ int
 em_meta::bc_fixedN_classify(int& iterations, double& tolerance, int fixed_n)
 {
     fixedN = fixed_n;
-    //minG = fixed_n;
+    minG = fixed_n;
     //dbg::printf("EM-BCoeff classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );
     return _iterate(iterations, tolerance, &em_meta::bc_fixedN_e_step, &em_meta::bc_fixedN_et_step);
 }

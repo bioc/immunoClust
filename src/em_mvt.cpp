@@ -802,7 +802,7 @@ em_mvt::m_step()
 	
 	// double z_sum, zu_sum;
 	
-	int l = 0;
+	//int l = 0;
 	// update means 
 	cblas_dgemm(CblasRowMajor, CblasTrans, CblasNoTrans, 
 				K, P, N, 1.0, Z, K, Y, P, 0.0, M, P);        
@@ -820,7 +820,7 @@ em_mvt::m_step()
 		}
 		
 		if( z_sum > 0.0 ) {
-			++l;
+			//++l;
 			// update precision
 			if( m_step_sigma_k(k) ) {
 				W[k] = 0.0;
