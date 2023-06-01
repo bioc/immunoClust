@@ -17,7 +17,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_sf_log.h>
 
-using std::max;
+
 
 meta_SON::meta_SON(int p,
                    int g, const double* gw, const double* gevts, const double* gm, const double* gs,
@@ -26,30 +26,35 @@ meta_SON::meta_SON(int p,
                    double alpha,
                    const int* traceG, const int* traceK, int v):
 FLTMAX(1.7976931348623157e308), zero(0.0), one(1.0), two(2.0),
-P(p), G(g), gW(gw), gEvts(gevts), gM(gm), gS(gs), K(k), kW(kw), kEvts(kevts), kM(km), kS(ks), normedM(knormed),
+P(p), G(g), gW(gw), gEvts(gevts), gM(gm), gS(gs),
+      K(k), kW(kw), kEvts(kevts), kM(km), kS(ks), normedM(knormed),
 ALPHA(alpha), gTrace(traceG), kTrace(traceK), verbose(v)
 {
-    mappedW = new double[G];
     mappedM = new double[G*P];
+    //scaledS = new double[G*P*P];
     
     tmpPxP = new double[P*P];
     tmpS = new double[P*P];
     tmpP = new double[P];
     
     neighbourProbs = new double[G*G];
+    //clusterProbs = new double[K];
     
     posterior = new double[K*G];
     map = new int[K];
     
+    
     cblas_dcopy(G*P, gM, 1, mappedM, 1);
     cblas_dcopy(K*P, kM, 1, normedM, 1);
+    
+    //initMapped();
     
 }
 
 meta_SON::~meta_SON()
 {
-    delete[] mappedW;
     delete[] mappedM;
+    //delete[] scaledS;
     
     delete[] tmpPxP;
     delete[] tmpS;
@@ -132,7 +137,8 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
         cblas_dcopy(G*P*P, gS, 1, blurredS, 1);
         cblas_dscal(G*P*P, blur, blurredS, 1);
         
-        buildModelNeighbourProbabilities(blurredS);
+        //buildBlurredS(blurredS, blurring, double(iter)/(rlen-1));
+        buildNeighbourProbabilities(blurredS);
         
         for( int l=0; l<K; ++l ) if( !use_cluster || use_cluster[l] ) {
             int k=0;
@@ -225,141 +231,32 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
 // meta_SON::mapStep
 
 /*
- meta_SON::alignStep
-
- 
+ meta_SON::scaleModel
+    scale model to best match clusters
+ */
+/*
 int
-meta_SON::alignStep(const int* map_cluster, const int* use_cluster,
-                  int rlen, double deltas[2], double blurring[2])
+meta_SON::scaleModel(double factor, int steps)
 {
-    int i, j, p;
-    
-    if(verbose)
-    dbg::printf("SON_align");
-    
-    // mapped = model
-    //cblas_dcopy(P*G, gM, 1, mappedM, 1);
-    
-    if( deltas[0] <= 0.0 ) deltas[0] = 1.0/rlen;
-    if( deltas[1] <= deltas[0]) deltas[1] = deltas[0];
-    
-  
-   
-    
-    double* mapW = new double[G];
-    cblas_dcopy(G, gW, 1, mapW, 1);
-    double sumW = 0;
-    for(j=0; j<G; ++j ) {
-        
-        if( !map_cluster || map_cluster[j] ){
-            sumW += mapW[j];
-        }
-        else {
-            mapW[j] = 0;
-        }
-    }
-    cblas_dscal(G,  1.0/sumW, mapW, 1);
-    
-    double* iterW = new double[K];
-    cblas_dcopy(K, kW, 1, iterW, 1);
-    sumW = 0;
-    for(int i=0; i<K; ++i ) {
-           
-        if( !use_cluster || use_cluster[i]){
-            sumW += iterW[i];
-        }
-        else {
-            iterW[i] = 0;
-        }
-    }
-    //cblas_dscal(K, 1.0/sumW, iterW, 1 );
-    
-    
-    double* blurredS = new double[K*P*P];
-    
-    long totIter = rlen*K;
-    long curIter = 0;
-    for( long iter = 0; iter < rlen; ++iter ) {
-        
-        double blur = blurring[0] - (blurring[0] - blurring[1]) * double(iter)/(rlen-1);
-        if(verbose)
-        dbg::printf("SON %d: blur=%.1lf", iter, blur);
-        
-        cblas_dcopy(K*P*P, kS, 1, blurredS, 1);
-        cblas_dscal(K*P*P, blur, blurredS, 1);
-        
-        buildClusterNeighbourProbabilities(blurredS);
-        
-        for( int l=0; l<K; ++l ) if( !use_cluster || use_cluster[l] ) {
-            int k=0;
-            double maxW = 0;
-            for( i=0; i<K; ++i) if( !use_cluster || use_cluster[i]) {
-                if(iterW[i] > maxW) {
-                    maxW = iterW[i];
-                    k = i;
-                }
-            }
-            
-            if( doTrace(-1, k) ) {
-                dbg::printf("%d/%d (%d) : %d <> %.4lf", curIter, totIter, iter, k, iterW[k] );
-            }
-            
-            double factor = double(curIter) / double(totIter-1);
-            
-            double delta = deltas[0] - (deltas[0] - deltas[1]) * factor;
-            
-            BMU bmu = bestMatchingUnit(k, map_cluster, mappedM);
-            
-            double weight = (1-factor)*sqrt( iterW[k]/sumW * mapW[bmu.index] ) + factor;
-         
-            ++curIter;
-            iterW[k] /= 2;
-            sumW -= iterW[k];
-            //cblas_dscal(K, 1.0/(1-iterW[k]), iterW, 1);
-            
-            delta *= weight;
-            
-            if(doTrace(bmu.index, k))
-                dbg::printf("bmu %d: %d <= %d (%.4lf) %.4lf", iter, k, bmu.index, bmu.probability, blur );
-            
-            if( bmu.probability > 0 ) {
-                
-                const double* neighbourP = neighbourProbs + k*K;
-                
-                for( i=0; i < K; ++i ) {
-                    double prob = bmu.probability * (*neighbourP++); // * bmu.probability * weight * delta;
-                    // clusterProbe (i,k) with blur * bmu.probability * weight
-                        
-                    if( doTrace(bmu.index, i) ){
-                        dbg::printf("%d: move %d => %d (%.4lf)", iter, i, bmu.index, prob);
-                    }
-         
-                    for( int p=0; p<P; ++p )
-                        *(normedM+k*P+p) += prob * delta * (*(gM+bmu.index*P+p) - *(normedM+k*P+p));
-                        
-                } // for i
-        
-            }
-            else {
-                if(verbose)
-                dbg::printf("no BMU %ld, %d, %d", curIter, k, bmu.index);
-            }
-            
-        }
-        
+    if( steps <= 0 ) {
+        cblas_dcopy(P, &one, 0, pScale, 1);
+        return 0;
     }
     
-    delete[] iterW;
-    delete[] mapW;
-    delete[] blurredS;
+    model_scale scale(P, G, gW, gM, gS, K, kW, kM, kS,
+                      factor, steps, ALPHA, 0);
     
-  
-    
-    return 0;
+    int status = scale.find_best_scale(pScale);
+    dbg::printf("scale model");
+    dbg::print_vector(P, pScale);
+    initMapped();
+    return status;
 }
-// meta_SON::alignStep
-*/
-
+ */
+/*
+ meta_SON::scaleStep
+    scale clusters to best match model
+ */
 int
 meta_SON::scaleStep(double factor, int steps)
 {
@@ -393,105 +290,47 @@ meta_SON::normStep( const int* map_cluster, const int* use_cluster,
     for( int iter= 0; iter < cycles; ++iter ) {
         if(verbose)
         dbg::printf("SON cycle: %d delta=(%.1lf %.1lf) blur=(%.1lf %.1lf)", iter, deltas[0], deltas[1], blurring[0], blurring[1] );
-        
 // 2017.10.05: the use of the original model should be OK, since it reflects the real connectivity
         cblas_dcopy(G*P, gM, 1, mappedM, 1);
+        //initMapped();
         mapStep( map_cluster, use_cluster, rlen, deltas, blurring);
-        
+        //  mapped.res <- m$mapped.res ==> mappedM
+ 
 // transform cell clusters to meta cluster using mapped clusters
-// 2017.09.29: prob gegebenfalls normalisieren nach sample.clusters
-// hat den nachteil, dass cluster ohne irgendeine nennenswerte aehnlichkeit zu
-// einem model.cluster (rausch cluster) zu 100% irgendwohin geschoben werden
-// anders: durch die maximale prob normieren. Dann bleiben die relationen erhalten?
+// 2017.09.29: prob gegebenfalls normalisieren nach cell.clusters
+// hat den nachteil, dass cluster ohne nennenswerte aehlichkeit zu
+// 100% irgendwohin geschoben werden
+// anders: durch die maximale prob normieren. Dann bleiben die relationen erhalten
 // 2017.10.02: mehrer durchlaeufe machen
 // 2017.10.23: try use only map.cluster (to focus) => SON17
 // 2017.10.23: not really a differnce, so turn back
 // 2018.03.22: coeff => probability by normalization => SON32
 // 2020.01.21: check whether only mapped clusters in model (gW > 0) to use for normalization
         
-        buildCoefficients(true);
-        double* prob = posterior; // GxK probability matrix
-        for( int j=0; j<G; ++j ) {
+        // 2023-06-01: changing to this leads to small changes in normStep
+        //const double* post =buildCoefficients(); // GxK probability matrix
+        for( int j=0; j<G; ++j ){
             
             if( gW[j] > 0.0 ){
-                // 2023.03.23: in dieser Variante ist die Summe der
-                // cluster-Bewegungen zur model-componete hin = 1
-                // eine andere Variante wäre die die Summe der
-                // cluster-zugehörigkeiten zu den model-clustern = 1 zu setzen
-                // aktuell (wieder) nicht ganz geklärt, dennoch comment vom 2017.09.29
-                // nicht ganz unsinnig
-                // satelliten werden beim normalisieren ignoriert
-                // auch wenn sie gemapped werden
                 
+                // doing it this way
+                const double* post = buildClusterProbabilities(j);
                 for( int k=0; k < K; ++k ) {
-                    //double prob = probability[k];
+                    double prob = post[k];
                     if( doTrace(j, k) ){
-                        dbg::printf("%d: move %d => %d (%.4lf)", iter, k, j, prob[k]);
+                        dbg::printf("%d: move %d => %d (%.4lf)", iter, k, j, prob);
                     }
                     
+                    // 2018.04.09: prob > 0.1 add???
+                    //  if( prob > 0.1 ) wohl nicht!!!
                     for( int p=0; p<P; ++p )
-                        *(normedM+k*P+p) += prob[k] * (*(gM+j*P+p) - *(mappedM+j*P+p));
+                        *(normedM+k*P+p) += prob * (*(gM+j*P+p) - *(mappedM+j*P+p));
                     
                 } // for k
             }
-            prob += K;
-        } // for j
-    } // for iter
-
-    return 0;
-}
-int
-meta_SON::normStep2( const int* map_cluster, const int* use_cluster,
-                    int cycles, int rlen, double deltas[2], double blurring[2]
-                )
-{
-    
-// 2017.10.05: several circles not clearified jet
-    for( int iter= 0; iter < cycles; ++iter ) {
-        if(verbose)
-        dbg::printf("SON cycle: %d delta=(%.1lf %.1lf) blur=(%.1lf %.1lf)", iter, deltas[0], deltas[1], blurring[0], blurring[1] );
-        
-// 2017.10.05: the use of the original model should be OK, since it reflects the real connectivity
-        cblas_dcopy(G*P, gM, 1, mappedM, 1);
-        mapStep( map_cluster, use_cluster, rlen, deltas, blurring);
-        
-// transform cell clusters to meta cluster using mapped clusters
-// 2017.09.29: prob gegebenfalls normalisieren nach sample.clusters
-// hat den nachteil, dass cluster ohne irgendeine nennenswerte aehnlichkeit zu
-// einem model.cluster (rausch cluster) zu 100% irgendwohin geschoben werden
-// anders: durch die maximale prob normieren. Dann bleiben die relationen erhalten?
-// 2017.10.02: mehrer durchlaeufe machen
-// 2017.10.23: try use only map.cluster (to focus) => SON17
-// 2017.10.23: not really a differnce, so turn back
-// 2018.03.22: coeff => probability by normalization => SON32
-// 2020.01.21: check whether only mapped clusters in model (gW > 0) to use for normalization
-        
-        buildCoefficients(false);
-        double* prob = posterior; // GxK probability matrix
-        for( int j=0; j<G; ++j ) {
             
-            if( gW[j] > 0.0 ){
-                // 2023.03.23: in dieser Variante ist die Summe der
-                // cluster-Bewegungen zur model-componete hin = 1
-                // eine andere Variante wäre die die Summe der
-                // cluster-zugehörigkeiten zu den model-clustern = 1 zu setzen
-                // aktuell (wieder) nicht ganz geklärt, dennoch comment vom 2017.09.29
-                // nicht ganz unsinnig
-                // satelliten werden beim normalisieren ignoriert
-                // auch wenn sie gemapped werden
-                
-                for( int k=0; k < K; ++k ) {
-                    //double prob = probability[k];
-                    if( doTrace(j, k) ){
-                        dbg::printf("%d: move %d => %d (%.4lf)", iter, k, j, prob[k]);
-                    }
-                    
-                    for( int p=0; p<P; ++p )
-                        *(normedM+k*P+p) += prob[k] * (*(gM+j*P+p) - *(mappedM+j*P+p));
-                    
-                } // for k
-            }
-            prob += K;
+            //post += K;
+            
         } // for j
     } // for iter
 
@@ -512,25 +351,11 @@ meta_SON::normStep3( const int* map_cluster, const int* use_cluster,
         dbg::printf("SON cycle: %d delta=(%.1lf %.1lf) blur=(%.1lf %.1lf)", iter, deltas[0], deltas[1], blurring[0], blurring[1] );
 // 2017.10.05: the use of the original model should be OK, since it reflects the real connectivity
         cblas_dcopy(G*P, gM, 1, mappedM, 1);
-        // with or without mapStep??
-        //mapStep( map_cluster, use_cluster, rlen, deltas, blurring);
         // E-step => Z=posterior
-        buildPosterior();
-        // with or without Mstep
+        const double* post = buildPosterior(); // KxG posterior matrix
         // M-step => mappedM
         buildMappedM();
-        /*
-        for( int k=0; k<K; ++k)
-        dbg::printf("%d: =>%d (%.2lf)", k, map[k], kEvts[k]);
-        for( int j=0; j<G; ++j ) {
-            dbg::printf("cls-%d", j);
-            dbg::print_vector(P, gM+j*P);
-            dbg::print_vector(P, mappedM+j*P);
-        }
-        */
-        
         // do movements
-        double* post = posterior; // KxG posterior matrix
         for( int k=0; k < K; ++k ) {
             
             for( int j=0; j<G; ++j ) {
@@ -553,49 +378,6 @@ meta_SON::normStep3( const int* map_cluster, const int* use_cluster,
     return 0;
 }
 
-int
-meta_SON::normStep4( const int* map_cluster, const int* use_cluster,
-                    int cycles, int rlen, double deltas[2], double blurring[2]
-                )
-{
-    
-// 2017.10.05: several circles not clearified jet
-    double delta = 1.0/cycles;
-    for( int iter= 0; iter < cycles; ++iter ) {
-        if(verbose)
-        dbg::printf("SON cycle: %d delta=(%.1lf %.1lf) blur=(%.1lf %.1lf)", iter, deltas[0], deltas[1], blurring[0], blurring[1] );
-// 2017.10.05: the use of the original model should be OK, since it reflects the real connectivity
-        cblas_dcopy(G*P, gM, 1, mappedM, 1);
-        // with or without mapStep??
-        mapStep( map_cluster, use_cluster, rlen, deltas, blurring);
-        // E-step => Z=posterior
-        buildPosterior();
-        // with or without Mstep
-        // M-step => mappedM
-        //buildMappedM();
-        // do movements
-        double* post = posterior; // KxG posterior matrix
-        for( int k=0; k < K; ++k ) {
-            
-            for( int j=0; j<G; ++j ) {
-                // posterior is normed = 1
-                // delta magic??
-                double prob = post[j] * delta;
-                if( doTrace(j, k) ){
-                    dbg::printf("%d: move %d => %d (%.4lf)", iter, k, j, prob);
-                }
- 
-                for( int p=0; p<P; ++p )
-                    *(normedM+k*P+p) += prob * (*(gM+j*P+p) - *(mappedM+j*P+p));
-                
-            } // for j
-            
-            post += G;
-        } // for k
-    } // for iter
-
-    return 0;
-}
 // normStep
 
 
@@ -617,7 +399,7 @@ meta_SON::bestMatchingUnit(int k, const int* map_cluster, const double* mappedM)
 }
 
 void
-meta_SON::buildModelNeighbourProbabilities(const double* blurredS)
+meta_SON::buildNeighbourProbabilities(const double* blurredS)
 {
     cblas_dcopy(G*G, &zero, 0, neighbourProbs, 1);
     for( int i=0; i<G; ++i )
@@ -628,10 +410,10 @@ meta_SON::buildModelNeighbourProbabilities(const double* blurredS)
             // with!!! or without alpha?
             prob[j] = bc_measure(gM+i*P, blurredS+i*P*P, gM+j*P, blurredS+j*P*P);
             if( verbose ) {
-                int pc = fpclassify( prob[j] );
-                if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
-                    dbg::printf("neighbour %d<>%d: NaN (%d) ", j, i, pc);
-                }
+            int pc = fpclassify( prob[j] );
+            if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
+                dbg::printf("neighbour %d<>%d: NaN (%d) ", j, i, pc);
+            }
             }
             sum += prob[j];
         }
@@ -639,8 +421,29 @@ meta_SON::buildModelNeighbourProbabilities(const double* blurredS)
     }
 }
 
-void
-meta_SON::buildCoefficients(bool scale)
+const double*
+meta_SON::buildClusterProbabilities(int j)
+{
+    cblas_dcopy(K, &zero, 0, posterior, 1);
+    double sum=0;
+    double* prob = posterior;
+    for( int k=0; k<K; ++k ) {
+            // with!!! or without alpha?
+        prob[k] = bc_measure(mappedM+j*P, gS+j*P*P, normedM+k*P, kS+k*P*P);
+        if( verbose ) {
+            int pc = fpclassify( prob[k] );
+            if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
+                dbg::printf("probability %d<>%d: NaN (%d) ", j, k, pc);
+            }
+        }
+        sum += prob[k];
+    }
+    cblas_dscal(K, 1.0/sum, posterior, 1);
+    return posterior;
+}
+
+const double*
+meta_SON::buildCoefficients()
 {
     /*
      denken: jede componente wurde aus den clustern gebildet
@@ -668,14 +471,16 @@ meta_SON::buildCoefficients(bool scale)
             }
             sum += prob[k];
         }
-        if( scale && sum > 0 )
+       
         cblas_dscal(K, 1.0/sum, prob, 1);
         
         prob += K;
     }
+    
+    return posterior;
 }
 
-void
+const double*
 meta_SON::buildPosterior()
 {
     /*
@@ -718,6 +523,8 @@ meta_SON::buildPosterior()
       
         z += G;
     }
+    
+    return posterior;
 }
 
 void
@@ -726,7 +533,7 @@ meta_SON::buildMappedM()
     /*
      classical m-step: using MAP-component and cluster events
      */
-    double N_evts = cblas_ddot(K, kEvts, 1, &one, 0);
+    //double N_evts = cblas_ddot(K, kEvts, 1, &one, 0);
     for( int j=0; j<G; ++j ) {
         double* gm = mappedM + j*P;
         cblas_dcopy(P, &zero, 0, gm, 1);
@@ -744,45 +551,14 @@ meta_SON::buildMappedM()
         }
         if( z_sum > 0 )
             cblas_dscal(P, 1./z_sum, gm, 1);
-        mappedW[j] = z_sum/N_evts;
+        //mappedW[j] = z_sum/N_evts;
         
     }
     
 }
-/*
-void
-meta_SON::buildBlurredS(double* blurredS, double blurring[2], double lambda)
-{
-    // original scaled ...
-    cblas_dcopy(G*P*P, gS, 1, mapS, 1);
-    for( int p=0; p<P; ++p )
-           tmpP[p] = gScale[p] - (gScale[p] - 1) * lambda;
-    
-   
-    double* s = mapS;
-    for( int j=0; j<G; j++ ) {
-        for(int p=0; p<P; ++p) {
-            for(int q=0; q<P; ++q) {
-                *(s+p*P+q) *= tmpP[p] * tmpP[q];
-            }
-        }
-    
-        s += P*P;
-    }
- 
-    // .. and blurred
-    double blur = blurring[0] - (blurring[0] - blurring[1]) * lambda;
 
-    if(verbose)
-    dbg::printf("SON blur %.1lf: blur=%.1lf", lambda, blur);
-    
-    cblas_dcopy(G*P*P, mapS, 1, blurredS, 1);
-    cblas_dscal(G*P*P, blur, blurredS, 1);
-    
-}
-*/
 /*
- bc_coefficient
+ bc_measure
  */
 double
 meta_SON::bc_coeff(const double* m1, const double* s1, const double* m2, const double* s2)
@@ -819,13 +595,9 @@ meta_SON::bc_coeff(const double* m1, const double* s1, const double* m2, const d
     double logD = det + w1*det_1 + w2*det_2;
     logD -= w1*w2*sqr(mvn::mahalanobis(P, m1, m2, tmpS, tmpP));
     
-    // normalization factor
-    //logD -= 0.25*det_j;
-    
     return exp(0.5*logD);
     
 }
-
 double
 meta_SON::bc_diag_coeff(const double* m1, const double* s1, const double* m2, const double* s2)
 {
@@ -859,8 +631,7 @@ meta_SON::bc_diag_coeff(const double* m1, const double* s1, const double* m2, co
     logD -= 0.25*sqr(mvn::mahalanobis(P, m1, m2, tmpS, tmpP));
     
     // normalization factor
-    //logD -= 0.25*det_j;
-    
+
     return exp(0.5*logD);
 }
 
@@ -880,10 +651,9 @@ meta_SON::bc_measure(const double* m1, const double* s1, const double* m2, const
     
     return bc_coeff(m1, s1, m2, s2);
 }
+// bc_measure
 
-/*
 // bc_probability
- */
 double
 meta_SON::bc_prob(const double* m1, const double* s1, const double* m2, const double* s2)
 {
@@ -980,6 +750,7 @@ meta_SON::bc_probability(const double* m1, const double* s1, const double* m2, c
     
     return bc_prob(m1, s1, m2, s2);
 }
+// bc_prpbability
 
 /*
  logdet:

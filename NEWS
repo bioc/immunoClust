@@ -1,6 +1,10 @@
+Changes in Version 1.33.2
+- CHANGES
+    SON/ormalization back to Version 1.31.9
+
 Changes in Version 1.33.1
 - CHANGES
-    normalization variants fpor combine clustering
+    normalization variants for combine clustering
     
 Changes in Version 1.31.12
 - CHANGES

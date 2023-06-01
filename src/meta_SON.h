@@ -36,14 +36,14 @@ protected:
  
     const int            G;     // number of model components
     const double*        gW;    // component weights: G
-    const double*        gEvts;
+    const double*        gEvts; // components events: G
     const double*        gM;    // component mean: G x P
     const double*        gS;    // component sigma: G x P x P
    
 
     const int           K;      // number of cell-clusters
  	const double*		kW;	    // cluster weights: K
-    const double*       kEvts;
+    const double*       kEvts;  // cluster events: K
 	const double*		kM;	    // cluster mean: K x P
 	const double*		kS;	    // cluster sigma: K x P x P
     double*             normedM;    // normed cluster: K x P
@@ -53,14 +53,15 @@ protected:
     const int*      kTrace;
     const int       verbose;
     
-    double*     mappedW;    // G
     double*     mappedM;    // mapped component: G x P
-  
+    //double*     scaledS;       // map component sigma: G x P x P
+ 	
+    //double*     pScale;    // scaling factors for model: P
 	double*		tmpPxP;
 	double*		tmpP;
 	double*		tmpS;
     double*     neighbourProbs; // G x G
-    //double*     clusterProbs;   // length=max(G,K)
+    //double*     clusterProbs;   // K
     double*     posterior;      // K x G
     int*        map;    // K: maximum a posterior
     
@@ -82,41 +83,35 @@ public:
                      int cycles,int rlen,
                      double deltas[2], double blurring[2] );
     
-    int     normStep2(const int* map_cluster, const int* use_cluster,
-                     int cycles,int rlen,
-                     double deltas[2], double blurring[2] );
     int     normStep3(const int* map_cluster, const int* use_cluster,
                      int cycles,int rlen,
                      double deltas[2], double blurring[2] );
-    int     normStep4(const int* map_cluster, const int* use_cluster,
-                     int cycles,int rlen,
-                     double deltas[2], double blurring[2] );
-    /*
-    int     alignStep(const int* map_cluster, const int* use_cluster,
-                    int rlen,
-                    double deltas[2], double blurring[2] );
     
-    */
     int     scaleStep(double factor, int steps);
     
+    //int     scaleModel(double factor, int steps);
     
     double  bc_measure(const double* m1, const double* s1, const double* m2, const double* s2);
     double  bc_coeff(const double* m1, const double* s1, const double* m2, const double* s2);
     double  bc_probability(const double* m1, const double* s1, const double* m2, const double* s2);
     double  bc_prob(const double* m1, const double* s1, const double* m2, const double* s2);
 private:
+	
     double  bc_diag_prob(const double* m1, const double* s1, const double* m2, const double* s2);
 	double	bc_diag_coeff(const double* m1, const double* s1, const double* m2, const double* s2);
     
 	double	logdet(const double* a, int& status);
     
+    //void    initMapped();
+    //void    buildBlurredS(double* blurredS, double blurring[2], double lambda);
+  
     BMU    bestMatchingUnit(int k, const int* map_cluster, const double* mappedM );
-    void   buildModelNeighbourProbabilities(const double* blurredS);
-    void   buildCoefficients(bool scale=true);
-    //void   buildClusterPosterior(int k);
-    void   buildPosterior();
+    void   buildNeighbourProbabilities(const double* blurredS);
+    const double*   buildClusterProbabilities(int j);
+    const double*   buildCoefficients();
+    const double*   buildPosterior();
     void   buildMappedM();
-	
+    
     int    doTrace(int j, int k) const;
 };
 

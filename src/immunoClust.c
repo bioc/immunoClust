@@ -74,10 +74,10 @@ int print_text(const char* txt)
         {"immunoC_modelScale2", (DL_FUNC)(&call_modelScale2), 13},
         {"immunoC_modelScale3", (DL_FUNC)(&call_modelScale3), 13},
         */
-        /* SON */
-        {"immunoC_SON_combineClustering", (DL_FUNC)(&call_SON_combineClustering), 16},
+        /* SOM */
+        {"immunoC_SON_combineClustering", (DL_FUNC)(&call_SON_combineClustering), 15},
         {"immunoC_SON_normalize", (DL_FUNC)(&call_SON_normalize), 15},
-       
+        
 		{NULL, NULL, 0}
 	};
 	

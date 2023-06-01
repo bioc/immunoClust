@@ -66,7 +66,7 @@ map.cluster=seq_len(ncls(meta)), use.cluster=seq_len(ncls(res)),
 meta.alpha=0.5, meta.cycles=1, meta.bias=0.1,
 meta.iter=100, meta.tol=1e-5,
 SON.cycles=4, SON.rlen=10,
-SON.deltas=c(1/SON.rlen,1/SON.rlen), SON.blurring=c(2,1), SON.norm=1,
+SON.deltas=c(1/SON.rlen,1/SON.rlen), SON.blurring=c(2,1),
 traceG=c(), traceK=c())
 {
     ## co-clustering with normalization
@@ -97,7 +97,7 @@ traceG=c(), traceK=c())
     as.double(meta.alpha), as.integer(meta.cycles), as.double(meta.bias),
     as.integer(meta.iter), as.double(meta.tol),
     as.integer(SON.cycles), as.integer(SON.rlen), as.double(SON.deltas),
-    as.double(SON.blurring), as.integer(SON.norm),
+    as.double(SON.blurring),
     as.integer(c(traceG,0)), as.integer(c(traceK,0))
     )
     
