@@ -1,7 +1,10 @@
 \name{cell.EM}
 \alias{cell.EM}
+\alias{cell.EMt}
 \alias{cell.Estimation}
 \alias{cell.Estep}
+\alias{cell.EMstep}
+
 
 \encoding{utf8}
 
@@ -19,6 +22,15 @@ parameters and returns the fitted clusters information in an object of class
 cell.EM(data, parameters=NULL, expName="immunoClust Experiment", 
     history=NULL, state=NULL,
     K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt")
+
+cell.EMt(data,  K, w, m, s, parameters=NULL, 
+    expName="immunoClust Experiment", 
+    B=50, tol=1e-5, bias=0.5, modelName="mvt")
+
+cell.EMstep(data,  K, w, m, s, parameters=NULL, 
+    expName="immunoClust EMstep", 
+    B=1, tol=1e-5, modelName="mvt")
+
 
 cell.Estimation(data, parameters=NULL, expName="immunoClust Experiment",  
     history=NULL, state=NULL,
@@ -56,6 +68,14 @@ covariance matrices.}
 Whereas \code{cell.EM} performs a complete EMt-iteration, \code{cell.Estimate} 
 only calculates the a-posteriori probabilities and the Maximum-A-Posteriori 
 estimators of cluster membership for all events.
+
+\code{cell.EM} is misspelling since it dose an EMt-iteration and becomes
+deprecated in future, so better use \code{cell.EMt}. For an EM-iteration use
+\code{cell.EMstep}.
+
+\code{cell.Estep} and \code{cell.Estimation} do the same call. In
+\code{cell.Estep} the calling options are a bit better structured and
+\code{cell.Estimation} becomes deprecated in future.
 }
 
 \value{

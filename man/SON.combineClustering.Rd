@@ -19,9 +19,8 @@ meta.SON.combineClustering(
 meta, res, par=seq_len(npar(meta)),
 map.cluster=seq_len(ncls(meta)),
 use.cluster=seq_len(ncls(res)),
-meta.alpha=0.5,
-meta.cycles=1, meta.bias=0.1, meta.iter=100, meta.tol=1e-5,
-SON.cycles=4, SON.rlen=10,
+meta.alpha=0.5, meta.bias=0.1, meta.iter=100, meta.tol=1e-5,
+SON.method=1, SON.cycles=4, SON.rlen=10,
 SON.deltas=c(1/SON.rlen,1/SON.rlen), SON.blurring=c(2,1),
 traceG=c(), traceK=c())
 }
@@ -36,10 +35,11 @@ traceG=c(), traceK=c())
 \item{use.cluster}{the sample clusters to be used for SON mapping.}
 \item{meta.alpha}{The alpha value in calculation the bhattacharyya 
     probabilities.}
-\item{meta.cycles}{Number of meta co-clustering steps.}
+
 \item{meta.bias}{The ICL bias for meta co-clustering step.}
 \item{meta.iter}{Maximal iterations in the meta co-clustering step.}
 \item{meta.tol}{Maximal tolerance for meta co-clustering step.}
+\item{SON.method}{Method selection for SON normalization step.}
 \item{SON.cycles}{Number cycles in the SON normalization step. }
 \item{SON.rlen}{ runlength in the SON normalization step.}
 \item{SON.deltas}{ delta parameter in the SON normalization step.}
@@ -49,8 +49,7 @@ traceG=c(), traceK=c())
 
 }
 \details{
-The co-clustering process consists of \code{meta.cycles} iterations of 
-SON normalisation and meta-clustering steps.
+The co-clustering consists of a normalization and meta-clustering step.
 A sample cluster is than labeled according to its corresponding meta
 cluster. The SON-normalization and meta-clustering steps are parameterised by 
 the SON and meta arguments.
@@ -58,7 +57,7 @@ the SON and meta arguments.
 \value{
 An immunoClust-object from meta-clusters and combined
 observation from meta- and samples-cluster. The first
-G elements of the label coresponds to the meta-clusters afterwards
+G elements of the label coresponds to the meta-clusters, afterwards
 the labelling of the samples-clusters indicates the nearest 
 meta-cluster for the sample-cluster.
 }

@@ -1,5 +1,6 @@
 \name{cell.ME}
 \alias{cell.ME}
+\alias{cell.MEstep}
 \alias{cell.Mstep}
 
 \encoding{utf8}
@@ -19,6 +20,10 @@ object of class \code{\link[=immunoClust.object]{immunoClust}}.
 cell.ME(data, parameters=NULL, expName="immunoClust Experiment", 
         history=NULL, state=NULL, label, B=50, tol=1e-5, modelName="mvt")
 
+cell.MEstep(data, label, parameters=NULL, 
+    expName="immunoClust Experiment", 
+    B=50, tol=1e-5, modelName="mvt")
+        
 cell.Mstep(data, label, parameters=NULL,
     expName="immunoClust Mstep", modelName="mvt")
 }
@@ -41,6 +46,11 @@ initially assigned to a cluster.}
 \eqn{t}- or Gaussian mixture model respectively.}
 }
 
+\details{
+\code{cell.ME} and \code{cell.MEstep} do the same call. In \code{cell.MEstep}
+the calling options are a bit better structured and \code{cell.ME}
+becomes deprecated in future.
+}
 \value{
 The fitted clusters information in an object of class 
 \code{\link[=immunoClust.object]{immunoClust}}.

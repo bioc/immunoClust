@@ -615,9 +615,11 @@ em_mvt::build(const int* label, double logLike[3], int* history)
     cblas_dcopy(P*K, &zero, 0, M, 1);
     for( i=0; i<N; ++i ) {
         k = (*l++) - 1;
-        Z_sum[k]++;
-        //M[k,] += Y[i,]
-        cblas_daxpy(P, 1.0, y, 1, M+k*P, 1);
+        if( k >= 0 ) {
+            Z_sum[k]++;
+            //M[k,] += Y[i,]
+            cblas_daxpy(P, 1.0, y, 1, M+k*P, 1);
+        }
         y += P;
     }
     
@@ -641,19 +643,20 @@ em_mvt::build(const int* label, double logLike[3], int* history)
     for( i=0; i<N; ++i ) {
         k = (*l++) - 1;
         
-        double* m = M + k*P;
-        double* s = S + k*P*P;
-        
-        for(p=0; p<P;++p){
-            double yp = y[p];
-            double mp = m[p];
-            for(q=0; q<P;++q){
-                double yq = y[q];
-                double mq = m[q];
-                *(s+p*P+q) += (yp-mp) * (yq-mq);
+        if( k >= 0 ) {
+            double* m = M + k*P;
+            double* s = S + k*P*P;
+            
+            for(p=0; p<P;++p){
+                double yp = y[p];
+                double mp = m[p];
+                for(q=0; q<P;++q){
+                    double yq = y[q];
+                    double mq = m[q];
+                    *(s+p*P+q) += (yp-mp) * (yq-mq);
+                }
             }
         }
-        
         y += P;
         
     }

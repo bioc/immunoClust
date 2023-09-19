@@ -48,7 +48,7 @@ ALPHA(alpha), gTrace(traceG), kTrace(traceK), verbose(v)
     cblas_dcopy(K*P, kM, 1, normedM, 1);
     
     //initMapped();
-    
+  
 }
 
 meta_SON::~meta_SON()
@@ -124,7 +124,7 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
     //cblas_dscal(K, 1.0/sumW, iterW, 1 );
     
     
-    double* blurredS = new double[P*G*G];
+    double* blurredS = new double[G*P*P];
     
     long totIter = rlen*K;
     long curIter = 0;
@@ -307,7 +307,9 @@ meta_SON::normStep( const int* map_cluster, const int* use_cluster,
 // 2018.03.22: coeff => probability by normalization => SON32
 // 2020.01.21: check whether only mapped clusters in model (gW > 0) to use for normalization
         
-        // 2023-06-01: changing to this leads to small changes in normStep
+        // 2023-06-01: changing to buildCoefficients leads to minor changes in normStep
+        // da bisher die normed successive schon veraendert wurden, bevor der
+        // naechste model cluster dran kommt (was eigentlich falsch ist)
         //const double* post =buildCoefficients(); // GxK probability matrix
         for( int j=0; j<G; ++j ){
             
@@ -321,8 +323,6 @@ meta_SON::normStep( const int* map_cluster, const int* use_cluster,
                         dbg::printf("%d: move %d => %d (%.4lf)", iter, k, j, prob);
                     }
                     
-                    // 2018.04.09: prob > 0.1 add???
-                    //  if( prob > 0.1 ) wohl nicht!!!
                     for( int p=0; p<P; ++p )
                         *(normedM+k*P+p) += prob * (*(gM+j*P+p) - *(mappedM+j*P+p));
                     
@@ -338,18 +338,73 @@ meta_SON::normStep( const int* map_cluster, const int* use_cluster,
 }
 
 int
-meta_SON::normStep3( const int* map_cluster, const int* use_cluster,
+meta_SON::normStep2( const int* map_cluster, const int* use_cluster,
                     int cycles, int rlen, double deltas[2], double blurring[2]
                 )
 {
+// corrected normStep
     
-// 2017.10.05: several cycles not clearified jet
-    //double delta = 1.0/cycles;
-    double delta = 0.2;
     for( int iter= 0; iter < cycles; ++iter ) {
         if(verbose)
         dbg::printf("SON cycle: %d delta=(%.1lf %.1lf) blur=(%.1lf %.1lf)", iter, deltas[0], deltas[1], blurring[0], blurring[1] );
 // 2017.10.05: the use of the original model should be OK, since it reflects the real connectivity
+        cblas_dcopy(G*P, gM, 1, mappedM, 1);
+        mapStep( map_cluster, use_cluster, rlen, deltas, blurring);
+        
+        // 2023-06-01: changing to buildCoefficients leads to minor changes in normStep
+        // da bisher die normed successive schon veraendert wurden, bevor der
+        // naechste model cluster dran kommt (was eigentlich falsch ist)
+        const double* post = buildCoefficients(); // GxK probability matrix
+        for( int j=0; j<G; ++j ){
+            
+            if( gW[j] > 0.0 ){
+                
+                // doing it this way
+                //const double* post = buildClusterProbabilities(j);
+                for( int k=0; k < K; ++k ) {
+                    double prob = post[k];
+                    if( doTrace(j, k) ){
+                        dbg::printf("%d: move %d => %d (%.4lf)", iter, k, j, prob);
+                    }
+                    
+                    for( int p=0; p<P; ++p )
+                        *(normedM+k*P+p) += prob * (*(gM+j*P+p) - *(mappedM+j*P+p));
+                    
+                } // for k
+            }
+            
+            post += K;
+            
+        } // for j
+    } // for iter
+
+    return 0;
+}
+
+
+int
+meta_SON::normStep3( const int* map_cluster, const int* use_cluster,
+                    int cycles, int rlen, double deltas[2], double blurring[2]
+                )
+{
+    // clarifiy/re-structure SON parameters for norm-method 3
+    // cycles or rlen as number of iterations
+    // use deltas parameter
+    // blurring meaningless
+    //double delta = 1.0/cycles;
+    
+    if( deltas[0] <= 0.0 ) deltas[0] = 1.0/rlen;
+    if( deltas[1] <= deltas[0]) deltas[1] = deltas[0];
+    
+    //double delta = 0.2;
+    for( int iter= 0; iter < cycles; ++iter ) {
+        // fraglich ob ein gradient noetig ist: insofern deltas[0]==deltas[1] bevorzugt
+        double factor = double(iter) / double(cycles-1);
+        double delta = deltas[0] - (deltas[0] - deltas[1]) * factor;
+        
+        if(verbose)
+        dbg::printf("SON cycle: %d delta=(%.1lf %.1lf)", iter, deltas[0], deltas[1]);
+        // posterior normed cluster tp model cluster: model => mapped
         cblas_dcopy(G*P, gM, 1, mappedM, 1);
         // E-step => Z=posterior
         const double* post = buildPosterior(); // KxG posterior matrix
@@ -360,7 +415,6 @@ meta_SON::normStep3( const int* map_cluster, const int* use_cluster,
             
             for( int j=0; j<G; ++j ) {
                 // posterior is normed = 1
-                // delta magic??
                 double prob = post[j] * delta;
                 if( doTrace(j, k) ){
                     dbg::printf("%d: move %d => %d (%.4lf)", iter, k, j, prob);

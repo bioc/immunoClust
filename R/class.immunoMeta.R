@@ -25,6 +25,7 @@ immunoMeta <- function(res, dat, gating) {
                     "removedEvents"=sum(is.na(res@label)), 
                     "clsEvents"=clsEvents, "desc"=desc)
         res@label <- seq_len(res@K)
+        res@z <- matrix()
         
     }
     if( missing(gating) || is.null(gating) ) {

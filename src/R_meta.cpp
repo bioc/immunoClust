@@ -249,9 +249,9 @@ extern "C" {
     SEXP call_SON_combineClustering(SEXP res_model, SEXP res_sample,
                                     SEXP map_cluster, SEXP use_cluster,
                                     SEXP alpha,
-                                    SEXP meta_cycles, SEXP meta_bias,
-                                    SEXP meta_iter, SEXP meta_tol,
-                                    SEXP SON_cycles, SEXP SON_rlen,
+                                    //SEXP meta_cycles,
+                                    SEXP meta_bias, SEXP meta_iter, SEXP meta_tol,
+                                    SEXP SON_method, SEXP SON_cycles, SEXP SON_rlen,
                                     SEXP SON_deltas, SEXP SON_blurring,
                                     SEXP traceG, SEXP traceK
                                     )
@@ -333,8 +333,14 @@ extern "C" {
         // double maxLike = -1e100;
         // son.scaleModel(REAL(scale_factor)[0], INTEGER(scale_steps)[0]);
         // em with scaled model sigma too?
-        for( int cycle=0; cycle < INTEGER(meta_cycles)[0]; ++cycle) {
+        //for( int cycle=0; cycle < INTEGER(meta_cycles)[0]; ++cycle) {
+        {
+            // 2023.06.15: only for Trails
+            //int SON_norm = INTEGER(meta_cycles)[0];
+            int SON_norm = INTEGER(SON_method)[0];
             
+            // Rprintf("combineClustring %d\n", SON_norm);
+            //int SON_norm = 1;
             //dbg::printf("meta cycle %d", cycle);
             // re-label map_cluster?? obsolete because fixedN clustering
             // map.cluster <- unique(label[map_cluster])
@@ -345,14 +351,38 @@ extern "C" {
             // v23(R implementation)=v29 use originals
             // bei meta_cycles=1=v23 ohne unterschied
             cblas_dcopy(K*P, clusterM, 1, normedM, 1);
-            son.normStep(INTEGER(map_cluster),
-                         INTEGER(use_cluster),
-                         
-                         INTEGER(SON_cycles)[0],
-                         INTEGER(SON_rlen)[0],
-                         REAL(SON_deltas),
-                         REAL(SON_blurring)
-                         );
+            
+            if( SON_norm == 3 ) {
+                son.normStep3(INTEGER(map_cluster),
+                             INTEGER(use_cluster),
+                             
+                             INTEGER(SON_cycles)[0],
+                             INTEGER(SON_rlen)[0],
+                             REAL(SON_deltas),
+                             REAL(SON_blurring)
+                             );
+            }
+            else
+            if( SON_norm == 2 ) {
+                son.normStep2(INTEGER(map_cluster),
+                             INTEGER(use_cluster),
+                             
+                             INTEGER(SON_cycles)[0],
+                             INTEGER(SON_rlen)[0],
+                             REAL(SON_deltas),
+                             REAL(SON_blurring)
+                             );
+            }
+            else {
+                son.normStep(INTEGER(map_cluster),
+                             INTEGER(use_cluster),
+                             
+                             INTEGER(SON_cycles)[0],
+                             INTEGER(SON_rlen)[0],
+                             REAL(SON_deltas),
+                             REAL(SON_blurring)
+                             );
+            }
             
             // change mappedM (=em.gM = son.gM) within em-iteration
             // use son.normedM for clustering
@@ -450,7 +480,7 @@ extern "C" {
         SEXP ret = Rf_protect(allocVector(REALSXP, totK*P));
         
         double* normedM = REAL(ret);
-        int* nLabel = label;
+        //int* nLabel = label;
         const double* nW = W;
         const double* nM = M;
         const double* nS = S;
@@ -458,6 +488,8 @@ extern "C" {
             dbg::printf("SON_normalize: sample=%02d of %02d, K=%d <= %d (P=%d)", n, N, K[n], G, P);
             // norm nth sample
             int L = G;
+            
+            /*
             int max_iteration = INTEGER(meta_iter)[0];
             double max_tolerance = REAL(meta_tol)[0];
             
@@ -473,20 +505,21 @@ extern "C" {
                 double logLike[3];
                 L = em.final(label, logLike, 0);
             }
+            */
             
-            meta_SON son(P, L, gW, 0, gM, gS,
-                         K[n], nW, 0, nM, nS,
+            meta_SON son(P, L, gW, gW, gM, gS,
+                         K[n], nW, nW, nM, nS,
                          normedM,
                          REAL(alpha)[0], 0, 0, FALSE);
             // mayby scale first
             if(INTEGER(scale_steps)[0] > 0)
                 son.scaleStep(REAL(scale_factor)[0], INTEGER(scale_steps)[0] );
             // map
-            son.normStep( 0, 0,
+            son.normStep2( 0, 0,
                          INTEGER(SON_cycles)[0], INTEGER(SON_rlen)[0],
                          REAL(SON_deltas), REAL(SON_blurring));
             
-            nLabel += K[n];
+            //nLabel += K[n];
             nW += K[n];
             nM += K[n]*P;
             nS += K[n]*P*P;

@@ -63,9 +63,8 @@ verbose=FALSE
 meta.SON.combineClustering <-
 function(meta, res, par=seq_len(npar(meta)),
 map.cluster=seq_len(ncls(meta)), use.cluster=seq_len(ncls(res)),
-meta.alpha=0.5, meta.cycles=1, meta.bias=0.1,
-meta.iter=100, meta.tol=1e-5,
-SON.cycles=4, SON.rlen=10,
+meta.alpha=0.5, meta.bias=0.1, meta.iter=100, meta.tol=1e-5,
+SON.method=1, SON.cycles=4, SON.rlen=10,
 SON.deltas=c(1/SON.rlen,1/SON.rlen), SON.blurring=c(2,1),
 traceG=c(), traceK=c())
 {
@@ -94,10 +93,10 @@ traceG=c(), traceK=c())
     
     obj <- .Call("immunoC_SON_combineClustering",
     model_res, sample_res, as.integer(map_cluster), as.integer(use_cluster),
-    as.double(meta.alpha), as.integer(meta.cycles), as.double(meta.bias),
+    as.double(meta.alpha),  as.double(meta.bias),
     as.integer(meta.iter), as.double(meta.tol),
-    as.integer(SON.cycles), as.integer(SON.rlen), as.double(SON.deltas),
-    as.double(SON.blurring),
+    as.integer(SON.method), as.integer(SON.cycles), as.integer(SON.rlen),
+    as.double(SON.deltas), as.double(SON.blurring),
     as.integer(c(traceG,0)), as.integer(c(traceK,0))
     )
     

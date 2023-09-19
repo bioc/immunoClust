@@ -105,9 +105,12 @@ cell.classifyAll)
 ## cell.clustering
 export(
 cell.EM,
+cell.EMt,
+cell.EMstep,
 cell.Estimation,
 cell.Estep,
 cell.ME,
+cell.MEstep,
 cell.Mstep,
 cell.FitModel,
 cell.Classify,

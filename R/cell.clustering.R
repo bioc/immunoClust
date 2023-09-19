@@ -5,7 +5,7 @@
 
 
 ###
-##  cell.EM
+##  cell.EM(t)
 ##  fits model to sample data, initial estimation given by K, w, m, s
 ###
 cell.EM <- function(
@@ -42,7 +42,45 @@ state=NULL, K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt"
     .immunoClust2(obj, K, P, N, state=state,
                     expName=expName, parameters=parameters)
 }
-### cell.EM
+
+####
+## cell.EMt
+## cell.EM is missspelling, because it calls EMt
+##  better use cell.EMt
+cell.EMt <- function(
+data,  K, w, m, s, parameters=NULL,
+expName="immunoClust Experiment",
+B=50, tol=1e-5, bias=0.5, modelName="mvt"
+) {
+    
+    y <- .exprs(data, parameters)
+    N <- nrow(y)
+    P <- ncol(y)
+    
+    if (nrow(s)) {
+        dim(s) <- c(K,P*P)
+        S <- c(t(s))
+    }
+    else {
+        S <- s
+    }
+    if (nrow(m)) {
+        M <- c(t(m))
+    }
+    else{
+        M <- m
+    }
+    
+    obj <- .Call(paste(sep="","immunoC_", modelName, "EMt"),
+                N=as.integer(N), P=as.integer(P), L=as.integer(K),
+                as.double(t(y)), double(0),
+                as.double(w), as.double(M), as.double(S),
+                as.integer(B), as.double(tol), as.double(bias) )
+
+    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters)
+}
+
+### cell.EM(t)
 
 ###
 ##  cell.Estimation
@@ -80,7 +118,7 @@ history=NULL, state=NULL, K, w, m, s, scale_Z=TRUE, modelName="mvt"
                 as.double(t(y)), double(0), 
                 as.double(w), as.double(M), as.double(S), as.integer(scale_Z) )
 
-    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters);
+    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters)
     
 }
 ### cell.Estimation
@@ -119,7 +157,7 @@ modelName="mvt"
                 as.double(t(y)), double(0),
                 as.double(w), as.double(M), as.double(S), as.integer(scale_Z) )
 
-    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters);
+    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters)
     
 }
 cell.Mstep <-function(
@@ -145,7 +183,41 @@ modelName="mvt"
     .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters, inc=inc)
 }
 
+###
+## cell.EM does an EMt-iteration
+## cell.EMstep
+cell.EMstep <- function(
+data, K, w, m, s, parameters=NULL,
+expName="immunoClust EMstep",
+B=1, tol=1e-5, modelName="mvt"
+) {
+    
+    y <- .exprs(data, parameters)
+    N <- nrow(y)
+    P <- ncol(y)
+    
+    if (nrow(s)) {
+        dim(s) <- c(K,P*P)
+        S <- c(t(s))
+    }
+    else {
+        S <- s
+    }
+    if (nrow(m)) {
+        M <- c(t(m))
+    }
+    else{
+        M <- m
+    }
+    
+    obj <- .Call(paste(sep="","immunoC_", modelName, "EM"),
+                N=as.integer(N), P=as.integer(P), L=as.integer(K),
+                as.double(t(y)), double(0),
+                as.double(w), as.double(M), as.double(S),
+                as.integer(B), as.double(tol) )
 
+    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters)
+}
 
 ### cell.ME
 ###
@@ -173,6 +245,34 @@ history=NULL, state=NULL, label, B=50, tol=1e-5, modelName="mvt"
 
     .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters, inc=inc)
 }
+
+###
+## cell.ME has unlucky ordered (and unnessesary) call parameter
+##  better use cell.MEstep
+cell.MEstep <-function(
+data, label, parameters=NULL,
+expName="immunoClust Experiment",
+B=50, tol=1e-5, modelName="mvt"
+) {
+    
+    y <- .exprs(data, parameters);
+    
+    inc <- !is.na(label)
+    
+    y <- as.matrix(y[inc,])
+    N <- nrow(y)
+    P <- ncol(y)
+    label <- label[inc]
+    K <- max(label)
+    
+    obj <- .Call(paste(sep="", "immunoC_", modelName, "ME"),
+            as.integer(N), as.integer(P), as.integer(K),
+            as.double(t(y)), NULL,  as.integer(label),
+            as.integer(B), as.double(tol) )
+
+    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters, inc=inc)
+}
+
 ### cell.ME
 
 

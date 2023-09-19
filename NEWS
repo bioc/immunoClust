@@ -1,10 +1,15 @@
+Changes in Version 1.33.6
+- CHANGES
+    * introducing method option for SON/ormalization
+    * a bit clarification in E/M-calls interface
+
 Changes in Version 1.33.2
 - CHANGES
-    SON/ormalization back to Version 1.31.9
+    * SON/ormalization back to Version 1.31.9
 
 Changes in Version 1.33.1
 - CHANGES
-    normalization variants for combine clustering
+    * normalization variants for combine clustering
     
 Changes in Version 1.31.12
 - CHANGES

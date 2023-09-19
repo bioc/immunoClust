@@ -72,10 +72,19 @@ function(object,cls=seq_len(ncls(object)) ) {
 })
 
 setMethod("cells", signature(object="immunoClust"),
-function(object,cls=seq_len(ncls(object)) ) {
+function(object,cls=seq_len(ncls(object)), na.rm=FALSE ) {
     ret <- c()
-    for( k in cls ) {
-        ret <- c(ret, which(!is.na(object@label) & object@label==k))
+    
+    if( isTRUE(na.rm) ) {
+        label <- object@label[!is.na(object@label)]
+        for( k in cls ) {
+            ret <- c(ret, which(label==k))
+        }
+    }
+    else {
+        for( k in cls ) {
+            ret <- c(ret, which(!is.na(object@label) & object@label==k))
+        }
     }
     
     sort(ret)

@@ -31,7 +31,7 @@ pscal=NULL,...)
         subset <- seq_len(length(attributes(res)$param))
         
         if( is.null(inc.childs) ) {
-        inc.childs <- seq_len(length(pop$childs))
+            inc.childs <- seq_len(length(pop$childs))
             if( length(pop$plot.order) == length(pop$childs) )
                 inc.childs <- pop$plot.order
         }
@@ -62,7 +62,6 @@ pscal=NULL,...)
                 }
                 else {
                     clusters <- c(rest, clusters)
-                    #col <- c(rep("gray95", length(rest)), col)
                     col <- c(rep(rest.color, length(rest)), col)
                 }
             }

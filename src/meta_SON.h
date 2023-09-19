@@ -83,6 +83,10 @@ public:
                      int cycles,int rlen,
                      double deltas[2], double blurring[2] );
     
+    int     normStep2(const int* map_cluster, const int* use_cluster,
+                     int cycles,int rlen,
+                     double deltas[2], double blurring[2] );
+    
     int     normStep3(const int* map_cluster, const int* use_cluster,
                      int cycles,int rlen,
                      double deltas[2], double blurring[2] );

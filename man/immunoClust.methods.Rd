@@ -151,11 +151,13 @@ Documentation of the accessors and methods for immunoClust-objects
 
 \item{cells}{
     the cell-events indices in the FCS-file for the cluster selection 
-    (all cluster by default)
+    (all cluster by default). if na.rm ist TRUE the removed events aer
+    obmitted and the indices fits to the a-posteriori matrix \code{z} in the
+    \code{immunoClust}-object 
 
     \emph{Usage:}
 
-    \code{cells(immunoClust, ncls=seq_len(ncls(immunoClust)))}
+    \code{cells(immunoClust, ncls=seq_len(ncls(immunoClust)), na.rm=FALSE)}
 }
 
 }
