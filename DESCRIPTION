@@ -2,7 +2,7 @@ Package: immunoClust
 Type: Package
 Title: immunoClust - Automated Pipeline for Population Detection in
         Flow Cytometry
-Version: 1.34.0
+Version: 1.35.0
 Date: 2023-09-19
 Authors@R: person("Till", "Soerensen", email="till.soerensen@bioretis.com",
                     role=c("aut", "cre"))
