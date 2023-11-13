@@ -113,7 +113,7 @@ The appropriate value for the specific cal (see dection Details).
     meta-cluster.}
 
     \item{weights}{already generic in \code{stats}. Here, returns the weights 
-    of the mixture models for the cell-event of meta-clustering.}
+    of the mixture models for the cell-event or meta-clustering.}
 
     \item{mu}{returns the cluster means.}
 

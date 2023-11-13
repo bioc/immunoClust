@@ -101,7 +101,7 @@ bhattacharyya.dist <- function (gM, gS, cM, cS)
     d1 <- mahalanobis(gM, cM, S, inverted=TRUE)/8
     d2 <- (log(det(S)) + 0.5*det_g + 0.5*det_c)/2
     
-    ret <- d1 - d2
+    ret <- max(0, d1 - d2)
     ret
 }
 
