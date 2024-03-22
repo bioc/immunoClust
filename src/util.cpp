@@ -32,7 +32,7 @@ extern "C" {
 
 namespace mat {
 	int
-	cholesky_decomp (const int P, double* A)
+	cholesky_decomp (const int P, double* A, double eps)
 	{
 		
 		int i,j,k;
@@ -46,7 +46,7 @@ namespace mat {
 		
 		double L_00 = quiet_sqrt(A_00);
 		
-		if (A_00 <= 0.0)
+        if (A_00 <= eps) //if (A_00 <= 0.0)
         {
 			status = 1;
         }
@@ -62,7 +62,7 @@ namespace mat {
 			double diag = A_11 - L_10 * L_10;
 			double L_11 = quiet_sqrt(diag);
 			
-			if (diag <= 0.0)
+            if (diag <= eps) //if (diag <= 0.0)
             {
 				status = 1;
             }
@@ -93,7 +93,7 @@ namespace mat {
 				
 				double L_kk = quiet_sqrt(diag);
 				
-				if (diag <= 0.0)
+                if (diag <= eps) //if (diag <= 0.0)
 				{
 					status = 1;
 				}

@@ -85,7 +85,7 @@ em_mvt::init(const double* weights) {
 			t += T_inc;
 		}
 	}
-    
+    // 2024.02.09: hmm 2x durch anzahl der events geteilt?
 	for( int p=0; p<P; ++p ) {
 		TRC[p] = max(EPSMIN, TRC[p]/T_sum);
 	}
@@ -888,20 +888,21 @@ em_mvt::m_step_sigma_k(int k)
 			*(s+p*P+q) /= z_sum;
 		}
 	}
-	
-	status = mat::cholesky_decomp(P, s);
+    
+    // 2024.02.09: introduce? EPSMIN, GSL_SQRT_DBL_MIN ist zu wenig
+	status = mat::cholesky_decomp(P, s, 0.0 );
 	if(status!=0) {
-//		dbg::printf("%d: diag (1|%d) %.4lf", k, status, z_sum);		
+		//dbg::printf("%d: diag (1|%d) %.4lf", k, status, z_sum);
 		return m_step_diag_k(k);
 	}
 	
-
 	// covariance -> precision
 	mat::invert(P, s, tmpPxP);
-
-	status = mat::cholesky_decomp(P, s);
+    // 2024.02.09: introduce? EPSMIN, GSL_SQRT_DBL_MIN
+	status = mat::cholesky_decomp(P, s, 0.0 );
+    
 	if( status != 0 ) {
-		// dbg::printf("%d: singularity in precision", k);
+		//dbg::printf("%d: singularity in precision", k);
 		// should not be the case
 		// mat::set_identity(P, s);
 		/*
@@ -935,11 +936,10 @@ em_mvt::m_step_sigma_k(int k)
 		
 	}
 	
-//	dbg::printf("m-step %d: return", k);
 	for(p=0;p<P; ++p) {
 		int pc = fpclassify( log(*(s+p*P+p)) );
 		if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
-//			dbg::printf("%d: diag (3) %.4lf", k, z_sum);
+			//dbg::printf("%d: diag (3) %.4lf", k, z_sum);
 			return m_step_diag_k(k);
 		}
 	}
@@ -976,16 +976,19 @@ em_mvt::m_step_diag_k(int k)
 	for(p=0; p<P; ++p) {
 		if( (*(s+p*P+p) /= z_sum) <= EPSMIN ) {
 			// 2014.04.29: 				
-			// dbg::printf("%d: singularity in co-variance parameter %d (%g => %g, z-sum %.4lf)", k, p, (*(s+p*P+p))*z_sum, TRC[p]*z_sum, z_sum);
+			//dbg::printf("%d: singularity in co-variance parameter %d (%g => %g, z-sum %.4lf)", k, p, (*(s+p*P+p))*z_sum, TRC[p]*z_sum, z_sum);
 			//				status = 1;
 			//				break;
 			//				*(s+p*P+p) = one/TRC;
 			*(s+p*P+p) = TRC[p];
 		}
-		if( *(s+p*P+p) < EPSMIN ) {
+        /*
+        // ueberflussig: kann gar nicht sein nach definition von TRC
+		if( *(s+p*P+p) <= EPSMIN ) {
 			status = 1;
 			break;
 		}
+        */
 		double srt = sqrt(*(s+p*P+p));
 		*(s+p*P+p) = 1.0/srt; 
 	}

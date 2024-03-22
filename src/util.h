@@ -20,7 +20,7 @@ inline double sgn(double x) { return x<0.0 ? -1.0 : x > 0.0 ? +1.0 : 0.0; }
 
 namespace mat {
 	void	set_identity(const int P, double* A);
-	int		cholesky_decomp(const int P, double* A);
+	int		cholesky_decomp(const int P, double* A, double eps=0.0);
 	int		/*Doolittle_*/LU_decomposition(const int P, double *A);
 	void	LU_invert(const int P, double* LU, double* inv);
 	/* LU_invert requires A to be LU decomposed */

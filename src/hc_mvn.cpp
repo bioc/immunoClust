@@ -111,8 +111,9 @@ hc_mvn::init(double alpha, double beta, const double* t)
 	BETA = beta;
 	ABLOG  = log(beta*ALPHA);
 
-	BETA = beta;
-	ABLOG = log(beta*ALPHA);
+    // doppelt??
+	//BETA = beta;
+	//ABLOG = log(beta*ALPHA);
 	dbg::printf("hc_mvn %s: N = %d (%.0lf) trace = %lf", weighted? "weighted" : "straight", N, SUMT, ALPHA);
 	
 	//
