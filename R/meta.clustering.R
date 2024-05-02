@@ -249,12 +249,14 @@ verbose=FALSE
     #K <- max(label)
     
     J <- 8
-    cutoff <- 0
+  
     
     ## 2022.010.10: find a balance to introduce more clusters
     ##thres <- bias
     icl_thres <- (P*(P+1)/2 + P)*log(sum(W))*0.5*thres
     #message("ICL thres ",  format(icl_thres, digits=2) )
+    #cutoff <- min(0, icl_thres)
+    cutoff <- 0
     
     res_l <- vector("list", K)
     icl_l <- rep(0, K)
@@ -263,15 +265,22 @@ verbose=FALSE
     for( k in seq_len(K) ) {
         
         inc <- which(label==k)
+        
         if( length(inc) > 1 ) {
             res <- meta.TestSubCluster(x,
                     P, length(inc), W[inc], M[inc,], S[inc,],
                     J=min(length(inc),J), tol=tol,
                     bias=bias, alpha=alpha, EM.method=EM.method )
+                    
+            if( is.null(res) && verbose ) {
+                message("cluster ", k, " null TestSubCluster")
+            }
         }
         else {
             res <- NULL
         }
+        
+        
         res_l[[k]] <- res
 
         if( !is.null(res) && length(res) > 1 ) {
@@ -280,14 +289,32 @@ verbose=FALSE
             for( l in seq_len(length(res)) )
             icl[l] <- res[[l]]@ICL/res[[l]]@K
             
+            icl[1] <- cutoff
+            
             icl_l[k] <- max(icl)
             l <- which.max(icl)
             tst_l[k] <- l
+            
+            
+            #if( verbose ) {
+            #    ccl <- rep(0, length(res))
+            #    for( l in seq_len(length(res)) )
+            #    ccl[l] <- res[[l]]@logLike[3]
+            #
+            #    message("TestSubCluster ", bias, ": ", k, " ", length(inc), ">>",
+            #        length(res), ">>", paste(round(icl), collapse=","), "<<", paste(round(ccl), collapse=",") )
+            #}
+           
+           
         }
         else {
             icl_l[k] <- cutoff
             tst_l[k] <- 1
         }
+        
+        #if( verbose ) {
+        #    message("cluster", k, ": icl", icl_l[k], "(", tst_l[k], ")")
+        #}
         
     } ## for cluster k
     
@@ -304,6 +331,9 @@ verbose=FALSE
         l <- tst_l[k]
         
         if( is.null(res) ) {
+            if( verbose ) {
+                message(J, "/", sk, ": break with null at", k)
+            }
             break
         }
         
@@ -317,8 +347,12 @@ verbose=FALSE
         
         res <- res[[l]]
         
-        if( icl <= cutoff )
-        break
+        if( icl <= cutoff ) {
+            if( verbose ) {
+                message("break at ", k, " ", icl, " ", cutoff)
+            }
+            break
+        }
         
         ## 2022.10.17: respect cluster costs
         if( (res@K>1) && (icl>icl_thres) ) {
@@ -367,7 +401,7 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
     if( is.null(parameters) ) {
         parameters <- paste(sep="", "P", seq_len(P))
     }
-    result <- vector("list", J)
+    result <- vector("list")
     
     label <- rep(1, N)
 
@@ -379,6 +413,7 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
                 as.double(bias), as.double(alpha), as.integer(1))
 
     if( obj$L < 1 ) {
+        
         return(NULL)
     }
 
@@ -429,7 +464,8 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
         
         
         if( J > length(samples.set) ) {
-            return (NULL)
+            ##message( J, "<>", samples.set, " N=", N)
+            return (result)
         }
         
         if( length(samples.set) > HC.samples ) {

@@ -17,7 +17,7 @@ a SON normalization step between the meta-clustering iterations.
 meta.SON.clustering(
 meta,
 cycles=6, alpha=0.5, scale.factor=2, scale.steps=0,
-meta.iter=2, meta.bias=0.3, meta.tol=1e-5,
+meta.iter=2, meta.bias=0.3, meta.thres=0.1, meta.tol=1e-5,
 SON.cycles=1, SON.rlen=100, SON.deltas=c(1/SON.rlen,1/SON.rlen),
 SON.blurring=c(2,0.1),
 verbose=FALSE
@@ -35,6 +35,7 @@ verbose=FALSE
     no model scaling.}
 \item{meta.iter}{number of iterations for meta-clustering step }
 \item{meta.bias}{ICL bias for meta-clustering step}
+\item{meta.thres}{sub.thres for meta-clustering step}
 \item{meta.tol}{maximal tolerance for meta-clustering step}
 \item{SON.cycles}{number of cycles in SON normalization step.}
 \item{SON.rlen}{runlength in SON normalization step}

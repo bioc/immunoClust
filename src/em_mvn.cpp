@@ -13,9 +13,12 @@
 
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_math.h>
+#include <algorithm>
 #include <gsl/gsl_errno.h>
 #include <string.h>
 
+using std::max;
+using std::min;
 
 using std::fpclassify;
 
@@ -74,9 +77,9 @@ em_gaussian::init(const double* weights){
 			t += T_inc;
 		}
 	}
-
+    // 2024.04.19: EPSMIN minimal TRC 
 	for( int p=0; p<P; ++p ) {
-		TRC[p] /= T_sum;
+		TRC[p] = max(EPSMIN, TRC[p]/T_sum);
 	}
 	//	TRC /= P;
 	//	
@@ -935,22 +938,27 @@ em_gaussian::m_step_diag_k(int k)
 	}
 
 	// variance -> precision
+    // 2024.04.189 1e-20 => EPSMIN
 	for(p=0; p<P; ++p) {
-		if( (*(s+p*P+p) /= z_sum) <= 1e-20 ) {
-			// 2014.04.29: 				
+		if( (*(s+p*P+p) /= z_sum) <= EPSMIN ) {
+			// 2014.04.29:
 			//			dbg::printf("%d: singularity in co-variance parameter %d (%g => %g, z-sum %.4lf)", k, p, (*(s+p*P+p))*z_sum, TRC[p]*z_sum, z_sum);
 			//				status = 1;
 			//				break;
 			//*/
 			//				*(s+p*P+p) = one/TRC;
-			//*(s+p*P+p) = d_mean;
-			*(s+p*P+p) = TRC[p]*z_sum;
+			// 2024.04.19:
+			//*(s+p*P+p) = TRC[p]*z_sum;
+            *(s+p*P+p) = TRC[p];
 		}
+        /*
+        // ueberflussig: kann gar nicht sein nach definition von TRC
 		if( *(s+p*P+p) < 1e-20 ) {
 			status = 1;
 			break;
 		}
-		*(s+p*P+p) = 1.0/sqrt(*(s+p*P+p)); 
+        */
+		*(s+p*P+p) = 1.0/sqrt(*(s+p*P+p));
 	}
 	/*
 	 for(p=0;p<P; ++p) {

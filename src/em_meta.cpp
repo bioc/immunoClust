@@ -955,7 +955,7 @@ em_meta::m_step()
 	
 }
 
-int 
+int
 em_meta::m_step_sigma_g(int j)
 {
 	int status=0;
@@ -985,6 +985,7 @@ em_meta::m_step_sigma_g(int j)
 		s += P*P;
 	}
 	
+    // identity ist stupid
 	cblas_dscal(P*P, 1./z_sum, gs, 1);
 	cblas_dcopy(P*P, gs, 1, gp, 1);
 	status = mat::cholesky_decomp(P, gp);
@@ -1012,7 +1013,97 @@ em_meta::m_step_sigma_g(int j)
 	
 } // em_meta::m_step_sigma_g
 
+/*
+int
+em_meta::m_step_sigma_g(int j)
+{
+    int status=0;
+    int i, p,q;
+    
+    double z_sum = Z_sum[j];
+    const double* gm = gM + j*P;
+    double* gs = gS + j*P*P;
+    double* gp = gP + j*P*P;
+    double* gl = gL + j*P*P;
+        
+    cblas_dcopy(P*P, &zero, 0, gs, 1);
+    
+    const double* z = Z + j;
+    const double* s = S;
+    const double* m = M;
+    //for( i=0; i<N; ++i ) {
+    //    if( *z > 0.0 ) {
+    //        for( p=0; p<P; ++p ) {
+    //            for( q=0; q<P; ++q ) {
+    //                *(gs+p*P+q) += (*z) * ( *(s+p*P+q) + (m[p]-gm[p])*(m[q]-gm[q]) );
+    //            }
+    //        }
+    //    }
+    //    z += G;
+    //    m += P;
+    //    s += P*P;
+    //}
+    
+    
+    // blas alternative??? obwohl die Zeit geht woanders hin
+     for( i=0; i<N; ++i ) {
+         if( *z > 0.0 ) {
+            // tmp = (m - gm)
+            cblas_dcopy(P, m, 1, tmpP, 1)
+            cblas_daxpy(P, -1, gm, tmpP, 1)
+            //cblas_dcopy(P*P, &zero, 0, tmpPxP, 1);
+            gsl_blas_dsyr(CblasRowMajor, CblasLower,
+                P, (*z), tmp, 1, gs, P);
+            gsl_blas_daxpy(P*P, (*z), s, 1, gs, 1);
+     
+            //
+            //// gsl_blas_dsymm(CblasRowMajor, CblasLeft, CblasLower,
+            ////     P, P, (*z), A, gs, B, P, beta, C, P)
+         }
+         z += G;
+         m += P;
+         s += P*P;
+     }
+     
+     // not needed: cholesky_decomp uses only lower triangle
+     // copy the transposed lower triangle to the upper triangle,
+     for (i = 1; i < P; i++) {
+         for (j = 0; j < i; j++)
+         {
+             double A_ij = *(A+i*P+j);
+             *(A+j*P+i) = A_ij;
+         }
+     }
+     //
 
+    
+    cblas_dscal(P*P, 1./z_sum, gs, 1);
+    cblas_dcopy(P*P, gs, 1, gp, 1);
+    status = mat::cholesky_decomp(P, gp);
+    if( status!=0){
+        dbg::printf("m-step %d, singularity in co-variance", j);
+        mat::set_identity(P, gs);
+        mat::set_identity(P, gp);
+        mat::set_identity(P, gl);
+        return status;
+    }
+    
+    // covariance matrix -> precision matrix
+    mat::invert(P, gp, tmpPxP);
+    cblas_dcopy(P*P, gp, 1, gl, 1);
+    
+    status = mat::cholesky_decomp(P, gl);
+    if( status!=0 ) {
+        dbg::printf("m-step %d: singularity in precision", j);
+        mat::set_identity(P, gs);
+        mat::set_identity(P, gp);
+        mat::set_identity(P, gl);
+    }
+    
+    return status;
+    
+} // em_meta::m_step_sigma_g
+*/
 /*
 	em-initialization
  */
@@ -1212,6 +1303,8 @@ em_meta::final(int* label, double logLike[3], int* history)
         cblas_dcopy(P, &zero, 0, gM+j*P, 1);
         cblas_dcopy(P*P, &zero, 0, gS+j*P*P, 1);
         cblas_dcopy(N, &zero, 0, Z+j, G);
+        
+        // symmetric gS
     }
     
     /*

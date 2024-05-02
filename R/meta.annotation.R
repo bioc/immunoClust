@@ -437,6 +437,8 @@
         for( p in pop$plot.subset) {
             plot.subset <- c(plot.subset,which(subset==p))
         }
+        if( length(plot.subset) <= 1 )
+            plot.subset <- c()
         pop$plot.subset <- plot.subset
     }
     

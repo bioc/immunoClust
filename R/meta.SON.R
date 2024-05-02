@@ -7,7 +7,7 @@
 meta.SON.clustering <- function(
 meta,
 cycles=6, alpha=0.5, scale.factor=2, scale.steps=0,
-meta.iter=2, meta.bias=0.3, meta.tol=1e-5,
+meta.iter=2, meta.bias=0.3, meta.thres=0.1, meta.tol=1e-5,
 SON.cycles=1, SON.rlen=100, SON.deltas=c(1/SON.rlen,1/SON.rlen),
 SON.blurring=c(2,0.1),
 verbose=FALSE
@@ -21,14 +21,20 @@ verbose=FALSE
     nM <- dat$M
     sub.iter <- 0
     for( cycle in seq_len(cycles) ) {
-        if(verbose)
-        message("SON.clustering cycle", cycle, "\n")
-        ## allways original M or normedM
+        if(verbose) {
+            #message("SON.clustering cycle", cycle, "\n")
+            message("SON/ormalize", cycle, "\n")
+        }
+        ## allways original M or normedM?
+        s <- strptime(date(), "%a %b %d %H:%M:%S %Y")
         
         attr(nres,"P") <- dat$P
         obj <- .Call("immunoC_SON_normalize",
             nres, as.integer(dat$N), as.integer(dat$K),
-            as.double(dat$clsEvents), as.double(t(dat$M)), as.double(t(dat$S)),
+            as.double(dat$clsEvents), 
+            ##as.double(t(dat$M)),
+            as.double(t(nM)),
+            as.double(t(dat$S)),
             as.double(alpha), as.double(scale.factor), as.integer(scale.steps),
             as.integer(sub.iter), as.double(meta.tol),
             as.integer(SON.cycles), as.integer(SON.rlen), as.double(SON.deltas),
@@ -38,21 +44,31 @@ verbose=FALSE
         
         nM <- matrix(obj, nrow(dat$M), ncol(dat$M), byrow=TRUE)
         colnames(nM) <- colnames(dat$M)
+        e <- strptime(date(), "%a %b %d %H:%M:%S %Y")
         
+        if(verbose) {
+            message( "\ttakes ", format(difftime(e,s,units="min")), "\n")
+            message("SON Clustering", cycle, "\n")
+        }
+        s <- e
         nres <- meta.Clustering(dat$P, dat$N, dat$K, dat$clsEvents, nM, dat$S,
             label=nres@label, I.iter=meta.iter, tol=meta.tol,
-            bias=meta.bias, sub.thres=1, alpha=alpha, norm.method=0,
+            bias=meta.bias, sub.thres=meta.thres, alpha=alpha, norm.method=0,
             verbose=verbose)
         
+        e <- strptime(date(), "%a %b %d %H:%M:%S %Y")
+        
         if(verbose)
-        message("\t=>", ncls(nres), "clusters\n" )
+        message("\ttakes ", format(difftime(e,s,units="min")), "\n" )
     }
+    ## 2024.04.17: will man das so?
     dat$M <- nM
     attr(nres,"trans.a") <- attr(res, "trans.a")
     attr(nres,"trans.b") <- attr(res, "trans.b")
     attr(nres,"limits") <- attr(res, "limits")
     ret <- immunoMeta(nres, dat)
-    #ret$dat.clusters$nrm.M <- nrm_M
+    ##  2024.04.17: oder eigentlich so?
+    ##ret$dat.clusters$nrm.M <- nM
     parameters(ret) <- parameters(meta)
     prop(ret,"pscales",c()) <- prop(meta,"pscales",c())
     

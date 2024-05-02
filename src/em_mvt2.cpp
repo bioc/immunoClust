@@ -137,7 +137,7 @@ em_mvt2::e_step()
 	cblas_dcopy(K, &zero, 0, ZU_sum, 1);
 	    
 	const double* y = Y;
-  double* z = Z;
+    double* z = Z;
 	for(i=0;i<N;i++) {        
        
 		double sumLike=0;

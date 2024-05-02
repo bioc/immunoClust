@@ -22,13 +22,13 @@ pscal=NULL,...)
     main <- pop$desc
     
     if( length(pos) == 0 ) {
-        if( !is.null(plot.subset) ) 
+        if( length(plot.subset)>1 )
         subset <- plot.subset
         else
-        if( !is.null(pop$plot.subset) ) 
+        if( length(pop$plot.subset)>1 )
         subset <- pop$plot.subset
         else
-        subset <- seq_len(length(attributes(res)$param))
+        subset <- seq_len(npar(res))
         
         if( is.null(inc.childs) ) {
             inc.childs <- seq_len(length(pop$childs))

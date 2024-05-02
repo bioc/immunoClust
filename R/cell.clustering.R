@@ -18,10 +18,8 @@ state=NULL, K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt"
     P <- ncol(y)
     
     if (nrow(s)) {
-        S <- rep(0,length(s))
-        for(k in seq_len(K)){
-            S[(1+(k-1)*P*P):(k*P*P)] <- c(s[k,,])
-        }
+        dim(s) <- c(K,P*P)
+        S <- c(t(s))
     }
     else {
         S <- s
@@ -98,10 +96,8 @@ history=NULL, state=NULL, K, w, m, s, scale_Z=TRUE, modelName="mvt"
     P <- ncol(y)
     
     if (nrow(s)) {
-        S <- rep(0,length(s))
-        for(k in seq_len(K)){
-            S[(1+(k-1)*P*P):(k*P*P)] <- c(s[k,,])
-        }
+        dim(s) <- c(K,P*P)
+        S <- c(t(s))
     }
     else {
         S <- s
@@ -137,10 +133,8 @@ modelName="mvt"
     P <- ncol(y)
     
     if (nrow(s)) {
-        S <- rep(0,length(s))
-        for(k in seq_len(K)){
-            S[(1+(k-1)*P*P):(k*P*P)] <- c(s[k,,])
-        }
+        dim(s) <- c(K,P*P)
+        S <- c(t(s))
     }
     else {
         S <- s
@@ -252,7 +246,7 @@ history=NULL, state=NULL, label, B=50, tol=1e-5, modelName="mvt"
 cell.MEstep <-function(
 data, label, parameters=NULL,
 expName="immunoClust Experiment",
-B=50, tol=1e-5, modelName="mvt"
+B=1, tol=1e-5, modelName="mvt"
 ) {
     
     y <- .exprs(data, parameters);
