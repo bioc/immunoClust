@@ -163,7 +163,7 @@ bias=0.25, alpha=0.5, min.class=0
 ###
 meta.Clustering <- function(
 P, N, K, W, M, S, label=NULL, I.iter=10, B=500, tol=1e-5, 
-bias=0.25, sub.thres=bias, alpha=0.5, EM.method=20,
+bias=0.25, sub.thres=bias, alpha=0.5, EM.method=20, HC.samples=2000,
 norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
 ) {
 
@@ -204,14 +204,6 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
             }
         }
         
-        #if( G < 10 )
-        #label <- meta.SubClustering(P, totK, W, tM, tS, label, tol=tol,
-        #                            bias=bias*0.5, alpha=alpha,
-        #                            EM.method=subEM.method)
-        #else
-        #label <- meta.SubClustering(P, totK, W, tM, tS, label, tol=tol,
-        #                            bias=bias, alpha=alpha,
-        #                            EM.method=subEM.method)
         if( res@K < 10 )
         sub_bias <- bias*0.5
         else
@@ -219,7 +211,7 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
         label <- meta.SubClustering(res, P, totK, W, tM, tS,
                                     tol=tol,
                                     bias=sub_bias, thres=sub.thres, alpha=alpha,
-                                    EM.method=subEM.method,
+                                    EM.method=subEM.method, HC.samples=HC.samples,
                                     verbose=verbose)
         
         message("Fit Model ", i, " of ", I.iter, " with ",
@@ -240,7 +232,8 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
 #meta.SubClustering <- function(
 #P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
 meta.SubClustering <- function(
-x, P, N, W, M, S, tol=1e-5, bias=0.25, thres=bias, alpha=1.0, EM.method=20,
+x, P, N, W, M, S, tol=1e-5, bias=0.25, thres=bias, alpha=1.0, 
+EM.method=20, HC.samples=2000,
 verbose=FALSE
 ) {
     
@@ -270,7 +263,8 @@ verbose=FALSE
             res <- meta.TestSubCluster(x,
                     P, length(inc), W[inc], M[inc,], S[inc,],
                     J=min(length(inc),J), tol=tol,
-                    bias=bias, alpha=alpha, EM.method=EM.method )
+                    bias=bias, alpha=alpha, 
+                    EM.method=EM.method, HC.samples=HC.samples )
                     
             if( is.null(res) && verbose ) {
                 message("cluster ", k, " null TestSubCluster")
@@ -332,7 +326,7 @@ verbose=FALSE
         
         if( is.null(res) ) {
             if( verbose ) {
-                message(J, "/", sk, ": break with null at", k)
+                message(J, "/", sK, ": break with null at", k)
             }
             break
         }

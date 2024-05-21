@@ -22,7 +22,7 @@ cell.ME(data, parameters=NULL, expName="immunoClust Experiment",
 
 cell.MEstep(data, label, parameters=NULL, 
     expName="immunoClust Experiment", 
-    B=50, tol=1e-5, modelName="mvt")
+    B=1, tol=1e-5, modelName="mvt")
         
 cell.Mstep(data, label, parameters=NULL,
     expName="immunoClust Mstep", modelName="mvt")

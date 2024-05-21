@@ -17,7 +17,8 @@ returns the fitted mixture model parameter in an object of class immunoClust.
 \usage{
 meta.Clustering(P, N, K, W, M, S, label=NULL, I.iter=10, B=500, tol=1e-5,
                 bias=0.25, sub.thres = bias, alpha=0.5, EM.method=20,
-                norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE)
+                HC.samples=2000, norm.method=0, norm.blur=2, norm.minG=10,
+                verbose=FALSE)
 }
 
 \arguments{
@@ -61,6 +62,8 @@ complete covariance matrices are applied. A reasonable value for alpha is 0.5.}
 
 20  = EMt-classification weighted
 }
+\item{HC.samples}{The number of samples used for initial hierarchical
+    clustering.}
 \item{norm.method}{Normalization function; see \code{\link{meta.Normalize}} for
 details.}
 \item{norm.blur}{For the normalization step the a-posteriori probabilites of the
