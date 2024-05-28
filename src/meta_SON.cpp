@@ -47,6 +47,38 @@ ALPHA(alpha), gTrace(traceG), kTrace(traceK), verbose(v)
     cblas_dcopy(G*P, gM, 1, mappedM, 1);
     cblas_dcopy(K*P, kM, 1, normedM, 1);
     
+    // pre-calculate log det
+    kSdet = new double[K];
+    //
+    int status;
+    const double* s;
+    s = kS;
+    for( int i=0; i<K; ++ i) {
+        // logdet
+        double l = logdet(s, status);
+        if( status ) {
+            kSdet[i] = NAN;
+            dbg::printf("cluster %d: undefined determinant", i);
+        }
+        else {
+            kSdet[i] = l;
+        }
+        s += P*P;
+    }
+    gSdet = new double[G];
+    s = gS;
+    for( int i=0; i<G; ++ i) {
+        // logdet
+        double l = logdet(s, status);
+        if( status ) {
+            gSdet[i] = NAN;
+            dbg::printf("component %d: undefined determinant", i);
+        }
+        else {
+            gSdet[i] = l;
+        }
+        s += P*P;
+    }
     //initMapped();
   
 }
@@ -64,6 +96,9 @@ meta_SON::~meta_SON()
     //delete[] clusterProbs;
     delete[] posterior;
     delete[] map;
+    
+    delete[] kSdet;
+    delete[] gSdet;
 }
 
 /*
@@ -131,8 +166,9 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
     for( long iter = 0; iter < rlen; ++iter ) {
         
         double blur = blurring[0] - (blurring[0] - blurring[1]) * double(iter)/(rlen-1);
-        if(verbose)
-        dbg::printf("SON %d: blur=%.1lf", iter, blur);
+        
+        //if(verbose)
+        //dbg::printf("SON %d: blur=%.1lf", iter, blur);
         
         cblas_dcopy(G*P*P, gS, 1, blurredS, 1);
         cblas_dscal(G*P*P, blur, blurredS, 1);
@@ -231,29 +267,6 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
 // meta_SON::mapStep
 
 /*
- meta_SON::scaleModel
-    scale model to best match clusters
- */
-/*
-int
-meta_SON::scaleModel(double factor, int steps)
-{
-    if( steps <= 0 ) {
-        cblas_dcopy(P, &one, 0, pScale, 1);
-        return 0;
-    }
-    
-    model_scale scale(P, G, gW, gM, gS, K, kW, kM, kS,
-                      factor, steps, ALPHA, 0);
-    
-    int status = scale.find_best_scale(pScale);
-    dbg::printf("scale model");
-    dbg::print_vector(P, pScale);
-    initMapped();
-    return status;
-}
- */
-/*
  meta_SON::scaleStep
     scale clusters to best match model
  */
@@ -289,7 +302,7 @@ meta_SON::normStep( const int* map_cluster, const int* use_cluster,
 // 2017.10.05: several circles not clearified jet
     for( int iter= 0; iter < cycles; ++iter ) {
         if(verbose)
-        dbg::printf("SON cycle: %d delta=(%.1lf %.1lf) blur=(%.1lf %.1lf)", iter, deltas[0], deltas[1], blurring[0], blurring[1] );
+        dbg::printf("SON[1] cycle: %d delta=(%.1lf %.1lf) blur=(%.1lf %.1lf)", iter, deltas[0], deltas[1], blurring[0], blurring[1] );
 // 2017.10.05: the use of the original model should be OK, since it reflects the real connectivity
         cblas_dcopy(G*P, gM, 1, mappedM, 1);
         //initMapped();
@@ -346,7 +359,7 @@ meta_SON::normStep2( const int* map_cluster, const int* use_cluster,
     
     for( int iter= 0; iter < cycles; ++iter ) {
         if(verbose)
-        dbg::printf("SON cycle: %d delta=(%.1lf %.1lf) blur=(%.1lf %.1lf)", iter, deltas[0], deltas[1], blurring[0], blurring[1] );
+        dbg::printf("SON[2] cycle: %d delta=(%.1lf %.1lf) blur=(%.1lf %.1lf)", iter, deltas[0], deltas[1], blurring[0], blurring[1] );
 // 2017.10.05: the use of the original model should be OK, since it reflects the real connectivity
         cblas_dcopy(G*P, gM, 1, mappedM, 1);
         mapStep( map_cluster, use_cluster, rlen, deltas, blurring);
@@ -403,7 +416,7 @@ meta_SON::normStep3( const int* map_cluster, const int* use_cluster,
         double delta = deltas[0] - (deltas[0] - deltas[1]) * factor;
         
         if(verbose)
-        dbg::printf("SON cycle: %d delta=(%.1lf %.1lf)", iter, deltas[0], deltas[1]);
+        dbg::printf("SON[3] cycle: %d delta=(%.1lf %.1lf)", iter, deltas[0], deltas[1]);
         // posterior normed cluster tp model cluster: model => mapped
         cblas_dcopy(G*P, gM, 1, mappedM, 1);
         // E-step => Z=posterior
@@ -441,7 +454,8 @@ meta_SON::bestMatchingUnit(int k, const int* map_cluster, const double* mappedM)
     // use ALPHA
     BMU bmu;
     for( int j=0; j<G; ++j ) if( !map_cluster || map_cluster[j]) {
-        double  prob = gW[j] * bc_measure(normedM+k*P, kS+k*P*P, mappedM+j*P, gS+j*P*P);
+        double  prob = gW[j] * bc_measure2(normedM+k*P, kS+k*P*P, kSdet[k],
+                                           mappedM+j*P, gS+j*P*P, gSdet[j]);
         if( prob > bmu.probability) {
             bmu.probability = prob;
             bmu.index = j;
@@ -463,12 +477,12 @@ meta_SON::buildNeighbourProbabilities(const double* blurredS)
         for( int j=0; j<G; ++j ) { // if(map_cluster[j]) {
             // with!!! or without alpha?
             prob[j] = bc_measure(gM+i*P, blurredS+i*P*P, gM+j*P, blurredS+j*P*P);
-            if( verbose ) {
             int pc = fpclassify( prob[j] );
             if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
-                dbg::printf("neighbour %d<>%d: NaN (%d) ", j, i, pc);
+                dbg::printf("neighbour %d<>%d: NaN (%d|%d) ", j, i, pc, FP_ZERO);
+                prob[j] = 0.0;
             }
-            }
+            
             sum += prob[j];
         }
         cblas_dscal(G, 1.0/sum, prob, 1);
@@ -483,13 +497,15 @@ meta_SON::buildClusterProbabilities(int j)
     double* prob = posterior;
     for( int k=0; k<K; ++k ) {
             // with!!! or without alpha?
-        prob[k] = bc_measure(mappedM+j*P, gS+j*P*P, normedM+k*P, kS+k*P*P);
-        if( verbose ) {
-            int pc = fpclassify( prob[k] );
-            if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
-                dbg::printf("probability %d<>%d: NaN (%d) ", j, k, pc);
-            }
+        prob[k] = bc_measure2(mappedM+j*P, gS+j*P*P, gSdet[j],
+                              normedM+k*P, kS+k*P*P, kSdet[k]);
+        
+        int pc = fpclassify( prob[k] );
+        if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
+            dbg::printf("probability %d<>%d: NaN (%d) ", j, k, pc);
+            prob[k] = 0;
         }
+        
         sum += prob[k];
     }
     cblas_dscal(K, 1.0/sum, posterior, 1);
@@ -508,6 +524,9 @@ meta_SON::buildCoefficients()
      frage ist eigentlich, wieso überhaupt normieren, warum nicht
      den cluster-component overlap direkt nehmen
      */
+    if( verbose )
+        dbg::printf("buildCoefficients");
+                    
     cblas_dcopy(G*K, &zero, 0, posterior, 1);
     double* prob = posterior;
     for( int j=0; j<G; ++j ) {
@@ -516,13 +535,15 @@ meta_SON::buildCoefficients()
         for( int k=0; k<K; ++k ) {
             // with!!! or without alpha?
             // here: coeff<>probability egal, gW egal, only factors fixed for g
-            prob[k] = bc_measure(mappedM+j*P, gS+j*P*P, normedM+k*P, kS+k*P*P);
-            if( verbose ) {
-                int pc = fpclassify( prob[k] );
-                if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
-                    dbg::printf("probability %d<>%d: NaN (%d) ", j, k, pc);
-                }
+            prob[k] = bc_measure2(mappedM+j*P, gS+j*P*P, gSdet[j],
+                                  normedM+k*P, kS+k*P*P, kSdet[k]);
+         
+            int pc = fpclassify( prob[k] );
+            if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
+                dbg::printf("coefficients %d<>%d: NaN (%d|%d) ", j, k, pc, FP_NAN);
+                prob[k] = 0;
             }
+            
             sum += prob[k];
         }
        
@@ -557,13 +578,14 @@ meta_SON::buildPosterior()
             // weights magic???
             // hier: bc_coeff <> bc_prob und gW nicht egal
             //double weight = (gW[j]+kW[k]);
-            double clsPDF = bc_probability(mappedM+j*P, gS+j*P*P, normedM+k*P, kS+k*P*P);
+            double clsPDF = bc_probability2(mappedM+j*P, gS+j*P*P, gSdet[j],
+                                            normedM+k*P, kS+k*P*P, kSdet[k]);
             double clsLike = gEvts[j]* clsPDF;
             z[j] = clsLike;
             if( verbose ) {
                 int pc = fpclassify( clsLike );
                 if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
-                    dbg::printf("probability %d<>%d: NaN (%d) ", j, k, pc);
+                    dbg::printf("probability %d<>%d: NaN (%d|%d) ", j, k, pc, FP_NAN);
                 }
             }
             sumLike += clsLike;
@@ -615,12 +637,14 @@ meta_SON::buildMappedM()
  bc_measure
  */
 double
-meta_SON::bc_coeff(const double* m1, const double* s1, const double* m2, const double* s2)
+meta_SON::bc_coeff2(const double* m1, const double* s1, double det_1,
+                    const double* m2, const double* s2, double det_2)
 {
     int status;
     // gS = sigma(component), S = sigma(cluster)
     const double w1 = 0.5;
     const double w2 = 0.5;
+    /*
     double det_1 = logdet(s1, status);  // =0.5*logdet_invS for w1=0.5
     if( status ) {
         return bc_diag_coeff(m1, s1, m2, s2);
@@ -629,7 +653,10 @@ meta_SON::bc_coeff(const double* m1, const double* s1, const double* m2, const d
     if( status ) {
         return bc_diag_coeff(m1, s1, m2, s2);
     }
+    */
     
+    if( fpclassify( det_1 ) == FP_NAN || fpclassify( det_2 ) == FP_NAN )
+        return bc_diag_coeff(m1, s1, m2, s2);
     //
     mat::sum(P, tmpS, s1, s2, w1, w2);
     // covariance matrix -> precision matrix
@@ -656,8 +683,6 @@ double
 meta_SON::bc_diag_coeff(const double* m1, const double* s1, const double* m2, const double* s2)
 {
     int /*status,*/ p;
-    // gS = sigma(component), S = sigma(cluster)
-    
     
     double det_1 = 0;
     double det_2 = 0;
@@ -690,31 +715,80 @@ meta_SON::bc_diag_coeff(const double* m1, const double* s1, const double* m2, co
 }
 
 double
-meta_SON::bc_measure(const double* m1, const double* s1, const double* m2, const double* s2)
+meta_SON::bc_measure2(const double* m1, const double* s1, double det_1,
+                      const double* m2, const double* s2, double det_2)
 {
     if( ALPHA <= 0 ) {
         return bc_diag_coeff(m1, s1, m2, s2);
     }
     if( ALPHA < 1.0 ) {
         
-        double a = bc_coeff(m1, s1, m2 ,s2);
+        double a = bc_coeff2(m1, s1, det_1, m2, s2, det_2);
         double b = bc_diag_coeff(m1, s1, m2, s2);
         
         return ALPHA*a + (1.0-ALPHA)*b;
     }
     
-    return bc_coeff(m1, s1, m2, s2);
+    return bc_coeff2(m1, s1, det_1, m2, s2, det_2);
 }
+
+double
+meta_SON::bc_measure(const double* m1, const double* s1,
+                      const double* m2, const double* s2)
+{
+    if( ALPHA <= 0 ) {
+        return bc_diag_coeff(m1, s1, m2, s2);
+    }
+    
+    int status = 0;
+    double det_1 = logdet(s1, status);
+    if( status )
+        return bc_diag_coeff(m1, s1, m2, s2);
+    
+    double det_2 = logdet(s2, status);
+    if( status )
+        return bc_diag_coeff(m1, s1, m2, s2);
+    
+    if( ALPHA < 1.0 ) {
+        
+        double a = bc_coeff2(m1, s1, det_1, m2, s2, det_2);
+        double b = bc_diag_coeff(m1, s1, m2, s2);
+        
+        return ALPHA*a + (1.0-ALPHA)*b;
+    }
+    
+    return bc_coeff2(m1, s1, det_1, m2, s2, det_2);
+}
+double
+meta_SON::bc_coeff(const double* m1, const double* s1,
+                    const double* m2, const double* s2)
+{
+    int status;
+    
+    double det_1 = logdet(s1, status);
+    if( status )
+        return bc_diag_coeff(m1, s1, m2, s2);
+    
+    double det_2 = logdet(s2, status);
+    if( status )
+        return bc_diag_coeff(m1, s1, m2, s2);
+    
+    return bc_coeff2(m1, s1, det_1, m2, s2, det_2);
+    
+}
+
 // bc_measure
 
 // bc_probability
 double
-meta_SON::bc_prob(const double* m1, const double* s1, const double* m2, const double* s2)
+meta_SON::bc_prob2(const double* m1, const double* s1, double det_1,
+                   const double* m2, const double* s2, double det_2)
 {
     int status;
     // 1 = component), 2 = cluster)
     const double w1 = 0.5;
     const double w2 = 0.5;
+    /*
     double det_1 = logdet(s1, status);  // =0.5*logdet_invS for w1=0.5
     if( status ) {
         return bc_diag_prob(m1, s1, m2, s2);
@@ -723,7 +797,10 @@ meta_SON::bc_prob(const double* m1, const double* s1, const double* m2, const do
     if( status ) {
         return bc_diag_prob(m1, s1, m2, s2);
     }
-    
+    */
+    //if( det_1==NAN || det_2==NAN )
+    if( fpclassify( det_1 ) == FP_NAN || fpclassify( det_2 ) == FP_NAN )
+        return bc_diag_prob(m1,s1,m2,s2);
     //
     mat::sum(P, tmpS, s1, s2, w1, w2);
     // covariance matrix -> precision matrix
@@ -751,7 +828,8 @@ meta_SON::bc_prob(const double* m1, const double* s1, const double* m2, const do
 }
 
 double
-meta_SON::bc_diag_prob(const double* m1, const double* s1, const double* m2, const double* s2)
+meta_SON::bc_diag_prob(const double* m1, const double* s1, 
+                       const double* m2, const double* s2)
 {
     int p;
     // 1 = component, 2 = cluster
@@ -788,7 +866,8 @@ meta_SON::bc_diag_prob(const double* m1, const double* s1, const double* m2, con
 }
 // meta_SON::bc_diag_prob
 double
-meta_SON::bc_probability(const double* m1, const double* s1, const double* m2, const double* s2)
+meta_SON::bc_probability2(const double* m1, const double* s1, double det_1,
+                         const double* m2, const double* s2, double det_2)
 {
     // 1=component, 2=cluster
     if( ALPHA <= 0 ) {
@@ -796,13 +875,13 @@ meta_SON::bc_probability(const double* m1, const double* s1, const double* m2, c
     }
     if( ALPHA < 1.0 ) {
         
-        double a = bc_prob(m1, s1, m2 ,s2);
+        double a = bc_prob2(m1, s1, det_1, m2 ,s2, det_2);
         double b = bc_diag_prob(m1, s1, m2, s2);
         
         return ALPHA*a + (1.0-ALPHA)*b;
     }
     
-    return bc_prob(m1, s1, m2, s2);
+    return bc_prob2(m1, s1, det_1, m2, s2, det_2);
 }
 // bc_prpbability
 
@@ -815,6 +894,8 @@ meta_SON::logdet(const double* a, int& status)
 {
     cblas_dcopy(P*P, a, 1, tmpPxP, 1);
     status = mat::cholesky_decomp(P, tmpPxP);
+
+    if( status ) return NAN;
     
     for(int p=0; p<P; ++p) {
         if( *(tmpPxP + p*P + p) <= 0.0 ) {

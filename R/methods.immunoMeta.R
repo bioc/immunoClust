@@ -514,9 +514,14 @@ function(object, remove.empty=FALSE, depth=-1)
     object
 })
 
-"transfer<-.immunoMeta" <- function(object,..., value)
+"transfer<-.immunoMeta" <- function(object, SON.method=2, ..., value)
 {
-    object <- .annotate.clustering(value, object)
+    if( SON.method>0 ) {
+        object <- .annotate.clustering2(value, object, SON.method=SON.method, ...)
+    }
+    else {
+        object <- .annotate.clustering(value, object)
+    }
     object <- finalize(object)
     object
 }

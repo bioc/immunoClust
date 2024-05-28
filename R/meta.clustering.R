@@ -189,6 +189,7 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
     ### sub-clustering is performed with EM.method=20
     if( EM.method == 23 )
         subEM.method <- 20
+    
     for( i in seq_len(I.iter) ) {
         if( norm.method > 0 ) {
             if( G >= norm.minG) {
@@ -204,6 +205,16 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
             }
         }
         
+        #if( G < 10 )
+        #label <- meta.SubClustering(P, totK, W, tM, tS, label, tol=tol,
+        #                            bias=bias*0.5, alpha=alpha,
+        #                            EM.method=subEM.method)
+        #else
+        #label <- meta.SubClustering(P, totK, W, tM, tS, label, tol=tol,
+        #                            bias=bias, alpha=alpha,
+        #                            EM.method=subEM.method)
+        btm <- ptm <- proc.time()
+        
         if( res@K < 10 )
         sub_bias <- bias*0.5
         else
@@ -213,13 +224,29 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
                                     bias=sub_bias, thres=sub.thres, alpha=alpha,
                                     EM.method=subEM.method, HC.samples=HC.samples,
                                     verbose=verbose)
-        
+        if( verbose ) {
+            message("sub-clustering (", i, "/", I.iter, ") => ", 
+            length(unique(res@label)), "=>", length(unique(label)),
+            "clusters takes ", paste((etm<-proc.time()) - ptm, collapse=",") )
+            ptm <- etm
+        }
+        else {
         message("Fit Model ", i, " of ", I.iter, " with ",
-                length(unique(label)), " clusters")
-        res <- meta.ME(P, N, K, W, tM, tS, label, B=B, tol=tol, 
+             length(unique(label)), " clusters")
+        }
+        res <- meta.ME(P, N, K, W, tM, tS, label, B=B, tol=tol,
                         bias=bias, alpha=alpha, method=EM.method)
+        
+        if( verbose ) {
+            message("meta-clustering (", i, "/", I.iter, ") => ", 
+            res@K, "/", length(unique(label(res))),
+            " clusters takes ", paste( (etm<-proc.time()) - ptm, collapse=",") )
+            ptm <- etm
+        }
+        else {
         message("=> results in  ", res@K, " clusters")
-        label <- res@label 
+        }
+        label <- res@label
         
         if( res@K == G ) break
         G <- res@K
@@ -228,7 +255,15 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
     res
 }
 
-
+## const delta cost (without information clustering assigment)
+.icl_delta_costs <- function(N,P,K, L) {
+## delta for L sub cluster if one cluster
+    res <- (L-1)*(P*(P+1)/2 + P)*log(N)*0.5
+    res <- res - lgamma((K+L-1)/2) + lgamma(K/2)
+    res <- res + (L-1) * lgamma(1/2)
+    res <- res + lgamma(N+(K+L-1)/2) - lgamma(N+K/2)
+    res
+}
 #meta.SubClustering <- function(
 #P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
 meta.SubClustering <- function(
@@ -239,16 +274,18 @@ verbose=FALSE
     
     label <- x@label
     K <- x@K
-    #K <- max(label)
-    
+    sum_T <- sum(W)
+    sum_T <- length(W)
+    ## maximal sub clustering count for one cluster
     J <- 8
-  
-    
+
     ## 2022.010.10: find a balance to introduce more clusters
     ##thres <- bias
-    icl_thres <- (P*(P+1)/2 + P)*log(sum(W))*0.5*thres
-    #message("ICL thres ",  format(icl_thres, digits=2) )
-    #cutoff <- min(0, icl_thres)
+    icl_thres <- (P*(P+1)/2 + P)*log(sum_T)*0.5*thres
+    if( verbose ) {
+        message("ICL thres ",  format(icl_thres, digits=2), " (", thres, ")" )
+    }
+  
     cutoff <- 0
     
     res_l <- vector("list", K)
@@ -259,6 +296,9 @@ verbose=FALSE
         
         inc <- which(label==k)
         
+        if(verbose) {
+            message("cluster ", k, " test with ", length(inc), " obs" )
+        }
         if( length(inc) > 1 ) {
             res <- meta.TestSubCluster(x,
                     P, length(inc), W[inc], M[inc,], S[inc,],
@@ -280,35 +320,37 @@ verbose=FALSE
         if( !is.null(res) && length(res) > 1 ) {
             
             icl <- rep(0, length(res))
-            for( l in seq_len(length(res)) )
-            icl[l] <- res[[l]]@ICL/res[[l]]@K
+            for( l in seq_len(length(res)) ) {
+                ## 2024.05.08:
+                ##icl[l] <- res[[l]]@ICL/res[[l]]@K
+                icLike <- res[[l]]@logLike[4]   ## delta icLike
+                iclSum <- res[[l]]@logLike[3]   ## delta iclSum  .icl_delta_costs
+                clCost <- .icl_delta_costs(sum_T, P, K, 2) ## res[[l]]@K)
+               
+                #icCost <- iclSum - .icl_delta_costs(sumW, P, K, res[[l]]@K)
+                icl[l] <- icLike + iclSum - bias*clCost
+                
+                if( verbose ) {
+                    message(k,"/", l,": ", round(icl[l]), "(L=", res[[l]]@K,
+                        " icl=",
+                        round(icLike), " sum=", round(iclSum), " costs=", round(clCost), ")")
+                }
+            }
             
             icl[1] <- cutoff
             
             icl_l[k] <- max(icl)
             l <- which.max(icl)
             tst_l[k] <- l
-            
-            
-            #if( verbose ) {
-            #    ccl <- rep(0, length(res))
-            #    for( l in seq_len(length(res)) )
-            #    ccl[l] <- res[[l]]@logLike[3]
-            #
-            #    message("TestSubCluster ", bias, ": ", k, " ", length(inc), ">>",
-            #        length(res), ">>", paste(round(icl), collapse=","), "<<", paste(round(ccl), collapse=",") )
-            #}
-           
-           
         }
         else {
+            if( verbose ) {
+                message("cluster ", k, " tested ", length(res))
+            }
+            
             icl_l[k] <- cutoff
             tst_l[k] <- 1
         }
-        
-        #if( verbose ) {
-        #    message("cluster", k, ": icl", icl_l[k], "(", tst_l[k], ")")
-        #}
         
     } ## for cluster k
     
@@ -325,14 +367,11 @@ verbose=FALSE
         l <- tst_l[k]
         
         if( is.null(res) ) {
-            if( verbose ) {
-                message(J, "/", sK, ": break with null at", k)
-            }
             break
         }
         
         if( res[[l]]@K > 1 && verbose ) {
-            message(J, "/", sK, ": cluster ", k, " has ", res[[l]]@K, 
+            message(J, "/", sK, ": cluster ", k, " (obs=", sum(label==k), ") has ", res[[l]]@K, 
                 " sub-clusters at ", l, ", ICL=", format(icl, digits=2), "<>",
                 format(icl_thres, digits=2))
         }
@@ -342,14 +381,11 @@ verbose=FALSE
         res <- res[[l]]
         
         if( icl <= cutoff ) {
-            if( verbose ) {
-                message("break at ", k, " ", icl, " ", cutoff)
-            }
             break
         }
         
         ## 2022.10.17: respect cluster costs
-        if( (res@K>1) && (icl>icl_thres) ) {
+        if( (res@K>1) ) { ## && (icl>icl_thres) ) {
             ins[[k]] <- res
         }
         
@@ -369,6 +405,11 @@ verbose=FALSE
         inc <- which(label==k)
         lnc <- (ins[[k]]@label==ins[[k]]@label[1])
         knc <- inc[lnc]
+        if( verbose ) {
+            message("label ", k, "(", ins[[k]]@K, "clusters): ", length(inc), ", ",
+            length(ins[[k]]@label),"+", max(label),
+            ", k=", ins[[k]]@label[1], "(#", sum(lnc), ")")
+        }
         label[label==k] <- ins[[k]]@label + max(label)
         label[knc] <- k
     }  #for cluster k
@@ -381,8 +422,7 @@ meta.TestSubCluster<-
 function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
         EM.method=2, HC.samples=2000)
 {
-#message("meta.TestSubCluster: ", "N=", N, " J=", J, 
-#           " dim=", paste(sep="", dim(M), collapes=","))
+
     if( J > N ) {
         warning("\t???", J, "sub >", N, "clusters")
         return (NULL)
@@ -429,8 +469,14 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
 # output BIC & ICL
     BIC <- obj$logLike[1]
     ICL <- 0
+    ## 3 = icLike + iclSum
     logLike <- obj$logLike[3]
-        
+    
+    ## 4 = icLike
+    icLike <- obj$logLike[4]
+    ## 3 =
+    iclSum <- obj$logLike[3] - obj$logLike[4]
+    obj$logLike[2] <- obj$logLike[3] <- obj$logLike[4] <- 0
         
 # output
     result[[1]] <- new("immunoClust", parameters=parameters,
@@ -473,8 +519,12 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
                                         M[samples.set,], S[samples.set,])
         }
         
-        for (k in 2:J) {
-                
+        
+        #for (k in 2:J) {
+        #for( j  in 2:J )
+        {
+            #k <- J+2-j
+            k <- J
             label <- rep(0, N)
                 
             label[samples.set] <- .clust.hclass(hcPairs, k)
@@ -487,7 +537,8 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
                         as.double(bias), as.double(alpha), as.integer(1))
 
             L <- obj$L
-
+            
+            
 # output obj$s to sigma
             sigma <- array(0, c(L, P, P))
             s <- matrix(obj$s, k, P * P, byrow=TRUE)
@@ -503,12 +554,23 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
             }
 # output BIC & ICL
             BIC <- obj$logLike[1]
-                ## 2022.10.10: .icl_delta ???
-            #ICL <- obj$logLike[3] - logLike
-            ICL <- obj$logLike[3] - logLike - .icl_delta(sumW, P, K, L)*bias
-                
+            ## 2022.10.10: .icl_delta ???
+            ## 2024.05.08:
+            ## delta icLike with icCost
+            ICL <- obj$logLike[2] - logLike
+            ##ICL <- obj$logLike[3] - logLike - .icl_delta_cor(sumW, P, K, L)*bias
+            
+            ## delta logLike
+            ## 3: icLike + iclSum => delta iclSum
+            ## 4: icLike
+            obj$logLike[3] <- obj$logLike[3] - obj$logLike[4] - iclSum
+            ## 4: icLike => delta icLike
+            obj$logLike[4] <- obj$logLike[4] - icLike
+          
+            ## message(k,"/", L,": ", round(obj$logLike[4]), ", ", round(obj$logLike[3]) )
+           
 # outp
-            result[[k]] <- new("immunoClust", parameters=parameters,
+            result[[2]] <- new("immunoClust", parameters=parameters,
                             K=L, N=N, P=P, w=obj$w, mu=mu, sigma=sigma,
                             label = obj$label,
                             logLike=obj$logLike, BIC=BIC, ICL=ICL)

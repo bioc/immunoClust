@@ -665,7 +665,7 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
 .icl_delta <- function(N,P,K, L) {
 ## delta for L sub cluster if one cluster
     res <- (L-1)*(P*(P+1)/2 + P)*log(N)*0.5
-    res <- res - (lgamma((K+L-1)/2) - lgamma(K/2))
+    res <- res - (lgamma((K+L-1)/2) - lgamma(K/2)) ## vorzeichenfehler !!!!
     res <- res + (L-1) * lgamma(1/2)
     res <- res + lgamma(N+(K+L-1)/2) - lgamma(N+K/2)
     res

@@ -77,7 +77,7 @@ extern "C" {
 	void metaHC(int* li, int* lj, double* crit, int* k, int* p, double* w, double* m, double* s)
 	{
 		mvn_dendro dendro(*k, *p, w, m, s);
-		dendro.hellinger(li, lj, crit);
+		dendro.hellinger_fast(li, lj, crit);
 	}
     
     
@@ -144,7 +144,7 @@ extern "C" {
 		SET_VECTOR_ELT(ret, 3, allocVector(REALSXP, k*p));	// out m
 		SET_VECTOR_ELT(ret, 4, allocVector(REALSXP, k*p*p));// out s
 		SET_VECTOR_ELT(ret, 5, allocVector(INTSXP, n));		// out label
-		SET_VECTOR_ELT(ret, 6, allocVector(REALSXP, 3));	// out logLike
+		SET_VECTOR_ELT(ret, 6, allocVector(REALSXP, 4));	// out logLike
 		SET_VECTOR_ELT(ret, 7, allocVector(INTSXP, k));		// out history
 		SET_VECTOR_ELT(ret, 8, allocVector(INTSXP, 1));		// out status
 		SET_VECTOR_ELT(ret, 9, allocVector(INTSXP, 1));		// out iteratioms
@@ -165,7 +165,7 @@ extern "C" {
                      SEXP label, SEXP max_iter, SEXP max_tol, SEXP method, 
                      SEXP bias, SEXP alpha, SEXP min_g)
 	{
-		int status = 0;
+		int status = 0, L = INTEGER(K)[0];
        
         int iterations = INTEGER(max_iter)[0];
         double tolerance = REAL(max_tol)[0];
@@ -188,6 +188,7 @@ extern "C" {
 				em.start(INTEGER(label), false);
 				status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);
 				break;
+            /*
             case 3:     // kl EM: no weights
                 em.start(INTEGER(label), false);
                 status = em.kl_maximize(iterations, tolerance);
@@ -196,13 +197,20 @@ extern "C" {
                 em.start(INTEGER(label), false);
                 status = em.kl_classify(iterations, tolerance, INTEGER(min_g)[0]);
                 break;
-            
+            */
             case 10:    // bc EM: weights
+            case 100:   // kann eigentlich weg, macht ja nichts anderes
 				em.start(INTEGER(label), true);
 				status = em.bc_maximize(iterations, tolerance);
 				break;
+            /*
+            case 100:    // bc EM: weights
+                em.start(INTEGER(label), true);
+                status = em.bc_maximize2(iterations, tolerance);
+                break;
+            */
 			case 20:	// bc EM-T: classification with weights
-				em.start(INTEGER(label), true);
+				L = em.start(INTEGER(label), true);
 				status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);
 				break;
           
@@ -210,7 +218,12 @@ extern "C" {
                 em.start(INTEGER(label), true);
                 status = em.bc_fixedN_classify(iterations, tolerance, INTEGER(min_g)[0]);
                 break;
-            
+                
+            case 200:    // bc EM-T: classification with weights
+                L = em.start(INTEGER(label), true);
+                status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);
+                break;
+            /*
             case 30:    // kl EM: weights
                 em.start(INTEGER(label), true);
                 status = em.kl_maximize(iterations, tolerance);
@@ -228,23 +241,41 @@ extern "C" {
 				em.start(INTEGER(label), false);
 				status = em.kl_minimize(iterations, tolerance);
 				break;
+             */
+            default:
+                em.start(INTEGER(label), false);
+                status = em.bc_maximize(iterations, tolerance);
+                break;
 		}
 		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
         
-      
+    
+        if( INTEGER(method)[0] == 200 )
+        INTEGER(VECTOR_ELT(ret,0))[0] = em.final2(INTEGER(VECTOR_ELT(ret,5)),
+                                                 REAL(VECTOR_ELT(ret,6)),
+                                                 INTEGER(VECTOR_ELT(ret,7)) );
+            
+        else
 		INTEGER(VECTOR_ELT(ret,0))[0] = em.final(INTEGER(VECTOR_ELT(ret,5)),
                                                  REAL(VECTOR_ELT(ret,6)), 
                                                  INTEGER(VECTOR_ELT(ret,7)) );
         
-        
+        const double* logLike = REAL(VECTOR_ELT(ret,6));
+        dbg::printf("EM[%d] (%d obs, %d cls, %d iter) => %d cluster (%.0lf|%.0lf)",
+                    INTEGER(method)[0], INTEGER(N)[0], L,
+                    iterations, INTEGER(VECTOR_ELT(ret,0))[0], logLike[3], logLike[2]-logLike[3]
+                    );
+                    
         Rf_unprotect(1);	// unprocted ret
                                                  
         return ret;
         
 	}
     
+
+
     // >> SON clustering
     SEXP call_SON_combineClustering(SEXP res_model, SEXP res_sample,
                                     SEXP map_cluster, SEXP use_cluster,
@@ -451,7 +482,7 @@ extern "C" {
     SEXP call_SON_normalize(SEXP res_model,
                             SEXP n, SEXP k, SEXP w, SEXP m, SEXP s,
                             SEXP alpha, SEXP scale_factor, SEXP scale_steps,
-                            SEXP meta_iter, SEXP meta_tol,
+                            SEXP meta_iter, SEXP meta_tol, // obsolete!!!
                             SEXP SON_cycles, SEXP SON_rlen, SEXP SON_deltas, SEXP SON_blurring
                             )
     {
@@ -490,21 +521,12 @@ extern "C" {
             int L = G;
             
             /*
-            int max_iteration = INTEGER(meta_iter)[0];
-            double max_tolerance = REAL(meta_tol)[0];
-            
-            if( max_iteration > 0 ) {
-                em_meta em(totK, P, G, W, M, S,
-                           z, gW, gM, gS,   // output
-                           0, REAL(alpha)[0] ); // BIAS not used in here
-                
-                memcpy(label, INTEGER(Rf_getAttrib(res_model, install("label"))), totK*sizeof(int));
-                memset(nLabel, 0, K[n]*sizeof(int));
-                
-                em.bc_maximize(max_iteration, max_tolerance);
-                double logLike[3];
-                L = em.final(label, logLike, 0);
-            }
+            int traceK[2];
+            traceK[1] = -1;
+            if( n == 23 )
+                traceK[0] = 71;
+            else
+                traceK[0] = -1;
             */
             
             meta_SON son(P, L, gW, gW, gM, gS,

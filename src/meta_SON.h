@@ -39,6 +39,7 @@ protected:
     const double*        gEvts; // components events: G
     const double*        gM;    // component mean: G x P
     const double*        gS;    // component sigma: G x P x P
+          double*        gSdet;  // logdet of gS: G
    
 
     const int           K;      // number of cell-clusters
@@ -46,6 +47,7 @@ protected:
     const double*       kEvts;  // cluster events: K
 	const double*		kM;	    // cluster mean: K x P
 	const double*		kS;	    // cluster sigma: K x P x P
+          double*       kSdet;  // logdet of kS: K
     double*             normedM;    // normed cluster: K x P
     
     const double    ALPHA;
@@ -94,13 +96,21 @@ public:
     int     scaleStep(double factor, int steps);
     
     //int     scaleModel(double factor, int steps);
-    
     double  bc_measure(const double* m1, const double* s1, const double* m2, const double* s2);
     double  bc_coeff(const double* m1, const double* s1, const double* m2, const double* s2);
-    double  bc_probability(const double* m1, const double* s1, const double* m2, const double* s2);
-    double  bc_prob(const double* m1, const double* s1, const double* m2, const double* s2);
+    //double  bc_probability(const double* m1, const double* s1, const double* m2, const double* s2);
+    //double  bc_prob(const double* m1, const double* s1, const double* m2, const double* s2);
+    
+  
 private:
-	
+    double  bc_measure2(const double* m1, const double* s1, double l1,
+                       const double* m2, const double* s2, double l2);
+    double  bc_coeff2(const double* m1, const double* s1, double l1,
+                     const double* m2, const double* s2, double l2);
+    double  bc_probability2(const double* m1, const double* s1, double l1,
+                           const double* m2, const double* s2, double l2);
+    double  bc_prob2(const double* m1, const double* s1, double det_1,
+                    const double* m2, const double* s2, double det_2);
     double  bc_diag_prob(const double* m1, const double* s1, const double* m2, const double* s2);
 	double	bc_diag_coeff(const double* m1, const double* s1, const double* m2, const double* s2);
     

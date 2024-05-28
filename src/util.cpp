@@ -119,8 +119,142 @@ namespace mat {
 		return status;
 		
 	}
-	
-	
+
+//
+// maybe faster
+// adapted from gsl
+int
+cholesky_decomp_L2 (const int P, double* A, double eps)
+{
+    
+    int i,j;
+    //int status = 0;
+    
+    /* Do the first 2 rows explicitly.  It is simple, and faster.  And
+     * one can return if the matrix has only 1 or 2 rows.
+     */
+    
+    for( j=0; j<P; ++j ) {
+        double* v = A+j*P+j; // +=P (i=j < P)
+        if( j> 0 ) {
+            double* w = A+j*P; // +=1 (k=0 < j)
+            double* M = A+j*P; // (i=j < P, k=0 < j)
+            
+            /// v += M*w^t
+            cblas_dgemv(CblasRowMajor, CblasNoTrans,
+                        P-j, j, -1.0, M, P, w, 1, 1.0, v, P);
+        }
+        double ajj = *(A+j*P+j);
+        if (ajj <= eps) //if (A_00 <= 0.0)
+        {
+            return 1;
+        }
+        
+        ajj = sqrt(ajj);
+        cblas_dscal(P-j, 1/ajj, v, P );
+    }
+    
+    
+    /* Now copy the transposed lower triangle to the upper triangle,
+     * the diagonal is common.
+     */
+    const double* l = A;
+    double* u = A;
+    for (i = 1; i < P; i++)
+    {
+        l += P;
+        u += 1;
+        cblas_dcopy(P-i, l, P, u, 1);
+        l += 1;
+        u += P;
+    }
+    
+    return 0;
+    
+}
+
+
+int
+_cholesky_decomp_L3 (const int P, double* A, int lda, double eps)
+{
+    
+    
+    if( P == 0 ) return 0;
+    
+    if( P == 1 ) {
+        double A_00 = *A;
+        
+        if (A_00 <= eps) return 1;
+        
+        *A = sqrt(A_00);
+        
+        return 0;
+    }
+    
+    int P1 = P/2;
+    int P2 = P-P1;
+  
+    /*
+     A =    A11 (=P1xP1)   A12 (=P1xP2)
+            A21 (=P2xP1)   A22 (=P2xP2)
+     */
+  
+    
+    // A11 => L11
+    int status = _cholesky_decomp_L3(P1, A, lda, eps );
+    if( status ) return status;
+    
+    
+    // update and scale A21: L21 = A21 * L11^{-1}
+    // CALL DTRSM( 'R', 'L', 'T', 'N', N2, N1, ONE,
+    // $                  A( 1, 1 ), LDA, A( N1+1, 1 ), LDA )
+    
+    cblas_dtrsm(CblasRowMajor, CblasRight, CblasLower, CblasTrans, CblasNonUnit,
+                P2, P1, 1.0, A, lda, A+P1*lda, lda );
+    /*
+     Update and factor A22
+     A22 -= L21 L21^T
+     */
+    
+    //CALL DSYRK( UPLO, 'N', N2, N1, -ONE, A( N1+1, 1 ), LDA,
+    //                       ONE, A( N1+1, N1+1 ), LDA )
+    cblas_dsyrk(CblasRowMajor, CblasLower, CblasNoTrans, P2, P1,
+                   -1.0, A+P1*lda, lda, 1.0, A+P1*lda+P1, lda);
+    
+    //CALL DPOTRF2( UPLO, N2, A( N1+1, N1+1 ), LDA, IINFO )
+    
+    status = _cholesky_decomp_L3(P2, A+P1*lda+P1, lda, eps);
+    
+    return status;
+    
+}
+int
+cholesky_decomp_L3 (const int P, double* A, double eps)
+{
+    int status = _cholesky_decomp_L3(P, A, P, eps);
+    
+    if( status ) return status;
+    
+    /* Now copy the transposed lower triangle to the upper triangle,
+     * the diagonal is common.
+     */
+    const double* l = A;
+    double* u = A;
+    for (int i = 1; i < P; i++)
+    {
+        l += P;
+        u += 1;
+        cblas_dcopy(P-i, l, P, u, 1);
+        l += 1;
+        u += P;
+    }
+    
+    return 0;
+    
+}
+// maybe faster
+//
+
 	////////////////////////////////////////////////////////////////////////////////
 	//  int Doolittle_LU_Decomposition(double *A, int n)                          //
 	//                                                                            //

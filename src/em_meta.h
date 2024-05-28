@@ -33,8 +33,6 @@ protected:
 	const int	N;	// number of cell-clusters
 	const int	P;	// number of parameter
     
-//	const int*	K;	// number of cluster in experiments: N
-//	int			totK;	// total number of cluster = sum K[i]
     const int	G;		// number of components
 
     int         fixedN; // number of fixed adressed clusters
@@ -42,6 +40,7 @@ protected:
 	const double*		W;	// cluster weights: N
 	const double*		M;	// cluster mean: N x P
 	const double*		S;	// cluster sigma: N x P x P
+    double*             Sdet;  // log det of S:  N
 	
 	const double*		T;	// cluster weights
 	double				T_sum;
@@ -57,8 +56,9 @@ protected:
 	double*		gS;		// component sigma:G x P x P (=co-variance matrix
 	double*		gP;		// component precision: G x P x P (=precision=sigma^{-1} during process
 	double*		gL;		// component cholewsky decomposition of gP: G x P x P (=sigma^{-1/2}
-
-	int*		C;	// classification: N 
+    double*     gSdet;  // log det og gS
+    
+	int*		C;	// classification: N
 	
 	double*		Z_sum;
 	
@@ -80,28 +80,29 @@ public:
 	
 	int		start(int* label, bool weighted);
 	int		final(int* label, double* loglike, int* history);
+    int     final2(int* label, double* loglike, int* history);
     
     int     bc_maximize(int& max_iteration, double& max_tolerance);
+    //int     bc_maximize2(int& max_iteration, double& max_tolerance);
 	int		bc_classify(int& max_iteration, double& max_tolerance, int min_g);
+    //int     bc_classify_t(int& max_iteration, double& max_tolerance, int min_g);
     int     bc_fixedN_classify(int& max_iteration, double& max_tolerance, int fixed_n);
     
-	
-    int     kl_maximize(int& max_iteration, double& max_tolerance);
-    int     kl_classify(int& max_iteration, double& max_tolerance, int min_g);
-    int     kl_fixedN_classify(int& max_iteration, double& max_tolerance, int fixed_n);
-    
-    int     kl_minimize(int& max_iteration, double& max_tolerance);
 
 protected:
 	int		_iterate(int& max_iteration, double& max_tolerance, em_meta::E_STEP e_step);
-	int		_iterate(int& max_iteration, double& max_tolerance, em_meta::E_STEP e_step, em_meta::E_STEP et_step);
-
+    int		_iterate(int& max_iteration, double& max_tolerance, em_meta::E_STEP e_step, em_meta::E_STEP et_step);
+    //int     _iterate_t(int& max_iteration, double& max_tolerance, em_meta::E_STEP e_step, em_meta::E_STEP et_step);
+    int     _iterate_0(int& max_iteration, double& max_tolerance, em_meta::E_STEP e_step, em_meta::E_STEP et_step);
+    
 	int		e_init();
 	int		m_init();
 	
 	// m_step
 	int		m_step();
 	int		m_step_sigma_g(int j);
+    //int     m_step2();
+    //int     m_step2_sigma_g(int j);
 
     // e_step's
     double  e_step();
@@ -119,13 +120,6 @@ protected:
     double      bc_fixedN_e_step(); // Bhattacharryya-coefficient-maximization
     double      bc_fixedN_et_step(); // Bhattacharryya-coefficient with test calculation
 
-    double      kl_min();    // KL-minimization
-    /*
-    double      kl_e_step();
-    double      kl_et_step();
-    double      kl_fixedN_e_step();
-    double      kl_fixedN_et_step();
-     */
 private:
 	
 	double	burg_divergence(int i, int j);
@@ -134,17 +128,9 @@ private:
 	double	bc_probability(int i, int j);
 	double	bc_diag(int i, int j);
 	double	bc_measure(int i, int j);
-    
-    double  kl_probability(int i, int j);
-    double  kl_diag(int i, int j);
-    double  kl_measure(int i, int j);
-    
-    /*
-    // calculate bhattacharryya coefficient and probability
-    int    bc_probability2(int i, int j, double& bc, double& bp);
-    int    bc_diag2(int i, int j, double& bc, double& bp);
-    int    bc_measure2(int i, int j, double& bc, double& bp);
-    */
+    double  bc_probability_fast(int i, int j);
+    double  bc_measure_fast(int i, int j);
+   
 	double	logdet(const double* a, int& status);
 	
 };

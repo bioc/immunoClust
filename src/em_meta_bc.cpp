@@ -138,6 +138,63 @@ em_meta::bc_measure(int i, int j)
 }
 // em_meta::bc_measure
 
+// em_meta::bc_measure_fast
+double
+em_meta::bc_probability_fast(int i, int j)
+{
+    int status;
+    // gS = sigma(component), S = sigma(cluster)
+    const double wi = 0.5;
+    const double wj = 0.5;
+    double det_i =  Sdet[i]; // logdet(S+i*P*P, status);  // =0.5*logdet_invS for w1=0.5
+    double det_j = gSdet[j]; //logdet(gS+j*P*P, status); // =0.5*logdet_invS for w2=0.5
+ 
+    if( fpclassify( det_i ) == FP_NAN || fpclassify( det_i ) == FP_NAN )
+        return bc_diag(i,j);
+    
+    //
+    mat::sum(P, tmpS, S+i*P*P, gS+j*P*P, wi, wj);
+    // covariance matrix -> precision matrix
+    status = mat::cholesky_decomp(P, tmpS);
+    if( status ) {
+        return bc_diag(i,j);
+    }
+    mat::invert(P, tmpS, tmpPxP);
+    double det = logdet(tmpS, status);
+    if( status ) {
+        return bc_diag(i,j);
+    }
+    status = mat::cholesky_decomp(P, tmpS);
+    if( status ) {
+        return bc_diag(i,j);
+    }
+    double logD = det + wi*det_i + wj*det_j;
+    logD -= wi*wj*sqr(mvn::mahalanobis(P, M+i*P, gM+j*P, tmpS, tmpP));
+    
+    // normalization factor
+    logD -= 0.25*det_j;
+    
+    return exp(0.5*logD);
+    
+}
+double
+em_meta::bc_measure_fast(int i, int j)
+{
+    if( ALPHA == 0 ) {
+        return bc_diag(i,j);
+    }
+    if( ALPHA < 1.0 ) {
+        
+        double a = bc_probability_fast(i,j);
+        double b = bc_diag(i,j);
+        
+        return ALPHA*a + (1.0-ALPHA)*b;
+    }
+    
+    return bc_probability_fast(i,j);
+}
+// em_meta::bc_measure_fast
+
 /*
  bc_e_step:
  e_step for bhattacharrya probability maximization
@@ -173,8 +230,11 @@ em_meta::bc_e_step()
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
                 if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
-                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                     tmpPDF = 0.0;
+                    
+                    if( pc != FP_SUBNORMAL )
+                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+                    
                 }
                 
                 tmpLike = gw*tmpPDF;
@@ -250,8 +310,10 @@ em_meta::bc_et_step()
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
                 if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
-                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                     tmpPDF = 0.0;
+                    
+                    if( pc != FP_SUBNORMAL )
+                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                 }
                 
                 tmpLike = gw*tmpPDF;
@@ -350,8 +412,11 @@ em_meta::bc_fixedN_e_step()
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
                 if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
-                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                     tmpPDF = 0.0;
+                    
+                    if( pc != FP_SUBNORMAL )
+                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+                    
                 }
                 
                 tmpLike = gw*tmpPDF;
@@ -398,8 +463,11 @@ em_meta::bc_fixedN_e_step()
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
                 if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
-                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                     tmpPDF = 0.0;
+                    
+                    if( pc != FP_SUBNORMAL )
+                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+                    
                 }
                 
                 tmpLike = gw*tmpPDF;
@@ -471,8 +539,11 @@ em_meta::bc_fixedN_et_step()
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
                 if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
-                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                     tmpPDF = 0.0;
+                    
+                    if( pc != FP_SUBNORMAL )
+                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+                    
                 }
                 
                 tmpLike = gw*tmpPDF;
@@ -536,8 +607,11 @@ em_meta::bc_fixedN_et_step()
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
                 if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
-                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                     tmpPDF = 0.0;
+                    
+                    if( pc != FP_SUBNORMAL )
+                    dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+                    
                 }
                 
                 tmpLike = gw*tmpPDF;
@@ -604,10 +678,17 @@ em_meta::bc_fixedN_et_step()
 int
 em_meta::bc_maximize(int& iterations, double& tolerance)
 {
-    //dbg::printf("EM-BC maximization: %d, %g", iterations, tolerance );
+    dbg::printf("EM-BC maximization: %d, %g", iterations, tolerance );
     return _iterate(iterations, tolerance, &em_meta::bc_e_step);
 }
-
+/*
+int
+em_meta::bc_maximize2(int& iterations, double& tolerance)
+{
+    dbg::printf("EM-BC2 maximization: %d, %g", iterations, tolerance );
+    return _iterate2(iterations, tolerance, &em_meta::bc_e_step);
+}
+*/
 int
 em_meta::bc_classify(int& iterations, double& tolerance, int min_g)
 {
@@ -615,130 +696,22 @@ em_meta::bc_classify(int& iterations, double& tolerance, int min_g)
     //dbg::printf("EM-BC classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );
     return _iterate(iterations, tolerance, &em_meta::bc_e_step, &em_meta::bc_et_step);
 }
-
+/*
+int
+em_meta::bc_classify_t(int& iterations, double& tolerance, int min_g)
+{
+    minG = min_g;
+    //dbg::printf("EM-BC classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );
+    return _iterate_t(iterations, tolerance, &em_meta::bc_e_step, &em_meta::bc_et_step);
+}
+*/
 int
 em_meta::bc_fixedN_classify(int& iterations, double& tolerance, int fixed_n)
 {
     fixedN = fixed_n;
     minG = fixed_n;
     //dbg::printf("EM-BCoeff classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );
-    return _iterate(iterations, tolerance, &em_meta::bc_fixedN_e_step, &em_meta::bc_fixedN_et_step);
+    return _iterate_0(iterations, tolerance, &em_meta::bc_fixedN_e_step, &em_meta::bc_fixedN_et_step);
 }
 
 
-
-
-/*
- bhattacharrya2:
- bhattacharrya coefficient & probability for cluster i and component j
- 
-int
-em_meta::bc_probability2(int i, int j, double& coef, double& prob)
-{
-    int status;
-    // gS = sigma(component), S = sigma(cluster)
-    const double wi = 0.5;
-    const double wj = 0.5;
-    double det_i = logdet(S+i*P*P, status);  // =0.5*logdet_invS for w1=0.5
-    if( status ) {
-        return bc_diag2(i,j, coef, prob);
-    }
-    double det_j = logdet(gS+j*P*P, status); // =0.5*logdet_invS for w2=0.5
-    if( status ) {
-        return bc_diag2(i,j, coef, prob);
-    }
-    
-    //
-    mat::sum(P, tmpS, S+i*P*P, gS+j*P*P, wi, wj);
-    // covariance matrix -> precision matrix
-    status = mat::cholesky_decomp(P, tmpS);
-    if( status ) {
-        return bc_diag2(i,j, coef, prob);
-    }
-    mat::invert(P, tmpS, tmpPxP);
-    double det = logdet(tmpS, status);
-    if( status ) {
-        return bc_diag2(i,j, coef, prob);
-    }
-    status = mat::cholesky_decomp(P, tmpS);
-    if( status ) {
-        return bc_diag2(i,j, coef, prob);
-    }
-    double logD = det + wi*det_i + wj*det_j;
-    logD -= wi*wj*sqr(mvn::mahalanobis(P, M+i*P, gM+j*P, tmpS, tmpP));
-    
-    coef = exp(0.5*logD);
-    // normalization factor
-    logD -= 0.25*det_j;
-    prob = exp(0.5*logD);
-    return 0;
-}
-// em_meta::bc_probability2
- */
-/*
- bc_diag2:
- bhattacharrya coefficient ignoring co-variance
- 
-int
-em_meta::bc_diag2(int i, int j, double& coef, double& prob)
-{
-    int p;
-    // gS = sigma(component), S = sigma(cluster)
-    
-    const double* gs = gS + j*P*P;
-    const double* cs = S + i*P*P;
-    
-    double det_i = 0;
-    double det_j = 0;
-    
-    cblas_dcopy(P*P, &zero, 0, tmpS, 1);
-    for( p=0; p<P; ++p ) {
-        // log det
-        det_i += log(*(cs+p*P+p));
-        det_j += log(*(gs+p*P+p));
-        // sum
-        *(tmpS+p*P+p) = 0.5*(*(cs+p*P+p) + *(gs+p*P+p));
-    }
-    //
-    // covariance matrix -> precision matrix
-    double det = 0;
-    for( p=0; p<P; ++p ) {
-        // invert
-        *(tmpS+p*P+p) = 1.0/(*(tmpS+p*P+p));
-        // log det
-        det += log(*(tmpS+p*P+p));
-        // sqrt
-        *(tmpS+p*P+p) = sqrt(*(tmpS+p*P+p));
-    }
-    double logD = det + 0.5*det_i + 0.5*det_j;
-    logD -= 0.25*sqr(mvn::mahalanobis(P, M+i*P, gM+j*P, tmpS, tmpP));
-    coef = exp(0.5*logD);
-    // normalization factor
-    logD -= 0.25*det_j;
-    prob = exp(0.5*logD);
-    return 0;
-}
-// em_meta::bc_diag2
-
-
-int
-em_meta::bc_measure2(int i, int j, double& coef, double& prob)
-{
-    if( ALPHA == 0 ) {
-        return bc_diag2(i,j, coef, prob);
-    }
-    if( ALPHA < 1.0 ) {
-        //return ALPHA*bhattacharryya(i,j) + (1.0-ALPHA)*bc_diag(i,j);
-        double a_coef, a_prob, b_coef, b_prob;
-        bhattacharryya2(i,j, a_coef, a_prob);
-        bc_diag2(i,j, b_coef, b_prob);
-        
-        coef = ALPHA*a_coef + (1.0-ALPHA)*b_coef;
-        prob = ALPHA*a_prob + (1.0-ALPHA)*b_prob;
-        return 0;
-    }
-    
-    return bhattacharryya2(i,j, coef, prob);
-}
-// em_meta::bc_measure2
-*/

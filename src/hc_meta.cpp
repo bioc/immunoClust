@@ -22,7 +22,7 @@
  * mvn_dendro
  */
 mvn_dendro::mvn_dendro(int k, int p, double* w, double* m, double* s):
-K(k), P(p), W(w), M(m), S(s)
+K(k), P(p), W(w), M(m), S(s), zero(0.0)
 {
 	tmpS = new double[P*P];
 	tmpPxP = new double[P*P];
@@ -33,7 +33,8 @@ K(k), P(p), W(w), M(m), S(s)
 		CLS[k] = k+1;
 	}
 	D = new double[K*(K-1)/2];
-	
+    
+    //logDet = 0;
 }
 
 mvn_dendro::~mvn_dendro()
@@ -41,8 +42,94 @@ mvn_dendro::~mvn_dendro()
 	delete[] tmpS;
 	delete[] tmpPxP;
 	delete[] tmpP;
+    //delete[] logDet;
 	delete[] D;
 	delete[] CLS;	
+}
+/*
+void
+mvn_dendro::init_logdet()
+{
+    logDet = new double[K];
+    
+    const double* s = S;
+    double* l = logDet;
+    
+    for(int k=0; k<K;++k) {
+        int status = 0;
+        // calc logdet(S_j^-1)
+        double detS;
+        
+        cblas_dcopy(P*P, s, 1, tmpS, 1);
+        status = mat::cholesky_decomp(P, tmpS);
+        if( status ) {
+            //dbg::printf("meta-HC logdet %d, status=%d", j, diag_j);
+            // use only diagonal elements
+            detS = 0.0;
+            for( int p=0; p<P; ++p ) {
+                detS += log(*(s+p*P+p));
+            }
+            detS *= -0.5;
+        }
+        else {
+            detS = -0.5 * mat::logdet(P, tmpS);
+        }
+        *l++ = detS;
+        s += P*P;
+    }
+}
+*/
+void
+mvn_dendro::init_D()
+{
+    int i, j;
+    //const double zero = 0.0;
+    const double *M_i, *M_j, *S_i, *S_j;
+    double detS, detS_i, detS_j, logD;
+    int status = 0;
+    double* dij;
+    dij = D;
+    for(j=1; j<K;++j) {
+        S_j = S+j*P*P;
+        M_j = M+j*P;
+        
+        // calc logdet(S_j^-1)
+        detS_j = logdet_S(S_j, status);
+
+        for( i=0; i<j;++i) {
+            S_i = S+i*P*P;
+            M_i = M+i*P;
+
+            // calc logdet(S_i^-1)
+            detS_i = logdet_S(S_i, status);
+            
+            // calc
+            mat::sum(P, tmpS, S_i, S_j, 0.5, 0.5);
+            detS = logdet_invS(tmpS, status);
+            if( status ) {
+                //dbg::printf("meta-HC: logdet <%d,%d>: status=%d", i, j, status);
+                // use only diagonal elements
+                cblas_dcopy(P*P, &zero, 0, tmpS, 1);
+                detS = 0.0;
+                for( int p=0; p<P; ++p ) {
+                    // invert
+                    *(tmpS+p*P+p) = 1.0/(*(S_j+p*P+p) + *(S_i+p*P+p));
+                    // log det
+                    detS += log(*(tmpS+p*P+p));
+                    // sqrt
+                    *(tmpS+p*P+p) = sqrt(*(tmpS+p*P+p));
+                }
+                    
+            }
+            // remember tmpS in now inverted
+            
+            logD = detS - (detS_i+detS_j);
+            logD -= 0.25*gsl_pow_2(mvn::mahalanobis(P, M_i, M_j, tmpS, tmpP));
+                        
+            *dij++ = 1. - exp(0.5*logD);
+            
+        }
+    }
 }
 
 void
@@ -81,6 +168,7 @@ mvn_dendro::swap_nodes(int k, int l)
 		cblas_dswap(P, M+l*P, 1, M+k*P, 1);
 		// swap S
 		cblas_dswap(P*P, S+l*P*P, 1, S+k*P*P, 1);
+        
 		// swap CLS
 		c = CLS[l];
 		CLS[l] = CLS[k];
@@ -94,7 +182,7 @@ mvn_dendro::joined_ij(int i, int j, double* M_ij, double* S_ij) const
 {
 	int p, q;
 	
-	const double zero = 0.0;
+	//const double zero = 0.0;
 	
 	double W_i=W[i], W_j=W[j];
 	
@@ -137,10 +225,100 @@ mvn_dendro::join_nodes(int i, int j)
 	
 }
 
-double
-mvn_dendro::logdet_invS(const double* S, int& status)
+void
+mvn_dendro::update_D(int oi, int oj)
 {
-	if( S != tmpS ) {
+    int i, j, /*status_i, status_j,*/ status;
+    const double *M_i, *M_j, *S_i, *S_j;
+    double detS, detS_i, detS_j, logD;
+    double* dij;
+    
+    // update D<<oi,oj>,k> -> D<oi,k>
+    S_j = S+oi*P*P;
+    M_j = M+oi*P;
+    //W_j = W[oi];
+    //W_j = 0.5;
+    
+    detS_j = logdet_S(S_j, status);
+    
+    dij = D + (oi*(oi-1))/2;    // = d<0,oi>
+    for(i=0; i<oi; ++i) {
+        S_i = S+i*P*P;
+        M_i = M+i*P;
+        //W_i = W[i];
+        // W_i = 0.5;
+        // w = W_i + W_j;
+        detS_i = logdet_S(S_i, status);
+       
+        mat::sum(P, tmpS, S_i, S_j, 0.5, 0.5);
+        detS = logdet_invS(tmpS, status);
+        if( status ) {
+            //dbg::printf("meta-HC logdet <%d,%d>: status=%d", i, oi, status);
+            // use only diagonal elements
+            cblas_dcopy(P*P, &zero, 0, tmpS, 1);
+            detS = 0.0;
+            for( int p=0; p<P; ++p ) {
+                // invert
+                *(tmpS+p*P+p) = 1.0/(*(S_j+p*P+p) + *(S_i+p*P+p));
+                // log det
+                detS += log(*(tmpS+p*P+p));
+                // sqrt
+                *(tmpS+p*P+p) = sqrt(*(tmpS+p*P+p));
+            }
+        }
+        
+        // tmpS is inverted and cholesky decomposed now
+        
+        logD = detS - (detS_i+detS_j);
+        logD -= 0.25 * gsl_pow_2(mvn::mahalanobis(P, M_i, M_j, tmpS, tmpP));
+        
+        *dij = 1. - exp(0.5*logD);
+        ++dij;
+    }
+    S_i = S_j;
+    M_i = M_j;
+    //W_i = W_j;
+    detS_i = detS_j;
+    dij += oi;
+    for(j=oi+1; j<oj; ++j) {
+        
+        S_j = S+j*P*P;
+        M_j = M+j*P;
+
+        detS_j = logdet_S(S_j, status);
+        
+        mat::sum(P, tmpS, S_i, S_j, 0.5, 0.5);
+        detS = logdet_invS(tmpS, status);
+        if( status ) {
+            //dbg::printf("meta-HC logdet <%d,%d>: status=%d", oi, j, status);
+            // use only diagonal elements
+            cblas_dcopy(P*P, &zero, 0, tmpS, 1);
+            detS = 0.0;
+            for( int p=0; p<P; ++p ) {
+                // invert
+                *(tmpS+p*P+p) = 1.0/(*(S_j+p*P+p) + *(S_i+p*P+p));
+                // log det
+                detS += log(*(tmpS+p*P+p));
+                // sqrt
+                *(tmpS+p*P+p) = sqrt(*(tmpS+p*P+p));
+            }
+            
+        }
+        
+        // tmpS is inverted and cholesky decomposed now
+        
+        logD = detS - (detS_i+detS_j);
+        logD -= 0.25 * gsl_pow_2(mvn::mahalanobis(P, M_i, M_j, tmpS, tmpP));
+        
+        *dij = 1. - exp(0.5*logD);
+        dij += j;
+    }
+}
+
+double
+mvn_dendro::logdet_invS(const double* s, int& status)
+{
+	if( s != tmpS ) {
 		cblas_dcopy(P*P, S, 1, tmpS, 1);
 	}
 	status = mat::cholesky_decomp(P, tmpS);
@@ -161,6 +339,26 @@ mvn_dendro::logdet_invS(const double* S, int& status)
 	}
  
 	return mat::logdet(P,tmpS);
+}
+
+double
+mvn_dendro::logdet_S(const double* s, int& status)
+{
+    cblas_dcopy(P*P, s, 1, tmpS, 1);
+    status = mat::cholesky_decomp(P, tmpS);
+    double detS = 0.0;
+    if( status ) {
+        //dbg::printf("meta-HC logdet %d, status=%d", j, diag_j);
+        // use only diagonal elements
+        for( int p=0; p<P; ++p ) {
+            detS += log(*(s+p*P+p));
+        }
+        detS *= -0.5;
+    }
+    else {
+        detS = -0.5 * mat::logdet(P, tmpS);
+    }
+    return detS;
 }
 
 void
@@ -188,7 +386,7 @@ mvn_dendro::hellinger(int* li, int* lj, double* crit)
 	
 	int i, j, k, l, oi, oj; //, cls;
 	
-    const double zero = 0.0;
+    //const double zero = 0.0;
 	const double *M_i, *M_j, *S_i, *S_j;
 		
 	double detS, detS_i, detS_j, logD, od;
@@ -422,6 +620,78 @@ mvn_dendro::hellinger(int* li, int* lj, double* crit)
 		
 	return 0;
 	
+}
+
+
+int
+mvn_dendro::hellinger_fast(int* li, int* lj, double* crit)
+{
+    
+    int i, j, k, l, oi, oj; //, cls;
+    
+    //const double zero = 0.0;
+    //const double *M_i, *M_j, *S_i, *S_j;
+    
+    double* dij;
+    double od;
+    //int status = 0;
+    
+    // init D
+    // dbg::printf("init D");
+    init_D();
+   
+    if( K<=1 ) {
+        return 0;
+    }
+    else
+    if( K==2 ) {
+        *li = CLS[0];
+        *lj = CLS[1];
+        *crit = *D;
+        return 0;
+    }
+    
+    //dbg::printf("join D");
+    // do cluster
+    
+    for(l=K-1, k=0; l>0; --l, ++k) {
+        // find minimum
+        dij = D;
+        od = *dij;
+        oi = 0;
+        oj = 1;
+        for(j=1; j<l+1; ++j) {
+            for(i=0; i<j; ++i) {
+                if( *dij < od ) {
+                    oi = i;
+                    oj = j;
+                    od = *dij;
+                }
+                ++dij;
+            }
+        }
+        // link oi,oj
+        li[k] = CLS[oi];
+        lj[k] = CLS[oj];
+        crit[k] = od;
+        
+        CLS[oi] = -(k+1);
+        
+        swap_nodes(oj,l);
+
+        oj = l;
+        
+        // build <oi,oj> -> oi
+        join_nodes(oi, oj);
+                
+        // update D<<oi,oj>,k> -> D<oi,k>
+        update_D(oi, oj);
+        
+        
+    }
+        
+    return 0;
+    
 }
 
 int

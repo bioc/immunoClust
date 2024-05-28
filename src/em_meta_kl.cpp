@@ -18,6 +18,9 @@
 
 using std::fpclassify;
 
+/*
+ 
+ 
 // kl_probability
 double
 em_meta::kl_probability(int i, int j)
@@ -101,21 +104,7 @@ em_meta::kl_measure(int i, int j)
         double a = kl_probability(i,j);
         double b = kl_diag(i,j);
         
-        /*
-        int pc = fpclassify( a );
-        if( pc != FP_NORMAL && pc != FP_ZERO && pc != FP_SUBNORMAL) {
-            dbg::printf("%d, %d: NaN (%d) in prob (%.4lf)", j, i, pc, a);
-           
-        }
-        else {
-            dbg::printf("%d, %d: (%.6lf", a);
-        }
-        pc = fpclassify( b );
-        if( pc != FP_NORMAL && pc != FP_ZERO && pc != FP_SUBNORMAL) {
-            dbg::printf("%d, %d: NaN (%d) in diag (%.4lf)", j, i, pc, b);
-            
-        }
-        */
+     
         
         return ALPHA*a + (1.0-ALPHA)*b;
     }
@@ -124,19 +113,18 @@ em_meta::kl_measure(int i, int j)
 }
 // em_meta::kl_measure
 
-/*
- kl_min:
- e-step for KL minimization
- */
+
+// kl_min:
+// e-step for KL minimization
 double
 em_meta::kl_min()
 {
-    int i, /*k,*/ j;
+    int i,  j;
     
     double obLike = 0;
     
     
-    /*    Initialize Z_sum elements to zero */
+    //    Initialize Z_sum elements to zero
     cblas_dcopy(G, &zero, 0, Z_sum, 1);
     
     double* z = Z;
@@ -233,4 +221,4 @@ em_meta::kl_fixedN_classify(int& iterations, double& tolerance, int fixed_n)
     //dbg::printf("EM-BCoeff classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );
     return _iterate(iterations, tolerance, &em_meta::fixedN_e_step, &em_meta::fixedN_et_step);
 }
-
+*/

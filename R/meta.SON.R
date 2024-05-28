@@ -1,4 +1,40 @@
 
+meta.SON.preclustering <- function(
+exp, par.subset=c(), meta.iter=5, tol=1e-3, meta.bias=1,
+meta.alpha=.5, HC.samples= 500, verbose=FALSE
+)
+{
+    dat <- meta.exprs(exp, sub=par.subset)
+    
+    res <- meta.Clustering(dat$P, dat$N, dat$K,
+                        dat$clsEvents, dat$M, dat$S,
+                        I.iter=meta.iter, B=10, tol=tol,
+                        bias=meta.bias, sub.thres=meta.bias, alpha=meta.alpha,
+                        HC.samples=HC.samples,
+                        verbose=verbose)
+
+    
+    attr(res, "desc") <- dat$desc
+    if( is.null(par.subset) )
+        par.subset <- seq_len(npar(res))
+    attr(res, "trans.a") <- apply( vapply(exp,function(x) x@trans.a[par.subset],
+                                rep(0.01,npar(res))), 1, mean)
+    attr(res, "trans.b") <- apply( vapply(exp,function(x) x@trans.b[par.subset],
+                                rep(0.0,npar(res))), 1, mean)
+    attr(res, "limits") <- attr(exp[[1]], "limits")[,par.subset]
+
+    meta <- list("dat.scatter"=NULL, "res.scatter"=NULL,
+                    "dat.clusters"=dat, "res.clusters"=res)
+    meta$gating <- list("clusters"=seq_len(res@K), "childs"=c(),
+                    "desc"="all", "partition"=TRUE)
+
+    
+    meta$gating$pscales <- Default_Scales(attr(res, "trans.a"),
+                                        attr(res, "limits"))
+    
+    class(meta) <- "immunoMeta"
+    meta
+}
 
 ##
 # meta.SON.clustering
@@ -7,7 +43,7 @@
 meta.SON.clustering <- function(
 meta,
 cycles=6, alpha=0.5, scale.factor=2, scale.steps=0,
-meta.iter=2, meta.bias=0.3, meta.thres=0.1, meta.tol=1e-5,
+meta.iter=1, meta.bias=0.3, meta.thres=meta.bias, meta.tol=1e-5,
 SON.cycles=1, SON.rlen=100, SON.deltas=c(1/SON.rlen,1/SON.rlen),
 SON.blurring=c(2,0.1),
 verbose=FALSE
@@ -32,8 +68,8 @@ verbose=FALSE
         obj <- .Call("immunoC_SON_normalize",
             nres, as.integer(dat$N), as.integer(dat$K),
             as.double(dat$clsEvents), 
-            ##as.double(t(dat$M)),
-            as.double(t(nM)),
+            as.double(t(dat$M)),
+            ##as.double(t(nM)),
             as.double(t(dat$S)),
             as.double(alpha), as.double(scale.factor), as.integer(scale.steps),
             as.integer(sub.iter), as.double(meta.tol),
@@ -53,7 +89,9 @@ verbose=FALSE
         s <- e
         nres <- meta.Clustering(dat$P, dat$N, dat$K, dat$clsEvents, nM, dat$S,
             label=nres@label, I.iter=meta.iter, tol=meta.tol,
-            bias=meta.bias, sub.thres=meta.thres, alpha=alpha, norm.method=0,
+            bias=meta.bias, sub.thres=meta.thres, alpha=alpha,
+            EM.method=200,
+            ## HC.samples?
             verbose=verbose)
         
         e <- strptime(date(), "%a %b %d %H:%M:%S %Y")
@@ -62,7 +100,7 @@ verbose=FALSE
         message("\ttakes ", format(difftime(e,s,units="min")), "\n" )
     }
     ## 2024.04.17: will man das so?
-    dat$M <- nM
+    dat$nrm.M <- nM
     attr(nres,"trans.a") <- attr(res, "trans.a")
     attr(nres,"trans.b") <- attr(res, "trans.b")
     attr(nres,"limits") <- attr(res, "limits")
@@ -71,6 +109,7 @@ verbose=FALSE
     ##ret$dat.clusters$nrm.M <- nM
     parameters(ret) <- parameters(meta)
     prop(ret,"pscales",c()) <- prop(meta,"pscales",c())
+    attr(res,"SON.call") <- match.call()
     
     ret
     
@@ -127,3 +166,47 @@ traceG=c(), traceK=c())
     co_res
 }
 
+meta.SON.normalize <- function(
+meta,
+alpha=0.5, scale.factor=2, scale.steps=0,
+SON.cycles=1, SON.rlen=100, SON.deltas=c(1/SON.rlen,1/SON.rlen),
+SON.blurring=c(2,0.1),
+verbose=FALSE
+)
+{
+    dat <- meta$dat.clusters
+    res <- meta$res.clusters
+    ndat <- dat
+    nres <- res
+    
+    nM <- dat$M
+    sub.iter <- 0
+    
+    #for( cycle in seq_len(cycles) ) {
+       
+        ## allways original M or normedM?
+        s <- strptime(date(), "%a %b %d %H:%M:%S %Y")
+        
+        attr(nres,"P") <- dat$P
+        obj <- .Call("immunoC_SON_normalize",
+            nres, as.integer(dat$N), as.integer(dat$K),
+            as.double(dat$clsEvents),
+            as.double(t(dat$M)),
+            ##as.double(t(nM)),
+            as.double(t(dat$S)),
+            as.double(alpha), as.double(scale.factor), as.integer(scale.steps),
+            as.integer(0), as.double(0.0), ## unused
+            as.integer(SON.cycles), as.integer(SON.rlen), as.double(SON.deltas),
+            as.double(SON.blurring)
+            )
+        
+        
+        nM <- matrix(obj, nrow(dat$M), ncol(dat$M), byrow=TRUE)
+        colnames(nM) <- colnames(dat$M)
+        e <- strptime(date(), "%a %b %d %H:%M:%S %Y")
+        
+    #}
+    
+    nM
+    
+}

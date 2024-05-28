@@ -982,13 +982,13 @@ em_mvt::m_step_diag_k(int k)
 			//				*(s+p*P+p) = one/TRC;
 			*(s+p*P+p) = TRC[p];
 		}
-        /*
+        // 2024.05.23: doch ein unterschied??
         // ueberflussig: kann gar nicht sein nach definition von TRC
 		if( *(s+p*P+p) <= EPSMIN ) {
 			status = 1;
 			break;
 		}
-        */
+        
 		double srt = sqrt(*(s+p*P+p));
 		*(s+p*P+p) = 1.0/srt; 
 	}

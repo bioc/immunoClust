@@ -117,6 +117,7 @@ extern "C" {
     SEXP call_metaME(SEXP N, SEXP P, SEXP K, SEXP w, SEXP m, SEXP s,
                      SEXP(label), SEXP(max_iter), SEXP(max_tol), SEXP(method),
                      SEXP(bias), SEXP(alpha), SEXP(min_g));
+
 	
     SEXP call_mvnDist(SEXP P, SEXP K, SEXP W, SEXP M, SEXP S);
 
