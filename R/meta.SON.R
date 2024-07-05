@@ -54,25 +54,43 @@ verbose=FALSE
     ndat <- dat
     nres <- res
     
+    ## samples for nres-clusters
+    K <- meta$dat.clusters$K
+    sam.label <- c()
+    for( i in seq_along(K) ) {
+        sam.label <- append(sam.label, rep(i, K[i]))
+    }
+    ##
+    
     nM <- dat$M
     sub.iter <- 0
     for( cycle in seq_len(cycles) ) {
         if(verbose) {
-            #message("SON.clustering cycle", cycle, "\n")
-            message("SON/ormalize", cycle, "\n")
+            message("SON/ormalize ", cycle, "\n")
         }
-        ## allways original M or normedM?
+        
         s <- strptime(date(), "%a %b %d %H:%M:%S %Y")
         
-        attr(nres,"P") <- dat$P
+        ## samples for nres-clusters
+        cls.samples <- sapply(seq_len(ncls(nres)), function(k) length(unique(sam.label[label(nres)==k])))
+        cls.use <- which(cls.samples > nsam(meta)/4)
+        res.nrm <- subset(nres, cls=cls.use)
+       
+        #if(verbose) {
+        #    message("use ", paste(collapse=",",match(clusters(meta, c(1,1,1,1)), cls.use)), "\n")
+        #}
+        
+        #attr(nres,"P") <- dat$P
+        attr(res.nrm, "P") <- dat$P
         obj <- .Call("immunoC_SON_normalize",
-            nres, as.integer(dat$N), as.integer(dat$K),
-            as.double(dat$clsEvents), 
+            res.nrm, ## nres,
+            as.integer(dat$N), as.integer(dat$K),
+            as.double(dat$clsEvents),
             as.double(t(dat$M)),
-            ##as.double(t(nM)),
+            ##as.double(t(nM)), ## always original M or normedM?
             as.double(t(dat$S)),
             as.double(alpha), as.double(scale.factor), as.integer(scale.steps),
-            as.integer(sub.iter), as.double(meta.tol),
+            as.integer(sub.iter), as.double(meta.tol), ## obsolet muss noch weg
             as.integer(SON.cycles), as.integer(SON.rlen), as.double(SON.deltas),
             as.double(SON.blurring)
             )
@@ -90,7 +108,7 @@ verbose=FALSE
         nres <- meta.Clustering(dat$P, dat$N, dat$K, dat$clsEvents, nM, dat$S,
             label=nres@label, I.iter=meta.iter, tol=meta.tol,
             bias=meta.bias, sub.thres=meta.thres, alpha=alpha,
-            EM.method=200,
+            EM.method=300,
             ## HC.samples?
             verbose=verbose)
         

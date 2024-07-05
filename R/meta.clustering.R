@@ -227,7 +227,7 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
         if( verbose ) {
             message("sub-clustering (", i, "/", I.iter, ") => ", 
             length(unique(res@label)), "=>", length(unique(label)),
-            "clusters takes ", paste((etm<-proc.time()) - ptm, collapse=",") )
+            "clusters takes ", paste( round((etm<-proc.time()) - ptm), collapse=",") )
             ptm <- etm
         }
         else {
@@ -240,7 +240,7 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
         if( verbose ) {
             message("meta-clustering (", i, "/", I.iter, ") => ", 
             res@K, "/", length(unique(label(res))),
-            " clusters takes ", paste( (etm<-proc.time()) - ptm, collapse=",") )
+            " clusters takes ", paste( round((etm<-proc.time()) - ptm), collapse=",") )
             ptm <- etm
         }
         else {
@@ -275,7 +275,9 @@ verbose=FALSE
     label <- x@label
     K <- x@K
     sum_T <- sum(W)
-    sum_T <- length(W)
+    if( EM.method==200 )
+        sum_T <- length(W)
+    
     ## maximal sub clustering count for one cluster
     J <- 8
 
@@ -297,7 +299,7 @@ verbose=FALSE
         inc <- which(label==k)
         
         if(verbose) {
-            message("cluster ", k, " test with ", length(inc), " obs" )
+            message("cluster ", k, " test with ", length(inc), " obs and ", sum(W[inc]), " evts" )
         }
         if( length(inc) > 1 ) {
             res <- meta.TestSubCluster(x,
@@ -325,7 +327,7 @@ verbose=FALSE
                 ##icl[l] <- res[[l]]@ICL/res[[l]]@K
                 icLike <- res[[l]]@logLike[4]   ## delta icLike
                 iclSum <- res[[l]]@logLike[3]   ## delta iclSum  .icl_delta_costs
-                clCost <- .icl_delta_costs(sum_T, P, K, 2) ## res[[l]]@K)
+                clCost <- .icl_delta_costs(sum_T, P, K, res[[l]]@K)
                
                 #icCost <- iclSum - .icl_delta_costs(sumW, P, K, res[[l]]@K)
                 icl[l] <- icLike + iclSum - bias*clCost
@@ -402,16 +404,21 @@ verbose=FALSE
 ## keep label k, the rest get's a new label
 ## should have the consequence, that the cluster label of the first experiment
 ## is not changed if they all distinct??? (required for EM.method=23)
-        inc <- which(label==k)
+        k_obs <- which(label==k)
         lnc <- (ins[[k]]@label==ins[[k]]@label[1])
-        knc <- inc[lnc]
+        f_obs <- k_obs[lnc]
         if( verbose ) {
-            message("label ", k, "(", ins[[k]]@K, "clusters): ", length(inc), ", ",
-            length(ins[[k]]@label),"+", max(label),
-            ", k=", ins[[k]]@label[1], "(#", sum(lnc), ")")
+            message("cls ", k, " (", ins[[k]]@K, " subs on ", length(k_obs), 
+            " obs): +max=", max(label))
+          
         }
-        label[label==k] <- ins[[k]]@label + max(label)
-        label[knc] <- k
+        label[k_obs] <- ins[[k]]@label + max(label)
+        label[f_obs] <- k
+        
+        if( verbose ) {
+            message( "stable sub-k=", ins[[k]]@label[1], "(for ", sum(lnc),
+            " obs) => max=", max(label))
+        }
     }  #for cluster k
     
     label
@@ -474,7 +481,7 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
     
     ## 4 = icLike
     icLike <- obj$logLike[4]
-    ## 3 =
+    ## 3-4 = iclSum
     iclSum <- obj$logLike[3] - obj$logLike[4]
     obj$logLike[2] <- obj$logLike[3] <- obj$logLike[4] <- 0
         
@@ -521,10 +528,10 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
         
         
         #for (k in 2:J) {
-        #for( j  in 2:J )
+        for( j  in 2:J )
         {
-            #k <- J+2-j
-            k <- J
+            k <- J+2-j
+            #k <- J
             label <- rep(0, N)
                 
             label[samples.set] <- .clust.hclass(hcPairs, k)
@@ -538,6 +545,7 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
 
             L <- obj$L
             
+            if( L == 1 ) break
             
 # output obj$s to sigma
             sigma <- array(0, c(L, P, P))
@@ -570,7 +578,7 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
             ## message(k,"/", L,": ", round(obj$logLike[4]), ", ", round(obj$logLike[3]) )
            
 # outp
-            result[[2]] <- new("immunoClust", parameters=parameters,
+            result[[j]] <- new("immunoClust", parameters=parameters,
                             K=L, N=N, P=P, w=obj$w, mu=mu, sigma=sigma,
                             label = obj$label,
                             logLike=obj$logLike, BIC=BIC, ICL=ICL)
