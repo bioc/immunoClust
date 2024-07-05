@@ -518,6 +518,7 @@ function(object, remove.empty=FALSE, depth=-1)
 {
     if( SON.method>0 ) {
         object <- .annotate.clustering2(value, object, SON.method=SON.method, ...)
+        parameters(object) <- parameters(value)
     }
     else {
         object <- .annotate.clustering(value, object)
