@@ -633,8 +633,7 @@ meta.alpha=0.5, norm.method=3, norm.blur=2, norm.minG=10, verbose=FALSE)
 function(meta.src, meta.dst, par=seq_len(npar(meta.dst)), SON.method=2, ...)
 {
    
-   
-   
+
     ## co-clustering and normalization
     co_res <- meta.SON.combineClustering(meta.src, meta.dst$res.clusters,
         par=par, SON.method=SON.method, ...)

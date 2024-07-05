@@ -188,27 +188,14 @@ extern "C" {
 				em.start(INTEGER(label), false);
 				status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);
 				break;
-            /*
-            case 3:     // kl EM: no weights
-                em.start(INTEGER(label), false);
-                status = em.kl_maximize(iterations, tolerance);
-                break;
-            case 4:     // kl EM-T: no weights
-                em.start(INTEGER(label), false);
-                status = em.kl_classify(iterations, tolerance, INTEGER(min_g)[0]);
-                break;
-            */
+          
             case 10:    // bc EM: weights
             case 100:   // kann eigentlich weg, macht ja nichts anderes
 				em.start(INTEGER(label), true);
 				status = em.bc_maximize(iterations, tolerance);
 				break;
-            /*
-            case 100:    // bc EM: weights
-                em.start(INTEGER(label), true);
-                status = em.bc_maximize2(iterations, tolerance);
-                break;
-            */
+         
+                
 			case 20:	// bc EM-T: classification with weights
 				L = em.start(INTEGER(label), true);
 				status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);
@@ -219,29 +206,13 @@ extern "C" {
                 status = em.bc_fixedN_classify(iterations, tolerance, INTEGER(min_g)[0]);
                 break;
                 
-            case 200:    // bc EM-T: classification with weights
+            case 200:   // bc EM-T: classification with weights
+            case 300:   // trail for changed final
                 L = em.start(INTEGER(label), true);
                 status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);
                 break;
-            /*
-            case 30:    // kl EM: weights
-                em.start(INTEGER(label), true);
-                status = em.kl_maximize(iterations, tolerance);
-                break;
-            case 40:    // kl EM-T: classification with weights
-                em.start(INTEGER(label), true);
-                status = em.kl_classify(iterations, tolerance, INTEGER(min_g)[0]);
-                break;
-            case 43:    // kl EM-T: classification with weights were the labeling of min_g cluster remains unchanged
-                em.start(INTEGER(label), true);
-                status = em.kl_fixedN_classify(iterations, tolerance, INTEGER(min_g)[0]);
-                break;
-            
-			default:
-				em.start(INTEGER(label), false);
-				status = em.kl_minimize(iterations, tolerance);
-				break;
-             */
+           
+                
             default:
                 em.start(INTEGER(label), false);
                 status = em.bc_maximize(iterations, tolerance);
@@ -252,15 +223,25 @@ extern "C" {
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
         
     
-        if( INTEGER(method)[0] == 200 )
-        INTEGER(VECTOR_ELT(ret,0))[0] = em.final2(INTEGER(VECTOR_ELT(ret,5)),
-                                                 REAL(VECTOR_ELT(ret,6)),
-                                                 INTEGER(VECTOR_ELT(ret,7)) );
-            
-        else
-		INTEGER(VECTOR_ELT(ret,0))[0] = em.final(INTEGER(VECTOR_ELT(ret,5)),
-                                                 REAL(VECTOR_ELT(ret,6)), 
-                                                 INTEGER(VECTOR_ELT(ret,7)) );
+        switch(INTEGER(method)[0]) {
+            case 300:   // final with weights, remove empty
+                INTEGER(VECTOR_ELT(ret,0))[0] = em.final3(INTEGER(VECTOR_ELT(ret,5)),
+                                                        REAL(VECTOR_ELT(ret,6)),
+                                                        INTEGER(VECTOR_ELT(ret,7)) );
+                break;
+                
+            case 200:   // final not weioghts, remove empty
+                INTEGER(VECTOR_ELT(ret,0))[0] = em.final2(INTEGER(VECTOR_ELT(ret,5)),
+                                                        REAL(VECTOR_ELT(ret,6)),
+                                                        INTEGER(VECTOR_ELT(ret,7)) );
+                break;
+                
+            default:    // old with weights, can contain finally empty
+                INTEGER(VECTOR_ELT(ret,0))[0] = em.final1(INTEGER(VECTOR_ELT(ret,5)),
+                                                        REAL(VECTOR_ELT(ret,6)),
+                                                        INTEGER(VECTOR_ELT(ret,7)) );
+                break;
+        }
         
         const double* logLike = REAL(VECTOR_ELT(ret,6));
         dbg::printf("EM[%d] (%d obs, %d cls, %d iter) => %d cluster (%.0lf|%.0lf)",
@@ -427,7 +408,7 @@ extern "C" {
             
             //double logLike[3];
             
-            INTEGER(VECTOR_ELT(ret,0))[0] = em.final(label,
+            INTEGER(VECTOR_ELT(ret,0))[0] = em.final1(label,
                                                      REAL(VECTOR_ELT(ret,6)),
                                                      INTEGER(VECTOR_ELT(ret,7)));
             
@@ -505,8 +486,8 @@ extern "C" {
         for( int i=0; i<N; ++i)
             totK += K[i];
         
-        int*  label = new int[totK];
-        double* z = new double[totK*G];
+        //int*  label = new int[totK];
+        //double* z = new double[totK*G];
         
         SEXP ret = Rf_protect(allocVector(REALSXP, totK*P));
         
@@ -520,19 +501,31 @@ extern "C" {
             // norm nth sample
             int L = G;
             
+           
             /*
             int traceK[2];
             traceK[1] = -1;
-            if( n == 23 )
-                traceK[0] = 71;
+            if( n == 11 )
+                traceK[0] = 7;
             else
                 traceK[0] = -1;
+             
+             int traceG[3];
+             traceG[2] = -1;
+             if( n == 11 ) {
+                 traceG[0] = 6;
+                 traceG[1] = -1;
+             }
+             else {
+                 traceG[0] = -1;
+             }
             */
             
             meta_SON son(P, L, gW, gW, gM, gS,
                          K[n], nW, nW, nM, nS,
                          normedM,
-                         REAL(alpha)[0], 0, 0, FALSE);
+                         REAL(alpha)[0], 
+                         0, 0, FALSE);
             // mayby scale first
             if(INTEGER(scale_steps)[0] > 0)
                 son.scaleStep(REAL(scale_factor)[0], INTEGER(scale_steps)[0] );
@@ -548,8 +541,8 @@ extern "C" {
             normedM += K[n]*P;
         }
         
-        delete[] z;
-        delete[] label;
+        //delete[] z;
+        //delete[] label;
         delete[] gW;
         delete[] gM;
         delete[] gS;

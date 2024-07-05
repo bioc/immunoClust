@@ -951,13 +951,13 @@ em_gaussian::m_step_diag_k(int k)
 			//*(s+p*P+p) = TRC[p]*z_sum;
             *(s+p*P+p) = TRC[p];
 		}
-        /*
+        
         // ueberflussig: kann gar nicht sein nach definition von TRC
-		if( *(s+p*P+p) < 1e-20 ) {
+		if( *(s+p*P+p) <= EPSMIN ) {
 			status = 1;
 			break;
 		}
-        */
+        
 		*(s+p*P+p) = 1.0/sqrt(*(s+p*P+p));
 	}
 	/*
@@ -1166,8 +1166,18 @@ em_gaussian::final(double logLike[3], int* label, int* history, int scale_Z)
 	/*	
 	 remove empty cluster
 	 */
+    double* tmpS = new double[P*P];
 	l = 0;
 	for( k=0; k<K; ++k ) {
+        // 2024.06.25
+        // test invert and chol: invertable?
+        cblas_dcopy(P*P, S+k*P*P, 1, tmpS, 1);
+        mat::invert(P, tmpS, tmpPxP);
+        if( mat::cholesky_decomp(P, tmpS) ) {
+            dbg::printf("%d: singularity in precision", k);
+            W[k] = 0.0;
+        }
+        
 		if( W[k] > 0.0 ) {
 			if( k > l ) {
 				W[l] = W[k];
@@ -1180,6 +1190,8 @@ em_gaussian::final(double logLike[3], int* label, int* history, int scale_Z)
 			++l;
 		}
 	}
+    delete[] tmpS;
+    
 	const int L = l;
 	for( k=L; k<K; ++k ) {
 		W[k] = 0.0;
