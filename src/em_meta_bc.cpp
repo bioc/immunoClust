@@ -149,7 +149,7 @@ em_meta::bc_probability_fast(int i, int j)
     double det_i =  Sdet[i]; // logdet(S+i*P*P, status);  // =0.5*logdet_invS for w1=0.5
     double det_j = gSdet[j]; //logdet(gS+j*P*P, status); // =0.5*logdet_invS for w2=0.5
  
-    if( fpclassify( det_i ) == FP_NAN || fpclassify( det_i ) == FP_NAN )
+    if( fpclassify( det_i ) == FP_NAN || fpclassify( det_j ) == FP_NAN )
         return bc_diag(i,j);
     
     //
@@ -343,7 +343,11 @@ em_meta::bc_et_step()
             //cblas_dscal(G, 1./sumLike, z, 1);
             obLike +=(*t) * log(sumLike);
         }
-        
+        /*
+        if( maxClust == 31 || maxClust == 98 || maxClust == 100 ) {
+            dbg::printf("e-step %d: max=%d: snd=%d", i, maxClust, sndClust  );
+        }
+        */
         if( sndClust > -1 ) {
             
             // tmpG -> delta likelihood
@@ -355,6 +359,7 @@ em_meta::bc_et_step()
             
             for( j=0; j<G; ++j ) {
                 if( j == maxClust ) {
+                   
                     unNk[sndClust] += (*t);    // nk for g-unlikelihood
                 }
                 else {

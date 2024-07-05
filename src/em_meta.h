@@ -11,6 +11,7 @@
 #define __em_meta_h_included
 
 
+
 class em_meta
 {
 public:
@@ -54,12 +55,14 @@ protected:
 	double*		gW;		// component weights: G
 	double*		gM;		// component mean: G x P
 	double*		gS;		// component sigma:G x P x P (=co-variance matrix
+
+    /* KL-stuff: removed
 	double*		gP;		// component precision: G x P x P (=precision=sigma^{-1} during process
 	double*		gL;		// component cholewsky decomposition of gP: G x P x P (=sigma^{-1/2}
-    double*     gSdet;  // log det og gS
+    */
     
-	int*		C;	// classification: N
-	
+    double*     gSdet;  // log det of gS
+    
 	double*		Z_sum;
 	
 	double*		tmpPxP;
@@ -79,8 +82,9 @@ public:
 	
 	
 	int		start(int* label, bool weighted);
-	int		final(int* label, double* loglike, int* history);
+	int		final1(int* label, double* loglike, int* history);
     int     final2(int* label, double* loglike, int* history);
+    int     final3(int* label, double* loglike, int* history);
     
     int     bc_maximize(int& max_iteration, double& max_tolerance);
     //int     bc_maximize2(int& max_iteration, double& max_tolerance);
@@ -101,30 +105,22 @@ protected:
 	// m_step
 	int		m_step();
 	int		m_step_sigma_g(int j);
-    //int     m_step2();
-    //int     m_step2_sigma_g(int j);
-
-    // e_step's
-    double  e_step();
-    double  et_step();
-    double  fixedN_e_step();
-    double  fixedN_et_step();
-    
+   
 	// t_step's
 	int		st_step();	// straight t_step
 	int		wt_step();	// weighted t_step
 
 	// e_step's
-	double		bc_e_step();	// Bhattacharryya-probability-maximization
-	double		bc_et_step();	// Bhattacharryya-probability with test calculation
-    double      bc_fixedN_e_step(); // Bhattacharryya-coefficient-maximization
-    double      bc_fixedN_et_step(); // Bhattacharryya-coefficient with test calculation
+	double		bc_e_step();	        // Bhattacharryya-probability-maximization
+	double		bc_et_step();	        // Bhattacharryya-probability with test calculation
+    double      bc_fixedN_e_step();     // Bhattacharryya-coefficient-maximization
+    double      bc_fixedN_et_step();    // Bhattacharryya-coefficient with test calculation
 
 private:
-	
+    /* KL-stuff: remove
 	double	burg_divergence(int i, int j);
 	double	mahalanobis(int i, int j);
-		
+    */
 	double	bc_probability(int i, int j);
 	double	bc_diag(int i, int j);
 	double	bc_measure(int i, int j);

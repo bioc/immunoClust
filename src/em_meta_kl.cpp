@@ -18,9 +18,56 @@
 
 using std::fpclassify;
 
+
 /*
+
+//
+//     burg_divergence
+     calc burg_divergence for cluster i and component j
+
+double
+em_meta::burg_divergence(int i, int j)
+{
+ // i'th cluster, j'th component
+ // S = Sigma_i
+ // gP = Sigma_j^{-1} = precision
+ // trace und det von Sigma_i*Sigma_j^{-1}
+ 
+ int a,b; //, status = 0;
+ const double* s = S + i*P*P;
+ const double* gp = gP + j*P*P;
  
  
+ int p, k;
+ double trace = 0.0;
+ for( p=0; p<P; ++p ) {
+     for( k=0; k<P; ++k ) {
+         trace += (*(s+p*P+k)) * (*(gp+k*P+p));
+     }
+ }
+
+ double det = logdet(s,a) + logdet(gp,b);
+ if( a > 0 || b > 0 ) {
+     dbg::printf("%d ~ %d burg: (%d ~ %d)", a, b);
+ }
+ 
+ return trace - det - P;
+ 
+}
+// em_meta::burg_divergence
+
+//    mahalanobis
+//        calc mahalanobis distance for cluster i and component j
+
+double
+em_meta::mahalanobis(int i, int j)
+{
+ // gL = precision^{1/2} = sigma^{-1/2}
+ return sqr(mvn::mahalanobis(P, M+i*P, gM+j*P, gL+j*P*P, tmpP));
+}
+// em_meta::mahalanobis
+
+
 // kl_probability
 double
 em_meta::kl_probability(int i, int j)
