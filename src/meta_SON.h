@@ -34,36 +34,42 @@ protected:
 	// data: in
 	const int	P;	// number of parameter
  
-    const int            G;     // number of model components
-    const double*        gW;    // component weights: G
-    const double*        gEvts; // components events: G
-    const double*        gM;    // component mean: G x P
-    const double*        gS;    // component sigma: G x P x P
-          double*        gSdet;  // logdet of gS: G
-   
+    const int           G;     // number of model components
+    const double*       gW;    // component weights: G
+    const double*       gEvts; // components events: G
+    const double*       gM;    // component mean: G x P
+    const double*       gS;    // component sigma: G x P x P
+    double*             gSdet;  // logdet of gS: G
 
     const int           K;      // number of cell-clusters
  	const double*		kW;	    // cluster weights: K
     const double*       kEvts;  // cluster events: K
 	const double*		kM;	    // cluster mean: K x P
 	const double*		kS;	    // cluster sigma: K x P x P
-          double*       kSdet;  // logdet of kS: K
+    double*             kSdet;  // logdet of kS: K
+    
     double*             normedM;    // normed cluster: K x P
+    
+    double*             kgS;     // inverted gS+kS: KxG x PxP
+    double*             kgSdet;  // logdet of gkS: KxG
+    
+    double*             blurredS; // G x P x P;
+    double*             ggS;     // inverted gS+gS: G*(G-1)/2 x PxP
+    double*             ggSdet;  // logdet of ggS: G*(G-1)/
     
     const double    ALPHA;
     const int*      gTrace;
     const int*      kTrace;
     const int       verbose;
     
-    double*     mappedM;    // mapped component: G x P
+    double*         mappedM;    // mapped component: G x P
     //double*     scaledS;       // map component sigma: G x P x P
- 	
     //double*     pScale;    // scaling factors for model: P
+    
 	double*		tmpPxP;
 	double*		tmpP;
 	double*		tmpS;
     double*     neighbourProbs; // G x G
-    //double*     clusterProbs;   // K
     double*     posterior;      // K x G
     int*        map;    // K: maximum a posterior
     
@@ -107,10 +113,26 @@ private:
                        const double* m2, const double* s2, double l2);
     double  bc_coeff2(const double* m1, const double* s1, double l1,
                      const double* m2, const double* s2, double l2);
+    
+    double  bc_measure3(const double* m1, const double* s1, double det_1,
+                       const double* m2, const double* s2, double det_2,
+                        const double* s_cov, double s_det );
+    double  bc_coeff3(const double* m1, const double* s1, double det_1,
+                      const double* m2, const double* s2, double det_2,
+                      const double* s_cov, double s_det);
+    
     double  bc_probability2(const double* m1, const double* s1, double l1,
                            const double* m2, const double* s2, double l2);
     double  bc_prob2(const double* m1, const double* s1, double det_1,
                     const double* m2, const double* s2, double det_2);
+    
+    double  bc_probability3(const double* m1, const double* s1, double det_1,
+                           const double* m2, const double* s2, double det_2,
+                            const double* s_cov, double s_det);
+    double  bc_prob3(const double* m1, const double* s1, double det_1,
+                    const double* m2, const double* s2, double det_2,
+                     const double* s_cov, double s_det);
+    
     double  bc_diag_prob(const double* m1, const double* s1, const double* m2, const double* s2);
 	double	bc_diag_coeff(const double* m1, const double* s1, const double* m2, const double* s2);
     
@@ -120,7 +142,11 @@ private:
     //void    buildBlurredS(double* blurredS, double blurring[2], double lambda);
   
     BMU    bestMatchingUnit(int k, const int* map_cluster, const double* mappedM );
-    void   buildNeighbourProbabilities(const double* blurredS);
+    
+  
+    //void   buildNeighbourProbabilities(const double* blurredS);
+    void   buildNeighbourProbabilities(double blur);
+  
     const double*   buildClusterProbabilities(int j);
     const double*   buildCoefficients();
     const double*   buildPosterior();
