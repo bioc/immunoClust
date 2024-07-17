@@ -118,6 +118,7 @@ extern "C" {
             cblas_dcopy(P, mu+k, K, M+k*P, 1);
             cblas_dcopy(P*P, sigma+k, K, S+k*P*P, 1);
         }
+       
     }
     static SEXP _ME_ret(int n, int p, int k) 
 	{
@@ -181,66 +182,66 @@ extern "C" {
        
 		switch(INTEGER(method)[0]) {
             case 1:		// bc EM: no weights
-				em.start(INTEGER(label), false);
+				L = em.start(INTEGER(label), false);
 				status = em.bc_maximize(iterations, tolerance);
 				break;
 			case 2:		// bc EM-T: classification no weights
-				em.start(INTEGER(label), false);
+				L = em.start(INTEGER(label), false);
 				status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);
 				break;
           
             case 10:    // bc EM: weights
-            case 100:   // kann eigentlich weg, macht ja nichts anderes
-				em.start(INTEGER(label), true);
+            case 100:   // kann eigentlich weg = 10, macht ja nichts anderes
+				L = em.start(INTEGER(label), true);
 				status = em.bc_maximize(iterations, tolerance);
 				break;
          
                 
 			case 20:	// bc EM-T: classification with weights
+            case 200:   // bc EM-T: classification with weights / final no weights: macht eher keine sinn
+            case 300:   // trail for changed final, kann wieder weg == 20
 				L = em.start(INTEGER(label), true);
 				status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);
 				break;
           
             case 23:    // bc EM-T: classification with weights were the labeling of min_g cluster remains unchanged
-                em.start(INTEGER(label), true);
+                L = em.start(INTEGER(label), true);
                 status = em.bc_fixedN_classify(iterations, tolerance, INTEGER(min_g)[0]);
                 break;
                 
-            case 200:   // bc EM-T: classification with weights
-            case 300:   // trail for changed final
-                L = em.start(INTEGER(label), true);
-                status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);
-                break;
-           
                 
             default:
-                em.start(INTEGER(label), false);
+                L = em.start(INTEGER(label), false);
                 status = em.bc_maximize(iterations, tolerance);
                 break;
 		}
-		INTEGER(VECTOR_ELT(ret,8))[0] = status;		
+        
+		INTEGER(VECTOR_ELT(ret,8))[0] = status;
 		INTEGER(VECTOR_ELT(ret,9))[0] = iterations;
 		REAL(VECTOR_ELT(ret,10))[0] = tolerance;
         
     
         switch(INTEGER(method)[0]) {
             case 300:   // final with weights, remove empty
+            default:    // old final with weights, can contain finally empty
                 INTEGER(VECTOR_ELT(ret,0))[0] = em.final3(INTEGER(VECTOR_ELT(ret,5)),
                                                         REAL(VECTOR_ELT(ret,6)),
                                                         INTEGER(VECTOR_ELT(ret,7)) );
                 break;
                 
-            case 200:   // final not weioghts, remove empty
+            case 200:   // final not weights, remove empty
                 INTEGER(VECTOR_ELT(ret,0))[0] = em.final2(INTEGER(VECTOR_ELT(ret,5)),
                                                         REAL(VECTOR_ELT(ret,6)),
                                                         INTEGER(VECTOR_ELT(ret,7)) );
                 break;
                 
-            default:    // old with weights, can contain finally empty
+           /*
+            default:
                 INTEGER(VECTOR_ELT(ret,0))[0] = em.final1(INTEGER(VECTOR_ELT(ret,5)),
                                                         REAL(VECTOR_ELT(ret,6)),
                                                         INTEGER(VECTOR_ELT(ret,7)) );
                 break;
+            */
         }
         
         const double* logLike = REAL(VECTOR_ELT(ret,6));
@@ -332,11 +333,13 @@ extern "C" {
             
         }
         
+        int SON_norm = INTEGER(SON_method)[0];
+        
         meta_SON son(P,
                      G, nW, nEvts, mappedM, nS,
                      K, nW+G, nEvts+G, clusterM, nS+G*P*P,
                      normedM,
-                     REAL(alpha)[0],
+                     REAL(alpha)[0], 1,     // old blur mode
                      gTrace, kTrace, 0);
         em_meta em(N, P, G, nEvts, nM, nS,
                    z, w, mappedM, s,   // output
@@ -347,12 +350,6 @@ extern "C" {
         // em with scaled model sigma too?
         //for( int cycle=0; cycle < INTEGER(meta_cycles)[0]; ++cycle) {
         {
-            // 2023.06.15: only for Trails
-            //int SON_norm = INTEGER(meta_cycles)[0];
-            int SON_norm = INTEGER(SON_method)[0];
-            
-            // Rprintf("combineClustring %d\n", SON_norm);
-            //int SON_norm = 1;
             //dbg::printf("meta cycle %d", cycle);
             // re-label map_cluster?? obsolete because fixedN clustering
             // map.cluster <- unique(label[map_cluster])
@@ -406,8 +403,6 @@ extern "C" {
             // keep model cluster fixed
             em.bc_fixedN_classify(max_iteration, max_tolerance, G);
             
-            //double logLike[3];
-            
             INTEGER(VECTOR_ELT(ret,0))[0] = em.final1(label,
                                                      REAL(VECTOR_ELT(ret,6)),
                                                      INTEGER(VECTOR_ELT(ret,7)));
@@ -448,7 +443,7 @@ extern "C" {
         }
         
         delete[] clusterM;
-        //delete[] mapS;
+
         delete[] nS;
         delete[] nW;
         delete[] nEvts;
@@ -463,7 +458,7 @@ extern "C" {
     SEXP call_SON_normalize(SEXP res_model,
                             SEXP n, SEXP k, SEXP w, SEXP m, SEXP s,
                             SEXP alpha, SEXP scale_factor, SEXP scale_steps,
-                            SEXP meta_iter, SEXP meta_tol, // obsolete!!!
+                            // SEXP meta_iter, SEXP meta_tol, // obsolete!!!
                             SEXP SON_cycles, SEXP SON_rlen, SEXP SON_deltas, SEXP SON_blurring
                             )
     {
@@ -476,23 +471,20 @@ extern "C" {
         
         _copyMixtureModel(res_model, gW, gM, gS);
         
-        int  N = INTEGER(n)[0];
-        const int* K = INTEGER(k);
-        const double* W = REAL(w);
-        const double* M = REAL(m);
-        const double* S = REAL(s);
+        int  N = INTEGER(n)[0];     // number of samples
+        const int* K = INTEGER(k);  // array with number of sample cluster
+        const double* W = REAL(w);  // sample cluster cell-event count
+        const double* M = REAL(m);  // sample cluster mean
+        const double* S = REAL(s);  // sample cluster co-variance
         //const double* tM = REAL(tm);
         int totK = 0;
         for( int i=0; i<N; ++i)
             totK += K[i];
         
-        //int*  label = new int[totK];
-        //double* z = new double[totK*G];
         
         SEXP ret = Rf_protect(allocVector(REALSXP, totK*P));
         
         double* normedM = REAL(ret);
-        //int* nLabel = label;
         const double* nW = W;
         const double* nM = M;
         const double* nS = S;
@@ -524,7 +516,7 @@ extern "C" {
             meta_SON son(P, L, gW, gW, gM, gS,
                          K[n], nW, nW, nM, nS,
                          normedM,
-                         REAL(alpha)[0], 
+                         REAL(alpha)[0], 0, // fast blur
                          0, 0, FALSE);
             // mayby scale first
             if(INTEGER(scale_steps)[0] > 0)
@@ -534,15 +526,43 @@ extern "C" {
                          INTEGER(SON_cycles)[0], INTEGER(SON_rlen)[0],
                          REAL(SON_deltas), REAL(SON_blurring));
             
-            //nLabel += K[n];
             nW += K[n];
             nM += K[n]*P;
             nS += K[n]*P*P;
             normedM += K[n]*P;
         }
+
+        // re-location normalized center to orignal
         
-        //delete[] z;
-        //delete[] label;
+        const double* label = REAL(R_do_slot(res_model, install("label")));
+        normedM = REAL(ret);
+        
+        for( int j = 0; j < G; ++j ) {
+            double* diff_m = new double[P];
+            double comp_w = 0;
+            memset(diff_m, 0, P*sizeof(double));
+            
+            for( int i=0; i < totK; ++i) {
+                if( label[i] == j+1 ) {
+                    cblas_daxpy(P, W[i], M+i*P, 1, diff_m, 1 );
+                    cblas_daxpy(P, -W[i], normedM+i*P, 1, diff_m, 1 );
+                    comp_w += W[i];
+                }
+            }
+            if( comp_w == 0.0 ) {
+                dbg::printf("SON: no obs for cls %d", j);
+                continue;
+            }
+            
+            cblas_dscal(P, 1.0/comp_w, diff_m, 1);
+            for( int i=0; i < totK; ++i) {
+                if( label[i] == j+1 ) {
+                    cblas_daxpy(P, 1.0, diff_m, 1, normedM+i*P, 1 );
+                }
+            }
+        } // for comp j
+        
+
         delete[] gW;
         delete[] gM;
         delete[] gS;

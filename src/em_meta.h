@@ -11,7 +11,6 @@
 #define __em_meta_h_included
 
 
-
 class em_meta
 {
 public:
@@ -25,6 +24,7 @@ protected:
 	const double	zero;
 	const double	one;
 	const double	two;
+    const double    inf;
 	
 	const double	BIAS;
 	const double	ALPHA;
@@ -56,18 +56,19 @@ protected:
 	double*		gM;		// component mean: G x P
 	double*		gS;		// component sigma:G x P x P (=co-variance matrix
 
-    /* KL-stuff: removed
-	double*		gP;		// component precision: G x P x P (=precision=sigma^{-1} during process
-	double*		gL;		// component cholewsky decomposition of gP: G x P x P (=sigma^{-1/2}
-    */
+
+    double*     gSdet;  // log det of gS: G ((=INFINITY if not claculated)
     
-    double*     gSdet;  // log det of gS
+    int*        e_label;    // actual label behind gS calculation: N
+    int*        g_changed;  // flags whether component g has changed: G
+
+    double*     probs;      // probability P(cluster i | component g ):   KxG
     
 	double*		Z_sum;
 	
 	double*		tmpPxP;
 	double*		tmpP;
-	double*		tmpG;	//	(un-)likelihood for cluster g removed: G
+	double*		tmpG;	//	(un-)likelihood for component g removed: G
 	double*		tmpNg;	//	(un-)likelihood number : G x (G+1)
 	double*		tmpS;
 	
@@ -87,7 +88,6 @@ public:
     int     final3(int* label, double* loglike, int* history);
     
     int     bc_maximize(int& max_iteration, double& max_tolerance);
-    //int     bc_maximize2(int& max_iteration, double& max_tolerance);
 	int		bc_classify(int& max_iteration, double& max_tolerance, int min_g);
     //int     bc_classify_t(int& max_iteration, double& max_tolerance, int min_g);
     int     bc_fixedN_classify(int& max_iteration, double& max_tolerance, int fixed_n);
@@ -102,6 +102,7 @@ protected:
 	int		e_init();
 	int		m_init();
 	
+    
 	// m_step
 	int		m_step();
 	int		m_step_sigma_g(int j);
@@ -116,18 +117,18 @@ protected:
     double      bc_fixedN_e_step();     // Bhattacharryya-coefficient-maximization
     double      bc_fixedN_et_step();    // Bhattacharryya-coefficient with test calculation
 
+    int         u_step();   // update probabilities P(cluster i| component j)
+    
 private:
-    /* KL-stuff: remove
-	double	burg_divergence(int i, int j);
-	double	mahalanobis(int i, int j);
-    */
-	double	bc_probability(int i, int j);
+
+    double	bc_probability(int i, int j);
 	double	bc_diag(int i, int j);
 	double	bc_measure(int i, int j);
     double  bc_probability_fast(int i, int j);
     double  bc_measure_fast(int i, int j);
-   
-	double	logdet(const double* a, int& status);
+
+    double	logdet(const double* a, int& status);
+    
 	
 };
 

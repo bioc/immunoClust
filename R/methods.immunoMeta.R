@@ -517,7 +517,8 @@ function(object, remove.empty=FALSE, depth=-1)
 "transfer<-.immunoMeta" <- function(object, SON.method=2, ..., value)
 {
     if( SON.method>0 ) {
-        object <- .annotate.clustering2(value, object, SON.method=SON.method, ...)
+        object <- .annotate.clustering2(value, object, 
+            SON.method=SON.method, ...)
         parameters(object) <- parameters(value)
     }
     else {

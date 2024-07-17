@@ -31,7 +31,8 @@ em_meta::em_meta(int n, int p, int g,
                  const double* w, const double* m, const double* s, 
 				 double* z, double* gw, double* gm, double* gs, 
                  double bias, double alpha):
-	FLTMAX(1.7976931348623157e308), zero(0.0), one(1.0), two(2.0), BIAS(bias), ALPHA(alpha),
+	FLTMAX(1.7976931348623157e308), zero(0.0), one(1.0), two(2.0), inf(INFINITY),
+    BIAS(bias), ALPHA(alpha),
 	N(n), P(p), G(g), W(w), M(m), S(s), Z(z), gW(gw), gM(gm), gS(gs)
 {	
     
@@ -83,6 +84,14 @@ em_meta::em_meta(int n, int p, int g,
             Sdet[i] = mat::logdet(P, tmpPxP);
         }
     }
+
+    probs = new double[G*N];
+    e_label = new int[N];
+    for( int i=0; i<N; ++i )
+        e_label[i] = -1;
+    g_changed = new int[G];
+    memset(g_changed, 0, G*sizeof(int));
+
 }
 
 em_meta::~em_meta()
@@ -90,12 +99,14 @@ em_meta::~em_meta()
 	// delete[] Z;
     delete[] Sdet;
 	delete[] Z_sum;
-    // KL-stuff: removed
-	//delete[] gL;
-	//delete[] gP;
+    
     delete[] gSdet;
-	
-	delete[] tmpPxP;
+    
+    delete[] e_label;
+    delete[] g_changed;
+    delete[] probs;
+
+    delete[] tmpPxP;
 	delete[] tmpS;
 	delete[] tmpP;
 	delete[] tmpG;
@@ -112,17 +123,9 @@ em_meta::logdet(const double* a, int& status)
 	cblas_dcopy(P*P, a, 1, tmpPxP, 1);
 	status = mat::cholesky_decomp(P, tmpPxP);
 	
-    /* passiert be cholesky
-	for(int p=0; p<P; ++p) {
-		if( *(tmpPxP + p*P + p) <= 0.0 ) {
-			status = 2;
-		}
-	}
-     */
 	return mat::logdet(P, tmpPxP);
 }
 // em_meta::logdet
-
 
 /*
 	wt_step: weighted t_step
@@ -152,11 +155,6 @@ em_meta::wt_step()
 			
 			double deltaCosts = icl::model_costs_2(T_sum, P, G, unNg) - testCosts;
 			
-            /*
-            if( j == 31 || j == 98 || j == 100 ) {
-                dbg::printf("t-step %d: deltaICL=%.0lf deltaCosts=%.0lf", j, tmpG[j], deltaCosts );
-            }
-            */
 			if( tmpG[j] + deltaCosts*BIAS < 0.0 ) {
 				
 				//tmpG[j] += deltaCosts;
@@ -184,6 +182,7 @@ em_meta::wt_step()
 	
 	if( minClust > -1 ) {
 //		dbg::printf("%d: rm cls %d (%.1lf) - %.1lf, %.1lf, %.1lf", L, minClust, tmpNg[minClust], tmpG[minClust], minDelta, minThres );
+        dbg::printf("t-step: remove %d", minClust);
 		gW[minClust] = 0.0;
         tmpNg[minClust] = 0.0;
         unNg = tmpNg + (1 + minClust)*G;
@@ -281,10 +280,11 @@ em_meta::e_init()
 	for(j=0;j<G;j++)
 	{
 		double* gs = gS + j*P*P;
-        // KL-stuff: removed
-		//double* gp = gP + j*P*P;
-		//double* gl = gL + j*P*P;
+  
 		if( gW[j] > 0.0 ) {
+
+            g_changed[j] = 1;
+            
 			//cblas_dcopy(P*P, gs, 1, gp, 1);
 			//status = mat::cholesky_decomp(P, gp);
             
@@ -293,12 +293,7 @@ em_meta::e_init()
             
 			if( status != 0 )
 				return status;
-            /*
-            gSdet[j] = mat::logdet(P, gp);
-			mat::invert(P, gp, tmpPxP);
-			cblas_dcopy(P*P, gp, 1, gl, 1);
-			status = mat::cholesky_decomp(P, gl);
-            */
+            
             gSdet[j] = mat::logdet(P, tmpS);
             mat::invert(P, tmpS, tmpPxP);
             status = mat::cholesky_decomp(P, tmpS);
@@ -336,8 +331,8 @@ em_meta::m_init()
 		for( i=0; i<N; ++i ) {
 			if( *z > 0 ) {
 				cblas_daxpy(P, *z, m, 1, gm, 1);
-				z_sum += (*z); 
-			}
+				z_sum += (*z);
+            }
 			z += G;
 			m += P;
 		}
@@ -349,10 +344,12 @@ em_meta::m_init()
 	{
 		double z_sum = Z_sum[j];
 		// initialize mixing proportions 
-		gW[j] = z_sum/T_sum;
+		
 		
 		//dbg::printf("sigma step %d (%.2lf, %.2lf)", k, z_sum, W[k]);
 		if( z_sum > 0.0 ) {
+           
+            gW[j] = z_sum/T_sum;
 			++L;
 			cblas_dscal(P, 1./z_sum, gM+j*P, 1);    
 			// initialize precision (cluster specific)
@@ -367,18 +364,15 @@ em_meta::m_init()
             //}
 		}
         else {
-            dbg::printf("init: empty cluster %d removed", j);
-            // 2024.06.27: debug info added
+            //dbg::printf("init: empty cluster %d removed", j);
             gW[j] = 0.0;
             gSdet[j] = NAN;
-            
             cblas_dcopy(P*P, &zero, 0, gS + j*P*P, 1);
-            // KL-stuff removed
-            //cblas_dcopy(P*P, &zero, 0, gP + j*P*P, 1);
-            //cblas_dcopy(P*P, &zero, 0, gL + j*P*P, 1);
         }
 	}
 		
+    dbg::printf("init: %d/%d clusters", L, G);
+    
 	return 0;
 	
 } 
@@ -390,41 +384,46 @@ em_meta::m_init()
 int
 em_meta::m_step()
 {
+    //dbg::printf("m-step");
+    
 	int j, i, status = 0;
-	
+   
 	for( j=0; j<G; ++j ) {
+        
 		double* gm = gM + j*P;
 		cblas_dcopy(P, &zero, 0, gm, 1);
 		const double* z = Z + j;
 		const double* m = M;
+        
+      
 		for( i=0; i<N; ++i ) {
 			if( *z > 0.0 ) {
 				cblas_daxpy(P, *z, m, 1, gm, 1);
-			}
+            }
 			z += G;
 			m += P;
 		}
 	}
 	
-    
     //cblas_dgemm(CblasRowMajor, CblasTrans, CblasNoTrans,
     //            G, P, N, 1.0, Z, G, M, P, 0.0, gM, P);
     
     // gS = Z*S + Z*(gM-M)*(gM-M)^t
     // hier Z*S
-    //cblas_dgemm(CblasRowMajor, CblasTrans, CblasNoTrans,
+    // cblas_dgemm(CblasRowMajor, CblasTrans, CblasNoTrans,
     //            G, P*P, N, 1.0, Z, G, S, P*P, 0.0, gS, P*P );
     
     L = 0;
 	for( j=0; j<G; ++j )
 	{
 		double z_sum = Z_sum[j];
-//		dbg::printf("m-step %d: z_sum=%.1lf / %.1lf", j, z_sum, T_sum);
+
 		// update mixing proportions 
-		gW[j] = z_sum/T_sum;
+		
 		
 		if( z_sum > 0.0 ){ 
-			cblas_dscal(P, 1./z_sum, gM+j*P, 1);    
+            gW[j] = z_sum/T_sum;
+			cblas_dscal(P, 1./z_sum, gM+j*P, 1);
 		
 			// update precision
 			if( m_step_sigma_g(j) ) {
@@ -434,20 +433,20 @@ em_meta::m_step()
 			else {
 				++L;
 			}
-		}	
+		}
 		else {
+            
+            if( gW[j] > 0.0 ) {
+                dbg::printf("m-step: %d becomes empty", j);
+            }
             // 2024.06.27: changed
             gW[j] = 0.0;
             gSdet[j] = NAN;
-			//mat::set_identity(P, gS+j*P*P);
-			//mat::set_identity(P, gP+j*P*P);
-			//mat::set_identity(P, gL+j*P*P);
+			
             cblas_dcopy(P*P, &zero, 0, gS+j*P*P,1 );
-            //cblas_dcopy(P*P, &zero, 0, gP+j*P*P,1 );
-            //cblas_dcopy(P*P, &zero, 0, gL+j*P*P,1 );
+            
 		}
 	}
-//	dbg::printf("m-step: %d cluster (%.1lf)", L, T_sum);
 	
 	return status;
 	
@@ -457,15 +456,14 @@ int
 em_meta::m_step_sigma_g(int j)
 {
 	int status=0;
-	int i, p,q;
+        
+    int i, p,q;
 	
 	double z_sum = Z_sum[j];
 	const double* gm = gM + j*P;
 	double* gs = gS + j*P*P;
-    // KL-stuff: removed
-	//double* gp = gP + j*P*P;
-	//double* gl = gL + j*P*P;
-		
+    
+    
 	cblas_dcopy(P*P, &zero, 0, gs, 1);
 	
 	const double* z = Z + j;
@@ -486,48 +484,31 @@ em_meta::m_step_sigma_g(int j)
 	
     // identity ist stupid
 	cblas_dscal(P*P, 1./z_sum, gs, 1);
-	//cblas_dcopy(P*P, gs, 1, gp, 1);
-	//status = mat::cholesky_decomp(P, gp);
-
+	
     cblas_dcopy(P*P, gs, 1, tmpS, 1);
     status = mat::cholesky_decomp(P, tmpS);
     
     if( status!=0){
 		dbg::printf("m-step %d, singularity in co-variance", j);
-        // 2024.06.27:
-        //mat::set_identity(P, gs);
-		//mat::set_identity(P, gp);
-		//mat::set_identity(P, gl);
+        
         cblas_dcopy(P*P, &zero, 0, gs, 1);
-        //cblas_dcopy(P*P, &zero, 0, gp, 1);
-        //cblas_dcopy(P*P, &zero, 0, gl, 1);
         gSdet[j] = NAN;
 		return status;
 	}
-    //gSdet[j] = mat::logdet(P, gp);
     gSdet[j] = mat::logdet(P, tmpS);
-	
-	// covariance matrix -> precision matrix 
-	//mat::invert(P, gp, tmpPxP);
-	//cblas_dcopy(P*P, gp, 1, gl, 1);
-	//status = mat::cholesky_decomp(P, gl);
-    
+	  
     mat::invert(P, tmpS, tmpPxP);
     status = mat::cholesky_decomp(P, tmpS);
     
 	if( status!=0 ) {
 		dbg::printf("m-step %d: singularity in precision", j);
-        // 2024.06.27: chenged
-		//mat::set_identity(P, gs);
-		//mat::set_identity(P, gp);
-		//mat::set_identity(P, gl);
+      
         cblas_dcopy(P*P, &zero, 0, gs, 1);
-        //cblas_dcopy(P*P, &zero, 0, gp, 1);
-        //cblas_dcopy(P*P, &zero, 0, gl, 1);
         gSdet[j] = NAN;
 	}
-	
-	return status;		
+
+    
+	return status;
 	
 } // em_meta::m_step_sigma_g
 
@@ -556,16 +537,23 @@ em_meta::start(int* label, bool weighted)
 	}
 	cblas_dcopy(N*G, &zero, 0, Z, 1);
 	cblas_dcopy(G, &zero, 0, Z_sum, 1);
+
+    memset(g_changed, 0, G*sizeof(int));
 	if( label ) {
 		double* z = Z;
 		const double* t = T;
 		for(int i=0; i<N; ++i) {
-			// Initialize Z-matrix (with 1's and 0's) according to initial partition
+            // Initialize Z-matrix (with 1's and 0's) according to initial partition
 			int l = label[i];
 			if(l>0) {
+                g_changed[l-1] += 1;
+                e_label[i] = l-1;
 				z[l-1] = (*t);
 				Z_sum[l-1] += (*t);
 			}
+            else {
+                //dbg::printf("start obs %d w/o component",i);
+            }
 			z += G;
 			t += T_inc;
 		}
@@ -597,8 +585,8 @@ em_meta::_iterate(int& iterations, double& tolerance, em_meta::E_STEP estep)
 	
 	while(  (diff>tolerance) && (iter<iterations) ) {
 
-        dbg::printf("iter %d", iter);
-        
+        //dbg::printf("iter %d", iter);
+        u_step();
 		hood = (this->*estep)();
 		if( m_step() ) {
 			diff = FLT_MAX;
@@ -616,7 +604,7 @@ em_meta::_iterate(int& iterations, double& tolerance, em_meta::E_STEP estep)
 		hold = hood;
 	}
 	//dbg::printf("iter %d: %.2lf, %.2lf", iter, hood, hold);
-	
+    u_step();
 	// set tolerance and iterations for output
 	tolerance = diff;
 	iterations = iter;
@@ -634,6 +622,8 @@ em_meta::_iterate(int& iterations, double& tolerance, em_meta::E_STEP estep, em_
 	double hood = FLT_MAX;
     double diff = FLT_MAX;	// difference between hood and hold
 	int iter = 1;			 // counter for EM iterations
+    int e_iter = 0;
+    int m_iter = 0;
 	int t_iter = 0;
 	int status = 0;
 	
@@ -645,24 +635,29 @@ em_meta::_iterate(int& iterations, double& tolerance, em_meta::E_STEP estep, em_
 	gsl_set_error_handler_off();
 	
 	// first iteration without test
-	hold = (this->*estep)();
+    u_step();
+ 	hold = (this->*estep)();
+    ++e_iter;
 	m_step();
+    ++m_iter;
 	
 	while( (diff>tolerance) && (iter<iterations) ) {
 		
         if( iter_ok ) {
             ++iter;
         }
-
+       
+        u_step();
 		hood = (this->*etstep)();
-		iter_ok = true;	
+        ++e_iter;
+		iter_ok = true;
 		//if( L > minG && t_step() ) {
+        ++t_iter;
 		if( L > minG && (this->*t_step)() ) {
 			
-            ++t_iter;
-			
+            
 			hood = (this->*estep)();
-			//hood = FLT_MAX;
+            ++e_iter;
 			diff = FLT_MAX;
 			iter_ok = false;
 		}
@@ -670,7 +665,7 @@ em_meta::_iterate(int& iterations, double& tolerance, em_meta::E_STEP estep, em_
         //if( iter > 0 ) {
             diff = fabs(hold-hood)/(1.0+fabs(hood));
         }
-		
+        ++m_iter;
 		if(  m_step() ) {
 			hood = FLT_MAX;
 			diff = FLT_MAX;
@@ -681,10 +676,11 @@ em_meta::_iterate(int& iterations, double& tolerance, em_meta::E_STEP estep, em_
 		hold = hood;
 	}
 	
+    u_step();
 	// set tolerance and iterations for output
 	tolerance = diff;
 
-//	dbg::printf("iter %d (t_iter %d) -> %d", iter, t_iter, L);
+	dbg::printf("iter %d (e_iter:%d t_iter:%d, m_iter:%d) -> %d", iter, e_iter, t_iter, m_iter, L);
 
 	iterations = iter + t_iter;
 
@@ -712,11 +708,13 @@ em_meta::_iterate_0(int& iterations, double& tolerance, em_meta::E_STEP estep, e
     gsl_set_error_handler_off();
     
     // first iteration without test
+    u_step();
     (this->*estep)();
     m_step();
     
     while( (diff>tolerance) && (iter<iterations) ) {
         
+        u_step();
         hood = (this->*etstep)();
         iter_ok = true;
         //if( L > minG && t_step() ) {
@@ -747,10 +745,9 @@ em_meta::_iterate_0(int& iterations, double& tolerance, em_meta::E_STEP estep, e
         hold = hood;
     }
     
+    u_step();
     // set tolerance and iterations for output
     tolerance = diff;
-
-//    dbg::printf("iter %d (t_iter %d) -> %d", iter, t_iter, L);
 
     iterations = iter + t_iter;
 
@@ -760,83 +757,7 @@ em_meta::_iterate_0(int& iterations, double& tolerance, em_meta::E_STEP estep, e
 }
 
 
-/*
-int
-em_meta::_iterate_t(int& iterations, double& tolerance, em_meta::E_STEP estep, em_meta::E_STEP etstep)
-{
-    
-    double hold = FLT_MAX/2.0;
-    double hood = FLT_MAX;
-    double diff = FLT_MAX;    // difference between hood and hold
-    int iter = 1;             // counter for EM iterations
-    int t_iter = 0;
-    int f_iter = 0;
-    int status = 0;
-    
-    
-    em_meta::T_STEP t_step = T_inc > 0 ? &em_meta::wt_step : &em_meta::st_step;
-    
-    bool iter_ok = false;
- 
-    gsl_set_error_handler_off();
-    
-    // first iteration without test
-    (this->*estep)();
-    m_step();
-    
-    while( (diff>tolerance) && (iter<iterations) ) {
-        
-        hood = (this->*etstep)();
-        iter_ok = true;
-        //if( L > minG && t_step() ) {
-        t_iter = 0;
-        while( L > minG && (this->*t_step)() ) {
-            
-            ++t_iter;
-            
-            
-            hood = FLT_MAX;
-            diff = FLT_MAX;
-            iter_ok = false;
-        }
-        
-        if ( t_iter > 0 ) {
-            (this->*estep)();
-        }
-        //else
-        if( iter > 3 ) {
-            diff = fabs(hold-hood)/(1.0+fabs(hood));
-        }
-        
-        if(  m_step() ) {
-            
-            ++f_iter;
-            
-            hood = FLT_MAX;
-            diff = FLT_MAX;
-            iter_ok = false;
-           
-        }
-        
-        if( iter_ok ) {
-            ++iter;
-        }
 
-        hold = hood;
-    }
-    
-    // set tolerance and iterations for output
-    tolerance = diff;
-
-//    dbg::printf("iter %d (t_iter %d) -> %d", iter, t_iter, L);
-
-    iterations = iter + f_iter;
-
-    
-    return status;
-    
-}
-*/
 
 /*
  final:
@@ -863,9 +784,11 @@ em_meta::final1(int* label, double logLike[3], int* history)
                 history[l] = history[j];
                 cblas_dcopy(P, gM+j*P, 1, gM+l*P, 1);
                 cblas_dcopy(P*P, gS+j*P*P, 1, gS+l*P*P, 1);
-                //cblas_dcopy(P*P, gP+j*P*P, 1, gP+l*P*P, 1);
-                //cblas_dcopy(P*P, gL+j*P*P, 1, gL+l*P*P, 1);
                 cblas_dcopy(N, Z+j, G, Z+l, G);
+                gSdet[l] = gSdet[j];
+
+                g_changed[l] = g_changed[j];
+                cblas_dcopy(N, probs+j, G, probs+l , G);
             }
             
             ++l;
@@ -892,6 +815,8 @@ em_meta::final1(int* label, double logLike[3], int* history)
     
     t = T;
     z = Z;
+
+    const double* pdf = probs;
     for(i=0;i<N;i++)
     {
         double sumLike = 0;
@@ -911,7 +836,8 @@ em_meta::final1(int* label, double logLike[3], int* history)
             double tmpLike = 0.0;
             double tmpPDF = 0.0;
             if( gw > 0.0 ){
-                
+
+                /*
                 tmpPDF = (this->*measure)(i,j);
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
@@ -919,8 +845,13 @@ em_meta::final1(int* label, double logLike[3], int* history)
                     dbg::printf("%d: NaN (%d) for PDF (%d) ", j, pc, i);
                     tmpPDF = 0.0;
                 }
+                 
+                if( tmpPDF != pdf[j]) {
+                    dbg::printf("final1: <%d,%d> differ",i , j);
+                }
+                 */
                 
-                
+                tmpPDF = pdf[j];
                 // 2015.03.05: has to be pdf w/o mixture weight
                 tmpLike = gw * tmpPDF;
                 //tmpLike = tmpPDF;
@@ -946,25 +877,13 @@ em_meta::final1(int* label, double logLike[3], int* history)
             }
             
             z[j] = tmpPDF;
+            
         } // for j
         
         
         if( maxClust > -1 )
         tmpG[maxClust] += (*t);
         
-        /* 2016.06.29: output absolut propabilities and not relative propabilities
-         // does not effect cluster assignment, which is only max
-         if( sumLike > 0.0 ) {
-         cblas_dscal(L, 1./sumLike, z, 1);
-         // 2015.10.16: should not happen but does!?
-         for( j=0; j<L; ++j ) {
-         if( z[j] > 1.0 ){
-         dbg::printf("meta %d %d: z > 1 (%.2lf)", i, j, z[j]);
-         z[j] = 1.0;
-         }
-         }
-         }
-         */
         // !!! weights ???    include weights likelihood sum, only parts of event
         obLike += (sumLike>0.0)? (*t) * log(sumLike) : 0.0;
         //clLike += (minLike>0.0)? log(minLike) : 0.0;
@@ -972,6 +891,8 @@ em_meta::final1(int* label, double logLike[3], int* history)
         
         t += T_inc;
         z += G;
+        pdf += G;
+
     }
     
     // BIC: observation likelihood
@@ -1018,7 +939,7 @@ em_meta::final2(int* label, double logLike[3], int* history)
     /*
      remove empty cluster
      */
-    dbg::printf("final2: %d/%d clusters", L, G);
+    //dbg::printf("final2: %d/%d clusters", L, G);
     
     l = 0;
     for( j=0; j<G; ++j ) {
@@ -1029,9 +950,11 @@ em_meta::final2(int* label, double logLike[3], int* history)
                 history[l] = history[j];
                 cblas_dcopy(P, gM+j*P, 1, gM+l*P, 1);
                 cblas_dcopy(P*P, gS+j*P*P, 1, gS+l*P*P, 1);
-                //cblas_dcopy(P*P, gP+j*P*P, 1, gP+l*P*P, 1);
-                //cblas_dcopy(P*P, gL+j*P*P, 1, gL+l*P*P, 1);
                 cblas_dcopy(N, Z+j, G, Z+l, G);
+                gSdet[l] = gSdet[j];
+
+                g_changed[l] = g_changed[j];
+                cblas_dcopy(N, probs+j, G, probs+l , G);
             }
             
             ++l;
@@ -1048,7 +971,7 @@ em_meta::final2(int* label, double logLike[3], int* history)
         
         // symmetric gS
     }
-    dbg::printf("final2: results in %d/%d clusters", L, G);
+    //dbg::printf("final2: results in %d/%d clusters", L, G);
     /*
      calc likelihood
      */
@@ -1058,6 +981,9 @@ em_meta::final2(int* label, double logLike[3], int* history)
     //cblas_dcopy(G, &zero, 0, Z_sum, 1);
     //t = T;
     z = Z;
+
+    const double* pdf = probs;
+
     for(i=0;i<N;i++)
     {
         double sumLike = 0;
@@ -1077,7 +1003,8 @@ em_meta::final2(int* label, double logLike[3], int* history)
             double tmpLike = 0.0;
             double tmpPDF = 0.0;
             if( gw > 0.0 ){
-                
+
+                /*
                 tmpPDF = (this->*measure)(i,j);
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
@@ -1088,7 +1015,9 @@ em_meta::final2(int* label, double logLike[3], int* history)
                     dbg::printf("%d: NaN (%d) for PDF (%d) ", j, pc, i);
                     
                 }
-                
+                 */
+
+                tmpPDF = pdf[j];
                 
                 // 2015.03.05: has to be pdf w/o mixture weight
                 tmpLike = gw * tmpPDF;
@@ -1131,6 +1060,8 @@ em_meta::final2(int* label, double logLike[3], int* history)
         
         // t += T_inc;
         z += G;
+        pdf += G;
+
     }
     
     // BIC: observation likelihood
@@ -1148,7 +1079,7 @@ em_meta::final2(int* label, double logLike[3], int* history)
     //ll = 0;
     for( j=L-1; j >= 0; --j ) {
         if( tmpG[j] == 0) {
-            dbg::printf("final2: cls-%d/%d is empty", j, L);
+            //dbg::printf("final2: cls-%d/%d is empty", j, L);
             
             // correct for that
             for(l=j+1; l<L; ++l ) {
@@ -1209,9 +1140,12 @@ em_meta::final3(int* label, double logLike[3], int* history)
                 history[l] = history[j];
                 cblas_dcopy(P, gM+j*P, 1, gM+l*P, 1);
                 cblas_dcopy(P*P, gS+j*P*P, 1, gS+l*P*P, 1);
-                //cblas_dcopy(P*P, gP+j*P*P, 1, gP+l*P*P, 1);
-                //cblas_dcopy(P*P, gL+j*P*P, 1, gL+l*P*P, 1);
                 cblas_dcopy(N, Z+j, G, Z+l, G);
+                gSdet[l] = gSdet[j];
+
+                g_changed[l] = g_changed[j];
+                cblas_dcopy(N, probs+j, G, probs+l , G);
+
             }
             
             ++l;
@@ -1239,6 +1173,8 @@ em_meta::final3(int* label, double logLike[3], int* history)
     //cblas_dcopy(G, &zero, 0, Z_sum, 1);
     t = T;
     z = Z;
+    const double* pdf = probs;
+
     for(i=0;i<N;i++)
     {
         double sumLike = 0;
@@ -1247,18 +1183,20 @@ em_meta::final3(int* label, double logLike[3], int* history)
         double maxLike = 0;
 #endif
         int maxClust = -1;
-        
+
         for(j=0;j<L;j++)
         {
             
             // observation likelihood: sumLike += tmpLike
             // classification likelihood: sumLike = max(tmpLike)
             // integrated classification likelihood: sumLike = max(tmpLike) without proportion
+
             double gw = gW[j];
             double tmpLike = 0.0;
             double tmpPDF = 0.0;
             if( gw > 0.0 ){
-                
+
+                /*
                 tmpPDF = (this->*measure)(i,j);
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
@@ -1269,7 +1207,9 @@ em_meta::final3(int* label, double logLike[3], int* history)
                     dbg::printf("%d: NaN (%d) for PDF (%d) ", j, pc, i);
             
                 }
+                 */
                 
+                tmpPDF = pdf[j];
                 
                 // 2015.03.05: has to be pdf w/o mixture weight
                 tmpLike = gw * tmpPDF;
@@ -1310,6 +1250,7 @@ em_meta::final3(int* label, double logLike[3], int* history)
         
         t += T_inc;
         z += G;
+        pdf += G;
     }
     
     // BIC: observation likelihood
@@ -1357,7 +1298,7 @@ em_meta::final3(int* label, double logLike[3], int* history)
             }
         }
         if( l < 0 ) {
-            dbg::printf("final2: obs-%d is not assigned", i);
+            dbg::printf("final3: obs-%d is not assigned", i);
         }
         label[i] = l+1;
         z += G;

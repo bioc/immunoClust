@@ -18,7 +18,7 @@ meta.SubClustering(x, P, N, W, M, S, tol=1e-5, bias=0.25, thres=bias,
     alpha=1.0, EM.method=20, HC.samples=2000, verbose=FALSE)
 
 meta.TestSubCluster(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, 
-    alpha=1.0, EM.method=2, HC.samples=2000) 
+    alpha=1.0, EM.method=20, HC.samples=2000) 
 }
 
 \arguments{

@@ -11,7 +11,8 @@ meta.alpha=.5, norm.method=0, norm.blur=2, norm.minG=10
                         dat$clsEvents, dat$M, dat$S, 
                         bias=meta.bias, sub.thres=0, I.iter=meta.iter, B=50, 
                         tol=tol, EM.method=20, alpha=meta.alpha,
-                        norm.method=norm.method, norm.blur=norm.blur, 
+                        ## norm-stuff obsolet here
+                        norm.method=norm.method, norm.blur=norm.blur,
                         norm.minG=norm.minG)
 
     dat.norm <- dat
@@ -30,16 +31,18 @@ meta.alpha=.5, norm.method=0, norm.blur=2, norm.minG=10
                                 rep(0.0,npar(res))), 1, mean)
     attr(res, "limits") <- attr(exp[[1]], "limits")[,dat.subset]
 
-    meta <- list("dat.scatter"=NULL, "res.scatter"=NULL,  
-                    "dat.clusters"=dat, "res.clusters"=res)
-    meta$gating <- list("clusters"=seq_len(res@K), "childs"=c(),
-                    "desc"="all", "partition"=TRUE)
-
+    #meta <- list("dat.scatter"=NULL, "res.scatter"=NULL,
+    #                "dat.clusters"=dat, "res.clusters"=res)
+    #meta$gating <- list("clusters"=seq_len(res@K), "childs"=c(),
+    #                "desc"="all", "partition"=TRUE)
+    #
+    #
+    #meta$gating$pscales <- Default_Scales(attr(res, "trans.a"),
+    #                                    attr(res, "limits"))
+    #
+    #class(meta) <- "immunoMeta"
     
-    meta$gating$pscales <- Default_Scales(attr(res, "trans.a"),
-                                        attr(res, "limits"))
-    
-    class(meta) <- "immunoMeta"
+    meta <- immunoMeta(res, dat)
     meta
 }
 ## meta.process
@@ -150,7 +153,7 @@ bias=0.25, alpha=0.5, min.class=0
                     K=L, P=P, w=obj$w[seq_len(L)], mu=mu, sigma=sigma, 
                     z=z, label=obj$label, 
                     logLike=obj$logLike, BIC=BIC, ICL=ICL,
-                    state=obj$history[seq_len(L)])
+                    history=paste(obj$history[seq_len(L)]) )
     
     result
     
@@ -163,8 +166,10 @@ bias=0.25, alpha=0.5, min.class=0
 ###
 meta.Clustering <- function(
 P, N, K, W, M, S, label=NULL, I.iter=10, B=500, tol=1e-5, 
-bias=0.25, sub.thres=bias, alpha=0.5, EM.method=20, HC.samples=2000,
-norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
+bias=0.25, sub.thres=bias, alpha=0.5, 
+EM.method=20, HC.samples=2000,
+norm.method=0, norm.blur=2, norm.minG=10, ## norm-stuff obsolet here
+verbose=FALSE
 ) {
 
     totK <- sum(K)
@@ -205,14 +210,7 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
             }
         }
         
-        #if( G < 10 )
-        #label <- meta.SubClustering(P, totK, W, tM, tS, label, tol=tol,
-        #                            bias=bias*0.5, alpha=alpha,
-        #                            EM.method=subEM.method)
-        #else
-        #label <- meta.SubClustering(P, totK, W, tM, tS, label, tol=tol,
-        #                            bias=bias, alpha=alpha,
-        #                            EM.method=subEM.method)
+        
         btm <- ptm <- proc.time()
         
         if( res@K < 10 )
@@ -222,17 +220,19 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
         label <- meta.SubClustering(res, P, totK, W, tM, tS,
                                     tol=tol,
                                     bias=sub_bias, thres=sub.thres, alpha=alpha,
-                                    EM.method=subEM.method, HC.samples=HC.samples,
+                                    EM.method=subEM.method, 
+                                    HC.samples=HC.samples,
                                     verbose=verbose)
         if( verbose ) {
             message("sub-clustering (", i, "/", I.iter, ") => ", 
             length(unique(res@label)), "=>", length(unique(label)),
-            "clusters takes ", paste( round((etm<-proc.time()) - ptm), collapse=",") )
+            "clusters takes ", 
+            paste( round((etm<-proc.time()) - ptm), collapse=",") )
             ptm <- etm
         }
         else {
         message("Fit Model ", i, " of ", I.iter, " with ",
-             length(unique(label)), " clusters")
+            length(unique(label)), " clusters")
         }
         res <- meta.ME(P, N, K, W, tM, tS, label, B=B, tol=tol,
                         bias=bias, alpha=alpha, method=EM.method)
@@ -240,12 +240,14 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
         if( verbose ) {
             message("meta-clustering (", i, "/", I.iter, ") => ", 
             res@K, "/", length(unique(label(res))),
-            " clusters takes ", paste( round((etm<-proc.time()) - ptm), collapse=",") )
+            " clusters takes ", 
+            paste( round((etm<-proc.time()) - ptm), collapse=",") )
             ptm <- etm
         }
         else {
         message("=> results in  ", res@K, " clusters")
         }
+        res@state <- label
         label <- res@label
         
         if( res@K == G ) break
@@ -264,8 +266,7 @@ norm.method=0, norm.blur=2, norm.minG=10, verbose=FALSE
     res <- res + lgamma(N+(K+L-1)/2) - lgamma(N+K/2)
     res
 }
-#meta.SubClustering <- function(
-#P, N, W, M, S, label, tol=1e-5, bias=0.25, alpha=1.0, EM.method=20
+
 meta.SubClustering <- function(
 x, P, N, W, M, S, tol=1e-5, bias=0.25, thres=bias, alpha=1.0, 
 EM.method=20, HC.samples=2000,
@@ -280,14 +281,14 @@ verbose=FALSE
     
     ## maximal sub clustering count for one cluster
     J <- 8
-
-    ## 2022.010.10: find a balance to introduce more clusters
+    
+    ## 2022.10.10: find a balance to introduce more clusters
     ##thres <- bias
     icl_thres <- (P*(P+1)/2 + P)*log(sum_T)*0.5*thres
     if( verbose ) {
         message("ICL thres ",  format(icl_thres, digits=2), " (", thres, ")" )
     }
-  
+    
     cutoff <- 0
     
     res_l <- vector("list", K)
@@ -299,7 +300,8 @@ verbose=FALSE
         inc <- which(label==k)
         
         if(verbose) {
-            message("cluster ", k, " test with ", length(inc), " obs and ", sum(W[inc]), " evts" )
+            message("cluster ", k, " test with ", length(inc), " obs and ", 
+            sum(W[inc]), " evts" )
         }
         if( length(inc) > 1 ) {
             res <- meta.TestSubCluster(x,
@@ -325,17 +327,17 @@ verbose=FALSE
             for( l in seq_len(length(res)) ) {
                 ## 2024.05.08:
                 ##icl[l] <- res[[l]]@ICL/res[[l]]@K
-                icLike <- res[[l]]@logLike[4]   ## delta icLike
-                iclSum <- res[[l]]@logLike[3]   ## delta iclSum  .icl_delta_costs
+                icLike <- res[[l]]@logLike[4] ## delta icLike
+                iclSum <- res[[l]]@logLike[3] ## delta iclSum  .icl_delta_costs
                 clCost <- .icl_delta_costs(sum_T, P, K, res[[l]]@K)
-               
+                
                 #icCost <- iclSum - .icl_delta_costs(sumW, P, K, res[[l]]@K)
                 icl[l] <- icLike + iclSum - bias*clCost
                 
                 if( verbose ) {
                     message(k,"/", l,": ", round(icl[l]), "(L=", res[[l]]@K,
-                        " icl=",
-                        round(icLike), " sum=", round(iclSum), " costs=", round(clCost), ")")
+                        " icl=", round(icLike), " sum=", round(iclSum),
+                        " costs=", round(clCost), ")")
                 }
             }
             
@@ -373,9 +375,9 @@ verbose=FALSE
         }
         
         if( res[[l]]@K > 1 && verbose ) {
-            message(J, "/", sK, ": cluster ", k, " (obs=", sum(label==k), ") has ", res[[l]]@K, 
-                " sub-clusters at ", l, ", ICL=", format(icl, digits=2), "<>",
-                format(icl_thres, digits=2))
+            message(J, "/", sK, ": cluster ", k, " (obs=", sum(label==k), 
+                ") has ", res[[l]]@K, " sub-clusters at ", l,
+                ", ICL=", format(icl, digits=2) )
         }
         
         icl_l[k] <- cutoff
@@ -410,7 +412,7 @@ verbose=FALSE
         if( verbose ) {
             message("cls ", k, " (", ins[[k]]@K, " subs on ", length(k_obs), 
             " obs): +max=", max(label))
-          
+            
         }
         label[k_obs] <- ins[[k]]@label + max(label)
         label[f_obs] <- k
@@ -427,7 +429,7 @@ verbose=FALSE
 
 meta.TestSubCluster<-
 function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
-        EM.method=2, HC.samples=2000)
+        EM.method=20, HC.samples=2000)
 {
 
     if( J > N ) {
@@ -510,8 +512,8 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
                                 }) > -100)
         
         
+            
         if( J > length(samples.set) ) {
-            ##message( J, "<>", samples.set, " N=", N)
             return (result)
         }
         
@@ -533,7 +535,6 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
             k <- J+2-j
             #k <- J
             label <- rep(0, N)
-                
             label[samples.set] <- .clust.hclass(hcPairs, k)
                 
             obj <- .Call("immunoC_metaME",
@@ -566,7 +567,8 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
             ## 2024.05.08:
             ## delta icLike with icCost
             ICL <- obj$logLike[2] - logLike
-            ##ICL <- obj$logLike[3] - logLike - .icl_delta_cor(sumW, P, K, L)*bias
+            ##ICL <- obj$logLike[3] - logLike - 
+            ##    .icl_delta_cor(sumW, P, K, L)*bias
             
             ## delta logLike
             ## 3: icLike + iclSum => delta iclSum
@@ -574,9 +576,7 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
             obj$logLike[3] <- obj$logLike[3] - obj$logLike[4] - iclSum
             ## 4: icLike => delta icLike
             obj$logLike[4] <- obj$logLike[4] - icLike
-          
-            ## message(k,"/", L,": ", round(obj$logLike[4]), ", ", round(obj$logLike[3]) )
-           
+            
 # outp
             result[[j]] <- new("immunoClust", parameters=parameters,
                             K=L, N=N, P=P, w=obj$w, mu=mu, sigma=sigma,

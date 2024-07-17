@@ -213,7 +213,7 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
     ## >> sollte mal verschwinden
     if( isTRUE(more.par$ellipsis.merged) ) {
         merged <- .clust.mergedClusters(x, include)
-       
+        
         .plot_ellipses(merged$sigma[subset,subset], merged$mu[subset],
             limits=limits[2,subset], cc=qt(0.95,5), lty=3, col="black",
             npoints=npoints)
@@ -233,7 +233,7 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
             col <- more.par$ellipses.col
             
         for( l in seq_len(nrow(more.par$ellipses.mean)) ) {
-           
+            
             .plot_ellipses(more.par$ellipses.sigma[l,subset,subset],
                 more.par$ellipses.mean[l,subset], limits=limits[2,subset],
                 cc=cc[l], lty=3, col=col[l], npoints=npoints)

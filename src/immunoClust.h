@@ -149,7 +149,7 @@ extern "C" {
     SEXP call_SON_normalize(SEXP res_model,
                 SEXP n, SEXP k, SEXP w, SEXP m, SEXP s,
                 SEXP alpha, SEXP scale_factor, SEXP scale_steps,
-                SEXP meta_iter, SEXP meta_tol,
+                //SEXP meta_iter, SEXP meta_tol, obsolet
                 SEXP SON_cycles, SEXP SON_rlen, SEXP SON_deltas, SEXP SON_blurring);
 
 

@@ -20,7 +20,7 @@ cycles=6, alpha=0.5, scale.factor=2, scale.steps=0,
 meta.iter=1, meta.bias=0.3, meta.thres=meta.bias, meta.tol=1e-5,
 SON.cycles=1, SON.rlen=100, SON.deltas=c(1/SON.rlen,1/SON.rlen),
 SON.blurring=c(2,0.1),
-verbose=FALSE
+verbose=0
 )
 }
 

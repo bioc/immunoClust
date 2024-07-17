@@ -78,7 +78,7 @@ public:
              int g, const double* gw, const double* gevts, const double* gm, const double* gs,
              int k, const double* kw, const double* kevts, const double* km, const double* ks,
              double* knormed,
-             double alpha,
+             double alpha, int old_blur,
              const int* traceG, const int* traceK, int verbose=0);
 	~meta_SON();
 	
@@ -101,7 +101,6 @@ public:
     
     int     scaleStep(double factor, int steps);
     
-    //int     scaleModel(double factor, int steps);
     double  bc_measure(const double* m1, const double* s1, const double* m2, const double* s2);
     double  bc_coeff(const double* m1, const double* s1, const double* m2, const double* s2);
     //double  bc_probability(const double* m1, const double* s1, const double* m2, const double* s2);
@@ -138,12 +137,8 @@ private:
     
 	double	logdet(const double* a, int& status);
     
-    //void    initMapped();
-    //void    buildBlurredS(double* blurredS, double blurring[2], double lambda);
-  
     BMU    bestMatchingUnit(int k, const int* map_cluster, const double* mappedM );
     
-  
     //void   buildNeighbourProbabilities(const double* blurredS);
     void   buildNeighbourProbabilities(double blur);
   

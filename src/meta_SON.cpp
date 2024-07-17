@@ -18,15 +18,12 @@
 #include <gsl/gsl_sf_log.h>
 
 
-#define USE_SUMCOV 1
-
-#define USE_BLURRED_Sn 1
 
 meta_SON::meta_SON(int p,
                    int g, const double* gw, const double* gevts, const double* gm, const double* gs,
                    int k, const double* kw, const double* kevts, const double* km, const double* ks,
                    double* knormed,
-                   double alpha,
+                   double alpha, int old_blur,
                    const int* traceG, const int* traceK, int v):
 FLTMAX(1.7976931348623157e308), zero(0.0), one(1.0), two(2.0),
 P(p), G(g), gW(gw), gEvts(gevts), gM(gm), gS(gs),
@@ -61,6 +58,7 @@ ALPHA(alpha), gTrace(traceG), kTrace(traceK), verbose(v)
         double l = logdet(s_i, status);
         if( status ) {
             kSdet[i] = NAN;
+            if(verbose)
             dbg::printf("cluster %d: undefined determinant", i);
         }
         else {
@@ -75,6 +73,7 @@ ALPHA(alpha), gTrace(traceG), kTrace(traceK), verbose(v)
         double l = logdet(s_j, status);
         if( status ) {
             gSdet[j] = NAN;
+            if(verbose)
             dbg::printf("component %d: undefined determinant", j);
         }
         else {
@@ -82,9 +81,8 @@ ALPHA(alpha), gTrace(traceG), kTrace(traceK), verbose(v)
         }
         s_j += P*P;
     }
-    //initMapped();
    
-#ifdef USE_SUMCOV
+    // pre-calculate sum
     kgS = new double[K*G*P*P];
     kgSdet = new double[K*G];
     
@@ -103,24 +101,15 @@ ALPHA(alpha), gTrace(traceG), kTrace(traceK), verbose(v)
             status = mat::cholesky_decomp(P, s);
             if( !status ) {
                 mat::invert(P, s, tmpPxP);
-                //*s_det = logdet(s, status);
                 status = mat::cholesky_decomp(P, s);
             }
             if( !status ) {
-                /*
-                for(int p=0; p<P; ++p) {
-                    if( *(s + p*P + p) <= 0.0 ) {
-                        status = 2;
-                    }
-                }
-                */
-                
                 *s_det = mat::logdet(P, s);
-                //status = mat::cholesky_decomp(P, s);
             }
             if( status ) {
                 *s_det = NAN;
                 cblas_dcopy(P*P, &zero, 0, s, 1);
+                if( verbose )
                 dbg::printf("sumS (%d,%d): undefined determinant", i,j);
             }
             
@@ -131,56 +120,49 @@ ALPHA(alpha), gTrace(traceG), kTrace(traceK), verbose(v)
         s_i += P*P;
     }
     
-   
+    //dbg::printf("meta_SOM with sum-covariance");
+
     
-    dbg::printf("meta_SOM with sum-covariance");
-#else
-    dbg::printf("meta_SOM w/o sum-covariance");
-    kgS = 0;
-    kgSdet = 0;
-    
-   
-#endif
-#ifdef USE_BLURRED_S
-    blurredS = new double[G*P*P];
-    ggS = 0;
-    ggSdet = 0;
-  
-#else
-    blurredS = 0;
-    ggS = new double[G*(G-1)/2*P*P];
-    ggSdet = new double[G*(G-1)/2];
-    s = ggS;
-    s_det = ggSdet;
-    
-    s_i = gS;
-    for(int i=0; i<G; ++i) {
-        s_j = gS;
-        for(int j=0; j<i; ++j ) {
-            mat::sum(P, s, s_i, s_j, w1, w2);
-            status = mat::cholesky_decomp(P, s);
-            if( !status ) {
-                mat::invert(P, s, tmpPxP);
-                status = mat::cholesky_decomp(P, s);
-              
-            }
-            if( !status ) {
-                *s_det = mat::logdet(P, s);
-            }
-            if( status ) {
-                *s_det = NAN;
-                cblas_dcopy(P*P, &zero, 0, s, 1);
-                dbg::printf("neighBourS (%d,%d): undefined determinant", i,j);
-            }
-            
-            s_j += P*P;
-            s += P*P;
-            ++s_det;
-        }
-        s_i += P*P;
+    if( old_blur ) {
+        blurredS = new double[G*P*P];
+        ggS = 0;
+        ggSdet = 0;
     }
-    
-#endif
+    else {
+        // fast blur
+        blurredS = 0;
+        ggS = new double[G*(G-1)/2*P*P];
+        ggSdet = new double[G*(G-1)/2];
+        s = ggS;
+        s_det = ggSdet;
+        
+        s_i = gS;
+        for(int i=0; i<G; ++i) {
+            s_j = gS;
+            for(int j=0; j<i; ++j ) {
+                mat::sum(P, s, s_i, s_j, w1, w2);
+                status = mat::cholesky_decomp(P, s);
+                if( !status ) {
+                    mat::invert(P, s, tmpPxP);
+                    status = mat::cholesky_decomp(P, s);
+                    
+                }
+                if( !status ) {
+                    *s_det = mat::logdet(P, s);
+                }
+                if( status ) {
+                    *s_det = NAN;
+                    cblas_dcopy(P*P, &zero, 0, s, 1);
+                    dbg::printf("neighBourS (%d,%d): undefined determinant", i,j);
+                }
+                
+                s_j += P*P;
+                s += P*P;
+                ++s_det;
+            }
+            s_i += P*P;
+        }
+    }
     
 }
 
@@ -224,20 +206,10 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
     if(verbose)
     dbg::printf("SON_map");
     
-    // mapped = model
-    //cblas_dcopy(P*G, gM, 1, mappedM, 1);
     
     if( deltas[0] <= 0.0 ) deltas[0] = 1.0/rlen;
     if( deltas[1] <= deltas[0]) deltas[1] = deltas[0];
     
-    /*
-    changes <- matrix(0, nrow=rlen*K, ncol=ncol(meta.res@mu))
-    probabilities <- rep(0, rlen*K)
-    histK <- rep(0, K)
-    histG <- rep(0, meta.res@K)
-     */
-    
-   
     
     double* mapW = new double[G];
     cblas_dcopy(G, gW, 1, mapW, 1);
@@ -268,23 +240,12 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
     //cblas_dscal(K, 1.0/sumW, iterW, 1 );
     
     
-    //double* blurredS = new double[G*P*P];
-    
     long totIter = rlen*K;
     long curIter = 0;
     for( long iter = 0; iter < rlen; ++iter ) {
         
         double blur = blurring[0] - (blurring[0] - blurring[1]) * double(iter)/(rlen-1);
         
-        //if(verbose)
-        //dbg::printf("SON %d: blur=%.1lf", iter, blur);
-        
-        /*
-        cblas_dcopy(G*P*P, gS, 1, blurredS, 1);
-        cblas_dscal(G*P*P, blur, blurredS, 1);
-        
-        buildNeighbourProbabilities(blurredS);
-        */
         buildNeighbourProbabilities(blur);
        
         for( int l=0; l<K; ++l ) if( !use_cluster || use_cluster[l] ) {
@@ -297,9 +258,6 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
                 }
             }
             
-            //if( doTrace(-1, k) ) {
-            //    dbg::printf("%d/%d (%d) : %d <> %.4lf", curIter, totIter, iter, k, iterW[k] );
-            //}
             
             double factor = double(curIter) / double(totIter-1);
             
@@ -337,11 +295,6 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
                     else {
                         //move probability based patially in direction of k
                         //2018.09.21 question?: calculate direction from code or from bmu
-                        /*
-                        if(doTrace(j, -1) && doTrace(bmu.index, k) ) {
-                            dbg::printf("bmu %d: move %d => %d: %.4lf (%.4lf)  %.4lf", bmu.index, j, k,  *(mappedM + j*P + 3), prob, *(normedM+k*P+3) );
-                        }
-                         */
                         for(p=0; p<P; ++p ) {
                         *(mappedM+j*P+p) +=
                             prob*delta*weight * (*(normedM+k*P+p) - *(mappedM+j*P+p));
@@ -361,8 +314,7 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
     
     delete[] iterW;
     delete[] mapW;
-    delete[] blurredS;
-    
+  
     // move not mapped cluster
     for(p=0; p<P; ++ p) {
         double dist = 0;
@@ -495,16 +447,8 @@ meta_SON::normStep2( const int* map_cluster, const int* use_cluster,
                     if( doTrace(j, k) ){
                         dbg::printf("%d: move %d => %d (%.4lf)", iter, k, j, prob);
                     }
-                    /*
-                    if( doTrace(j, k) && prob > 0.0001 ) {
-                        int p = 3;
-                        dbg::printf("move P[3] %d => %d: (%.4lf) %.4lf, [%.4lf <= %.4lf], %.4lf", k, j, prob,
-                                    *(normedM+k*P+p), *(gM+j*P+p), *(mappedM+j*P+p), (*(gM+j*P+p) - *(mappedM+j*P+p)) );
-                    }
-                    */
+                   
                     for( int p=0; p<P; ++p ) {
-                        //*(normedM+k*P+p) += prob * (*(gM+j*P+p) - *(normedM+k*P+p));
-                        
                         *(normedM+k*P+p) += prob * (*(gM+j*P+p) - *(mappedM+j*P+p));
                     }
                     
@@ -578,19 +522,16 @@ meta_SON::bestMatchingUnit(int k, const int* map_cluster, const double* mappedM)
 {
     // use ALPHA
     BMU bmu;
-#ifdef USE_SUMCOV
+
     const double* s_cov = kgS + k*G*P*P; // KxG (x PxP)
     const double* s_det = kgSdet + k*G;     // KxG
-#endif
+
     for( int j=0; j<G; ++j ) if( !map_cluster || map_cluster[j]) {
-#ifdef USE_SUMCOV
+
         double  prob = gW[j] * bc_measure3(normedM+k*P, kS+k*P*P, kSdet[k],
                                            mappedM+j*P, gS+j*P*P, gSdet[j],
                                            s_cov+j*P*P, s_det[j]);
-#else
-        double  prob = gW[j] * bc_measure2(normedM+k*P, kS+k*P*P, kSdet[k],
-                                           mappedM+j*P, gS+j*P*P, gSdet[j]);
-#endif
+
         if( prob > bmu.probability) {
             bmu.probability = prob;
             bmu.index = j;
@@ -601,99 +542,71 @@ meta_SON::bestMatchingUnit(int k, const int* map_cluster, const double* mappedM)
     
 }
 
-/*
-void
-//meta_SON::buildNeighbourProbabilities(const double* blurredS)
-meta_SON::buildNeighbourProbabilities(double blur)
-{
-    cblas_dcopy(G*P*P, gS, 1, blurredS, 1);
-    cblas_dscal(G*P*P, blur, blurredS, 1);
-    
-    cblas_dcopy(G*G, &zero, 0, neighbourProbs, 1);
-    for( int i=0; i<G; ++i )
-    { //if(map_cluster[i]) {
-        double sum=0;
-        double* prob = neighbourProbs + i*G;
-        for( int j=0; j<G; ++j ) { // if(map_cluster[j]) {
-            // with!!! or without alpha?
-            prob[j] = bc_measure(gM+i*P, blurredS+i*P*P, gM+j*P, blurredS+j*P*P);
-            int pc = fpclassify( prob[j] );
-            if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
-                dbg::printf("neighbour %d<>%d: NaN (%d|%d) ", j, i, pc, FP_ZERO);
-                prob[j] = 0.0;
-            }
-            
-            sum += prob[j];
-        }
-        cblas_dscal(G, 1.0/sum, prob, 1);
-    }
-}
-*/
  
 void
 meta_SON::buildNeighbourProbabilities(double blur)
 {
-#ifdef USE_BLURRED_S
-    cblas_dcopy(G*P*P, gS, 1, blurredS, 1);
-    cblas_dscal(G*P*P, blur, blurredS, 1);
-    
-    cblas_dcopy(G*G, &zero, 0, neighbourProbs, 1);
-    for( int i=0; i<G; ++i )
-    { //if(map_cluster[i]) {
-        double sum=0;
-        double* prob = neighbourProbs + i*G;
-        for( int j=0; j<G; ++j ) { // if(map_cluster[j]) {
-            // with!!! or without alpha?
-            prob[j] = bc_measure(gM+i*P, blurredS+i*P*P, gM+j*P, blurredS+j*P*P);
-            int pc = fpclassify( prob[j] );
-            if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
-                dbg::printf("neighbour %d<>%d: NaN (%d|%d) ", j, i, pc, FP_ZERO);
-                prob[j] = 0.0;
-            }
-            
-            sum += prob[j];
-        }
-        cblas_dscal(G, 1.0/sum, prob, 1);
-    }
-#else
-    cblas_dcopy(G*G, &zero, 0, neighbourProbs, 1);
-    
-    const double* s = ggS;  // == gS^{-1/2}
-    const double* s_det = ggSdet;
-    
-    for( int i=0; i<G; ++i )
-    { //if(map_cluster[i]) {
+    if( blurredS ) {
+        // compatible mode
+        cblas_dcopy(G*P*P, gS, 1, blurredS, 1);
+        cblas_dscal(G*P*P, blur, blurredS, 1);
         
-        for( int j=0; j<i; ++j) {
-            // alles burred hebt sich auf
-            double logD = *s_det + 0.5*gSdet[i] + 0.5*gSdet[j];
-            
-            // hier nicht
-            double dist = 1.0/blur * sqr(mvn::mahalanobis(P, gM+i*P, gM+j*P, s, tmpP));
-            double prob = exp(0.5*(logD-dist));
-            int pc = fpclassify( prob );
-            if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
-                dbg::printf("neighbour %d<>%d: NaN (%d|%d) ", j, i, pc, FP_ZERO);
-                prob = 0.0;
+        cblas_dcopy(G*G, &zero, 0, neighbourProbs, 1);
+        for( int i=0; i<G; ++i )
+        { //if(map_cluster[i]) {
+            double sum=0;
+            double* prob = neighbourProbs + i*G;
+            for( int j=0; j<G; ++j ) { // if(map_cluster[j]) {
+                // with!!! or without alpha?
+                prob[j] = bc_measure(gM+i*P, blurredS+i*P*P, gM+j*P, blurredS+j*P*P);
+                int pc = fpclassify( prob[j] );
+                if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
+                    dbg::printf("neighbour %d<>%d: NaN (%d|%d) ", j, i, pc, FP_ZERO);
+                    prob[j] = 0.0;
+                }
+                
+                sum += prob[j];
             }
-            *(neighbourProbs + i*G + j) = *(neighbourProbs + j*G + i) = prob;
-            s += P*P;
-            ++s_det;
+            cblas_dscal(G, 1.0/sum, prob, 1);
         }
-        *(neighbourProbs + i*G + i) = 1;
     }
-    for( int i = 0; i < G; ++i ) {
-        double sum=0;
-        double* prob = neighbourProbs + i*G;
-        for( int j=0; j<G; ++j ) { // if(map_cluster[j]) {
-            // with!!! or without alpha?
-            sum += prob[j];
+    else {
+        cblas_dcopy(G*G, &zero, 0, neighbourProbs, 1);
+        
+        const double* s = ggS;  // == gS^{-1/2}
+        const double* s_det = ggSdet;
+        
+        for( int i=0; i<G; ++i ) {
+            
+            for( int j=0; j<i; ++j) {
+                // alles burred hebt sich auf
+                double logD = *s_det + 0.5*gSdet[i] + 0.5*gSdet[j];
+                
+                // hier nicht
+                double dist = 1.0/blur * sqr(mvn::mahalanobis(P, gM+i*P, gM+j*P, s, tmpP));
+                double prob = exp(0.5*(logD-dist));
+                int pc = fpclassify( prob );
+                if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
+                    dbg::printf("neighbour %d<>%d: NaN (%d|%d) ", j, i, pc, FP_ZERO);
+                    prob = 0.0;
+                }
+                *(neighbourProbs + i*G + j) = *(neighbourProbs + j*G + i) = prob;
+                s += P*P;
+                ++s_det;
+            }
+            *(neighbourProbs + i*G + i) = 1;
         }
-        cblas_dscal(G, 1.0/sum, prob, 1);
+        for( int i = 0; i < G; ++i ) {
+            double sum=0;
+            double* prob = neighbourProbs + i*G;
+            for( int j=0; j<G; ++j ) { // if(map_cluster[j]) {
+                // with!!! or without alpha?
+                sum += prob[j];
+            }
+            cblas_dscal(G, 1.0/sum, prob, 1);
+        }
+        
     }
-    
-
-#endif
     
 }
 
@@ -703,20 +616,20 @@ meta_SON::buildClusterProbabilities(int j)
     cblas_dcopy(K, &zero, 0, posterior, 1);
     double sum=0;
     double* prob = posterior;
-#ifdef USE_SUMCOV
+
     const double* s_cov = kgS + j*P*P;   // = KxG (x PxP)
     const double* s_det = kgSdet + j;    // = KxG
-#endif
+
     for( int k=0; k<K; ++k ) {
-            // with!!! or without alpha?
-#ifdef USE_SUMCOV
+        // with!!! or without alpha?
+        /*
+        prob[k] = bc_measure2(mappedM+j*P, gS+j*P*P, gSdet[j],
+                              normedM+k*P, kS+k*P*P, kSdet[k]);
+       
+        */
         prob[k] = bc_measure3(mappedM+j*P, gS+j*P*P, gSdet[j],
                               normedM+k*P, kS+k*P*P, kSdet[k],
                               s_cov, *s_det );
-#else
-        prob[k] = bc_measure2(mappedM+j*P, gS+j*P*P, gSdet[j],
-                              normedM+k*P, kS+k*P*P, kSdet[k]);
-#endif
         int pc = fpclassify( prob[k] );
         if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
             dbg::printf("probability %d<>%d: NaN (%d) ", j, k, pc);
@@ -724,11 +637,11 @@ meta_SON::buildClusterProbabilities(int j)
         }
         
         sum += prob[k];
-#ifdef USE_SUMCOV
+
         // next row
         s_cov += G*P*P;
         s_det += G;
-#endif
+
     }
     cblas_dscal(K, 1.0/sum, posterior, 1);
     return posterior;
@@ -754,21 +667,18 @@ meta_SON::buildCoefficients()
     for( int j=0; j<G; ++j ) {
         double sum=0;
         
-#ifdef USE_SUMCOV
+
         const double* s_cov = kgS + j*P*P;  // j-te spalte KxG (x PxP)
         const double* s_det = kgSdet + j;    // j-te spalte KxG
-#endif
+
         for( int k=0; k<K; ++k ) {
             // with!!! or without alpha?
             // here: coeff<>probability egal, gW egal, only factors fixed for g
-#ifdef USE_SUMCOV
+
             prob[k] = bc_measure3(mappedM+j*P, gS+j*P*P, gSdet[j],
                                   normedM+k*P, kS+k*P*P, kSdet[k],
                                   s_cov, *s_det);
-#else
-            prob[k] = bc_measure2(mappedM+j*P, gS+j*P*P, gSdet[j],
-                                  normedM+k*P, kS+k*P*P, kSdet[k]);
-#endif
+
             int pc = fpclassify( prob[k] );
             if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
                 dbg::printf("coefficients %d<>%d: NaN (%d|%d) ", j, k, pc, FP_NAN);
@@ -776,11 +686,11 @@ meta_SON::buildCoefficients()
             }
             
             sum += prob[k];
-#ifdef USE_SUMCOV
+
             // next row
             s_cov += G*P*P;
             s_det += G;
-#endif
+
         }
        
         cblas_dscal(K, 1.0/sum, prob, 1);
@@ -805,10 +715,10 @@ meta_SON::buildPosterior()
      */
     cblas_dcopy(K*G, &zero, 0, posterior, 1);
     double* z = posterior;
-#ifdef USE_SUMCOV
+
     const double* s_cov = kgS;     // KxG (x PxP)
     const double* s_det = kgSdet;    // KxG
-#endif
+
     for(int k=0; k<K; ++k ) {
         map[k] = -1;
         double sumLike=0;
@@ -818,15 +728,12 @@ meta_SON::buildPosterior()
             // weights magic???
             // hier: bc_coeff <> bc_prob und gW nicht egal
             //double weight = (gW[j]+kW[k]);
-#ifdef USE_SUMCOV
+
             double clsPDF = bc_probability3(mappedM+j*P, gS+j*P*P, gSdet[j],
                                             normedM+k*P, kS+k*P*P, kSdet[k],
                                             s_cov, *s_det);
       
-#else
-            double clsPDF = bc_probability2(mappedM+j*P, gS+j*P*P, gSdet[j],
-                                            normedM+k*P, kS+k*P*P, kSdet[k]);
-#endif
+
             double clsLike = gEvts[j]* clsPDF;
             z[j] = clsLike;
             if( verbose ) {
@@ -840,10 +747,10 @@ meta_SON::buildPosterior()
                 maxPDF = clsPDF;
                 map[k] = j;
             }
-#ifdef USE_SUMCOV
+
             s_cov += P*P;
             ++s_det;
-#endif
+
         }
         if( sumLike > 0 )
             cblas_dscal(G, 1.0/sumLike, z, 1);

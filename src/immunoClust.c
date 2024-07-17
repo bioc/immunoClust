@@ -16,7 +16,7 @@ extern "C" {
 int print_text(const char* txt) 
 {
 //#ifdef DEBUG
-//	Rprintf("%s\n", txt);
+	//Rprintf("%s\n", txt);
 //#endif
 	return 0;
 }
@@ -77,7 +77,7 @@ int print_text(const char* txt)
         */
         /* SON */
         {"immunoC_SON_combineClustering", (DL_FUNC)(&call_SON_combineClustering), 15},
-        {"immunoC_SON_normalize", (DL_FUNC)(&call_SON_normalize), 15},
+        {"immunoC_SON_normalize", (DL_FUNC)(&call_SON_normalize), 13 }, //15},
         
 		{NULL, NULL, 0}
 	};

@@ -632,17 +632,16 @@ meta.alpha=0.5, norm.method=3, norm.blur=2, norm.minG=10, verbose=FALSE)
 .annotate.clustering2 <-
 function(meta.src, meta.dst, par=seq_len(npar(meta.dst)), SON.method=2, ...)
 {
-   
 
     ## co-clustering and normalization
     co_res <- meta.SON.combineClustering(meta.src, meta.dst$res.clusters,
         par=par, SON.method=SON.method, ...)
- 
+    
     model_res <- subset(meta.src$res.clusters, par=par)
- #model_clsEvents <-  model$dat.clusters$clsEvents
- 
+    #model_clsEvents <-  model$dat.clusters$clsEvents
+    
     sample_res <- subset(meta.dst$res.clusters, par=par)
- 
+    
     #normedM <- attr(co_res, "nrm.M")
     
     #nrm_M <- normedM[seq_len(ncls(sample_res)) + ncls(model_res), ]
@@ -660,17 +659,17 @@ function(meta.src, meta.dst, par=seq_len(npar(meta.dst)), SON.method=2, ...)
             cls <- which(co_res@label==j) - ncls(model_res)
             move(meta.dst, anno$pos) <<- cls[cls>0]
         }
-     
-       
+        
+        
         for( i in seq_len(length(anno$childs)) ) {
             .annotateClusters(anno$childs[[i]])
         }
     }
- 
+    
     .annotateClusters(meta.src$gating)
- 
+    
     #meta.dst <- finalize(meta.dst)
- 
+    
     meta.dst
     
 }

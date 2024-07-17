@@ -147,8 +147,10 @@ em_meta::bc_probability_fast(int i, int j)
     const double wi = 0.5;
     const double wj = 0.5;
     double det_i =  Sdet[i]; // logdet(S+i*P*P, status);  // =0.5*logdet_invS for w1=0.5
-    double det_j = gSdet[j]; //logdet(gS+j*P*P, status); // =0.5*logdet_invS for w2=0.5
+    double det_j = gSdet[j]; // logdet(gS+j*P*P, status); // =0.5*logdet_invS for w2=0.5
  
+    // double det_ij = *(kgSdet + i*G + j);
+    
     if( fpclassify( det_i ) == FP_NAN || fpclassify( det_j ) == FP_NAN )
         return bc_diag(i,j);
     
@@ -177,6 +179,8 @@ em_meta::bc_probability_fast(int i, int j)
     return exp(0.5*logD);
     
 }
+
+ 
 double
 em_meta::bc_measure_fast(int i, int j)
 {
@@ -184,16 +188,52 @@ em_meta::bc_measure_fast(int i, int j)
         return bc_diag(i,j);
     }
     if( ALPHA < 1.0 ) {
-        
+
         double a = bc_probability_fast(i,j);
         double b = bc_diag(i,j);
         
         return ALPHA*a + (1.0-ALPHA)*b;
     }
-    
     return bc_probability_fast(i,j);
 }
 // em_meta::bc_measure_fast
+
+//
+int
+em_meta::u_step()
+{
+    //dbg::printf("u-step: update probabilities");
+    for( int j=0; j<G; j++ )
+        if( gW[j] > 0.0 && g_changed[j] ) {
+        
+            //dbg::printf("u-step: component %d has changed", j);
+    
+            double* pdf = probs + j;
+            for( int i=0; i<N; ++i ) {
+                
+                double tmpPDF = bc_measure_fast(i,j);
+                
+                int pc = fpclassify( tmpPDF );
+                if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
+                    tmpPDF = 0.0;
+                    
+                    if( pc != FP_SUBNORMAL )
+                        dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
+                    
+                }
+                
+                *pdf = tmpPDF;
+                pdf += G;
+                //s_i += P*P;
+                //++det_i;
+            }   // for i
+    } // if j
+    
+    memset(g_changed, 0, G*sizeof(int));
+    
+    return 0;
+}
+
 
 /*
  bc_e_step:
@@ -202,16 +242,20 @@ em_meta::bc_measure_fast(int i, int j)
 double
 em_meta::bc_e_step()
 {
+    //dbg::printf("e-step");
     int i, j;
     
     double obLike = 0;
     
     //    Initialize Z_sum elements to zero
     cblas_dcopy(G, &zero, 0, Z_sum, 1);
-    
+
+
     double* z = Z;
     const double* t = T;
-    for(i=0; i < N;i++) {
+    const double* pdf = probs;
+
+    for(i=0; i < N; i++) {
         
         cblas_dcopy(G, &zero, 0, z, 1);
         
@@ -219,14 +263,16 @@ em_meta::bc_e_step()
         // double maxLike = 0.0;
         double maxPDF = 0.0;
         int maxClust = -1;
-        
+
         for(j=0;j<G;j++) {
             
             double gw = gW[j];
             double tmpPDF = 0.0;
             double tmpLike = 0.0;
             if( gw > 0.0 ) {
-                tmpPDF = bc_measure(i,j);
+
+                /*
+                tmpPDF = bc_measure_fast(i,j);
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
                 if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
@@ -236,7 +282,9 @@ em_meta::bc_e_step()
                     dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                     
                 }
-                
+                */
+
+                tmpPDF = pdf[j];
                 tmpLike = gw*tmpPDF;
             }
             
@@ -258,6 +306,20 @@ em_meta::bc_e_step()
             z[maxClust] = *t;
             Z_sum[maxClust] += *t;
         }
+        //else {
+        //    dbg::printf("e-step: cls %d w/o component",  i);
+        //}
+
+        if( e_label[i] != maxClust ) {
+            //dbg::printf("e-step: component %d cls %d changed => %d", e_label[i], i, maxClust);
+            if( e_label[i] > -1 )
+                g_changed[ e_label[i] ] +=1;
+            if( maxClust > -1 )
+            g_changed[maxClust] += 1;
+            e_label[i] = maxClust;
+        }
+
+        pdf += G;
         z += G;
         t += T_inc;
     }    // for i<N
@@ -274,6 +336,7 @@ em_meta::bc_e_step()
 double
 em_meta::bc_et_step()
 {
+    //dbg::printf("et-step");
     int i, j;
     
     double obLike = 0;
@@ -286,9 +349,12 @@ em_meta::bc_et_step()
     
     //    Initialize Z_sum elements to zero
     cblas_dcopy(G, &zero, 0, Z_sum, 1);
-    
+
+
     double* z = Z;
     const double* t = T;
+    const double* pdf = probs;
+
     for(i=0; i < N;i++) {
         
         cblas_dcopy(G, &zero, 0, z, 1);
@@ -299,14 +365,17 @@ em_meta::bc_et_step()
         double maxPDF = 0.0;
         double sndPDF = 0.0;
         int maxClust = -1, sndClust = -1;
-        
+
         for(j=0;j<G;j++) {
             
             double gw = gW[j];
             double tmpPDF = 0.0;
             double tmpLike = 0.0;
+            
             if( gw > 0.0 ) {
-                tmpPDF = bc_measure(i,j);
+
+                /*
+                tmpPDF = bc_measure_fast(i,j);
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
                 if( pc != FP_NORMAL && pc !=  FP_ZERO ) {
@@ -315,9 +384,12 @@ em_meta::bc_et_step()
                     if( pc != FP_SUBNORMAL )
                     dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                 }
+                */
                 
+                tmpPDF = pdf[j];
                 tmpLike = gw*tmpPDF;
             }
+            
             
             // z[j] = (*t) * tmpLike;
             sumLike += tmpLike;
@@ -343,11 +415,7 @@ em_meta::bc_et_step()
             //cblas_dscal(G, 1./sumLike, z, 1);
             obLike +=(*t) * log(sumLike);
         }
-        /*
-        if( maxClust == 31 || maxClust == 98 || maxClust == 100 ) {
-            dbg::printf("e-step %d: max=%d: snd=%d", i, maxClust, sndClust  );
-        }
-        */
+        
         if( sndClust > -1 ) {
             
             // tmpG -> delta likelihood
@@ -374,7 +442,18 @@ em_meta::bc_et_step()
         if( maxClust > -1 ) {
             z[maxClust] = *t;
             Z_sum[maxClust] += *t;
+            
         }
+       
+        if( e_label[i] != maxClust ) {
+            //dbg::printf("et-step: component %d cls %d changed => %d", e_label[i], i, maxClust);
+            if( e_label[i] > -1 )
+                g_changed[ e_label[i] ] +=1;
+            if( maxClust > -1 )
+                g_changed[maxClust] +=1;
+            e_label[i] = maxClust;
+        }
+        pdf += G;
         z += G;
         t += T_inc;
     }    // for i<N
@@ -389,6 +468,7 @@ em_meta::bc_et_step()
  e_step for bhattacharrya probability maximization
  the labeling of minG clusters remains unchanged
  */
+
 double
 em_meta::bc_fixedN_e_step()
 {
@@ -401,6 +481,7 @@ em_meta::bc_fixedN_e_step()
     
     double* z = Z;
     const double* t = T;
+    const double* pdf = probs;
     for(i=0; i < fixedN; i++) {
         double sumLike = 0.0;
         // double maxPDF = 0.0;
@@ -413,6 +494,8 @@ em_meta::bc_fixedN_e_step()
             double tmpPDF = 0.0;
             double tmpLike = 0.0;
             if( gw > 0.0 ) {
+                
+                /*
                 tmpPDF = bc_measure(i,j);
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
@@ -423,10 +506,15 @@ em_meta::bc_fixedN_e_step()
                     dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                     
                 }
+
+                if( tmpPDF != pdf[j])
+                    dbg::printf("fixedN_e-step: <%d,%d>, differ", i, j);
+                 */
                 
+                tmpPDF = pdf[j];
                 tmpLike = gw*tmpPDF;
             }
-            
+
             sumLike += tmpLike;
             
             if( z[j] > maxZ ) {
@@ -446,8 +534,18 @@ em_meta::bc_fixedN_e_step()
             Z_sum[maxClust] += *t;
         } // maxClust > -1
         
+        if( e_label[i] != maxClust ) {
+            //dbg::printf("et-step: component %d cls %d changed => %d", e_label[i], i, maxClust);
+            if( e_label[i] > -1 )
+                g_changed[ e_label[i] ] +=1;
+            if( maxClust > -1 )
+                g_changed[maxClust] +=1;
+            e_label[i] = maxClust;
+        }
+
         z += G;
         t += T_inc;
+        pdf += G;
     }
     
     for(i=fixedN; i < N; i++) {
@@ -464,6 +562,8 @@ em_meta::bc_fixedN_e_step()
             double tmpPDF = 0.0;
             double tmpLike = 0.0;
             if( gw > 0.0 ) {
+
+                /*
                 tmpPDF = bc_measure(i,j);
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
@@ -474,7 +574,12 @@ em_meta::bc_fixedN_e_step()
                     dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                     
                 }
+
+                if( tmpPDF != pdf[j])
+                    dbg::printf("fixedN_e-step: <%d,%d>, differ", i, j);
+                */
                 
+                tmpPDF = pdf[j];
                 tmpLike = gw*tmpPDF;
             }
             
@@ -493,9 +598,21 @@ em_meta::bc_fixedN_e_step()
         if( maxClust > -1 ) {
             z[maxClust] = *t;
             Z_sum[maxClust] += *t;
+           
         }
+        if( e_label[i] != maxClust ) {
+            //dbg::printf("et-step: component %d cls %d changed => %d", e_label[i], i, maxClust);
+            if( e_label[i] > -1 )
+                g_changed[ e_label[i] ] +=1;
+            if( maxClust > -1 )
+            g_changed[maxClust] += 1;
+            e_label[i] = maxClust;
+        }
+        
         z += G;
         t += T_inc;
+        pdf += G;
+
     } // for i<N
     
     
@@ -508,6 +625,7 @@ em_meta::bc_fixedN_e_step()
  e_step for bhattacharrya probability maximization with g^ estimation
  labeling of minG clusters remains unchanged
  */
+
 double
 em_meta::bc_fixedN_et_step()
 {
@@ -526,6 +644,7 @@ em_meta::bc_fixedN_et_step()
     
     double* z = Z;
     const double* t = T;
+    const double* pdf = probs;
     for(i=0; i<fixedN; i++) {
         
         //cblas_dcopy(G, &zero, 0, z, 1);
@@ -540,6 +659,8 @@ em_meta::bc_fixedN_et_step()
             double tmpPDF = 0.0;
             double tmpLike = 0.0;
             if( gw > 0.0 ) {
+
+                /*
                 tmpPDF = bc_measure(i,j);
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
@@ -550,6 +671,12 @@ em_meta::bc_fixedN_et_step()
                     dbg::printf("%d, %d: NaN (%d) in PDF ", j, i, pc);
                     
                 }
+
+                if( tmpPDF != pdf[j])
+                    dbg::printf("fixedN_e-step: <%d,%d>, differ", i, j);
+                 */
+                
+                tmpPDF = pdf[j];
                 
                 tmpLike = gw*tmpPDF;
             }
@@ -559,6 +686,7 @@ em_meta::bc_fixedN_et_step()
             if( z[j] > maxZ ) {
                 maxZ = z[j];
                 maxClust = j;
+               
             }
             
         } // for j
@@ -569,8 +697,8 @@ em_meta::bc_fixedN_et_step()
         }
         
         if( maxClust > -1 ) {
-            //z[maxClust] = *t;
             Z_sum[maxClust] += *t;
+            // if label[i] != maxClust => gS[maxCLust] invalide
             
             // maxClust darf nicht weg
             // ein zweit bester hat also PDF=0 --> infinity
@@ -584,11 +712,23 @@ em_meta::bc_fixedN_et_step()
                 // if maxClust is removed the events are gone
                 unNk += G;
             } // for j
+            
         } // maxClust > -1
+        
+        
+         if( e_label[i] != maxClust ) {
+             //dbg::printf("et-step: component %d cls %d changed => %d", e_label[i], i, maxClust);
+             if( e_label[i] > -1 )
+                 g_changed[ e_label[i] ] +=1;
+             if( maxClust > -1 )
+                 g_changed[maxClust] +=1;
+             e_label[i] = maxClust;
+         }
+ 
         
         z += G;
         t += T_inc;
-        
+        pdf += G;
     } // for i<fixedN
     
     for(i=fixedN; i<N; i++) {
@@ -608,6 +748,8 @@ em_meta::bc_fixedN_et_step()
             double tmpPDF = 0.0;
             double tmpLike = 0.0;
             if( gw > 0.0 ) {
+
+                /*
                 tmpPDF = bc_measure(i,j);
                 // 2016.03.21:
                 int pc = fpclassify( tmpPDF );
@@ -619,6 +761,12 @@ em_meta::bc_fixedN_et_step()
                     
                 }
                 
+                if( tmpPDF != pdf[j])
+                    dbg::printf("fixedN_e-step: <%d,%d>, differ", i, j);
+                
+                 */
+                
+                tmpPDF = pdf[j];
                 tmpLike = gw*tmpPDF;
             }
             
@@ -671,8 +819,20 @@ em_meta::bc_fixedN_et_step()
             z[maxClust] = *t;
             Z_sum[maxClust] += *t;
         }
+        
+         if( e_label[i] != maxClust ) {
+             //dbg::printf("et-step: component %d cls %d changed => %d", e_label[i], i, maxClust);
+             if( e_label[i] > -1 )
+                 g_changed[ e_label[i] ] +=1;
+             if( maxClust > -1 )
+                 g_changed[maxClust] +=1;
+             e_label[i] = maxClust;
+         }
+
         z += G;
         t += T_inc;
+        
+        pdf += G;
     } // for i<N
     
     
@@ -683,17 +843,10 @@ em_meta::bc_fixedN_et_step()
 int
 em_meta::bc_maximize(int& iterations, double& tolerance)
 {
-    dbg::printf("EM-BC maximization: %d, %g", iterations, tolerance );
+    //dbg::printf("EM-BC maximization: %d, %g", iterations, tolerance );
     return _iterate(iterations, tolerance, &em_meta::bc_e_step);
 }
-/*
-int
-em_meta::bc_maximize2(int& iterations, double& tolerance)
-{
-    dbg::printf("EM-BC2 maximization: %d, %g", iterations, tolerance );
-    return _iterate2(iterations, tolerance, &em_meta::bc_e_step);
-}
-*/
+
 int
 em_meta::bc_classify(int& iterations, double& tolerance, int min_g)
 {
@@ -701,15 +854,7 @@ em_meta::bc_classify(int& iterations, double& tolerance, int min_g)
     //dbg::printf("EM-BC classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );
     return _iterate(iterations, tolerance, &em_meta::bc_e_step, &em_meta::bc_et_step);
 }
-/*
-int
-em_meta::bc_classify_t(int& iterations, double& tolerance, int min_g)
-{
-    minG = min_g;
-    //dbg::printf("EM-BC classification: %d, %g, %.1lf, >=%d classes", iterations, tolerance, BIAS, minG );
-    return _iterate_t(iterations, tolerance, &em_meta::bc_e_step, &em_meta::bc_et_step);
-}
-*/
+
 int
 em_meta::bc_fixedN_classify(int& iterations, double& tolerance, int fixed_n)
 {

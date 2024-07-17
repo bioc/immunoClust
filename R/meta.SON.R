@@ -46,7 +46,7 @@ cycles=6, alpha=0.5, scale.factor=2, scale.steps=0,
 meta.iter=1, meta.bias=0.3, meta.thres=meta.bias, meta.tol=1e-5,
 SON.cycles=1, SON.rlen=100, SON.deltas=c(1/SON.rlen,1/SON.rlen),
 SON.blurring=c(2,0.1),
-verbose=FALSE
+verbose=0
 )
 {
     dat <- meta$dat.clusters
@@ -65,20 +65,19 @@ verbose=FALSE
     nM <- dat$M
     sub.iter <- 0
     for( cycle in seq_len(cycles) ) {
-        if(verbose) {
-            message("SON/ormalize ", cycle, "\n")
-        }
         
         s <- strptime(date(), "%a %b %d %H:%M:%S %Y")
         
         ## samples for nres-clusters
-        cls.samples <- sapply(seq_len(ncls(nres)), function(k) length(unique(sam.label[label(nres)==k])))
+        cls.samples <- sapply(seq_len(ncls(nres)), 
+            function(k) length(unique(sam.label[label(nres)==k])))
         cls.use <- which(cls.samples > nsam(meta)/4)
         res.nrm <- subset(nres, cls=cls.use)
-       
-        #if(verbose) {
-        #    message("use ", paste(collapse=",",match(clusters(meta, c(1,1,1,1)), cls.use)), "\n")
-        #}
+        
+        if(verbose>0) {
+            message("SON/ormalize ", cycle, ": ", nsam(meta), 
+                " samples with model of ", ncls(res.nrm), " clusters")
+        }
         
         #attr(nres,"P") <- dat$P
         attr(res.nrm, "P") <- dat$P
@@ -90,7 +89,7 @@ verbose=FALSE
             ##as.double(t(nM)), ## always original M or normedM?
             as.double(t(dat$S)),
             as.double(alpha), as.double(scale.factor), as.integer(scale.steps),
-            as.integer(sub.iter), as.double(meta.tol), ## obsolet muss noch weg
+            ## as.integer(sub.iter), as.double(meta.tol), ## obsolet!! 
             as.integer(SON.cycles), as.integer(SON.rlen), as.double(SON.deltas),
             as.double(SON.blurring)
             )
@@ -100,9 +99,9 @@ verbose=FALSE
         colnames(nM) <- colnames(dat$M)
         e <- strptime(date(), "%a %b %d %H:%M:%S %Y")
         
-        if(verbose) {
+        if(verbose>0) {
             message( "\ttakes ", format(difftime(e,s,units="min")), "\n")
-            message("SON Clustering", cycle, "\n")
+            message("SON/clustering ", cycle)
         }
         s <- e
         nres <- meta.Clustering(dat$P, dat$N, dat$K, dat$clsEvents, nM, dat$S,
@@ -110,11 +109,11 @@ verbose=FALSE
             bias=meta.bias, sub.thres=meta.thres, alpha=alpha,
             EM.method=300,
             ## HC.samples?
-            verbose=verbose)
+            verbose=verbose>1)
         
         e <- strptime(date(), "%a %b %d %H:%M:%S %Y")
         
-        if(verbose)
+        if(verbose>0)
         message("\ttakes ", format(difftime(e,s,units="min")), "\n" )
     }
     ## 2024.04.17: will man das so?
@@ -201,7 +200,7 @@ verbose=FALSE
     sub.iter <- 0
     
     #for( cycle in seq_len(cycles) ) {
-       
+        
         ## allways original M or normedM?
         s <- strptime(date(), "%a %b %d %H:%M:%S %Y")
         
@@ -213,7 +212,7 @@ verbose=FALSE
             ##as.double(t(nM)),
             as.double(t(dat$S)),
             as.double(alpha), as.double(scale.factor), as.integer(scale.steps),
-            as.integer(0), as.double(0.0), ## unused
+            ## as.integer(0), as.double(0.0), ## unused
             as.integer(SON.cycles), as.integer(SON.rlen), as.double(SON.deltas),
             as.double(SON.blurring)
             )

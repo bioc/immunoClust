@@ -1,6 +1,6 @@
-Changes in Version 1.37.3-10
+Changes in Version 1.37.3-11
 - CHANGES
-    * processing time improvements in meta.SON.clustering
+    * processing time improvements in meta.SON.clustering and meta.SON.normalisation
     
 Changes in Version 1.35.3
 - CHANGES
