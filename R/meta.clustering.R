@@ -216,7 +216,7 @@ verbose=FALSE
         if( res@K < 10 )
         sub_bias <- bias*0.5
         else
-        sub_bias <- bias
+        sub_bias <- sub.thres
         label <- meta.SubClustering(res, P, totK, W, tM, tS,
                                     tol=tol,
                                     bias=sub_bias, thres=sub.thres, alpha=alpha,
@@ -530,12 +530,13 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
         
         
         #for (k in 2:J) {
-        for( j  in 2:J )
+        #for( j  in 2:J )
+        j <- 2
         {
+           
             k <- J+2-j
-            #k <- J
-            label <- rep(0, N)
-            label[samples.set] <- .clust.hclass(hcPairs, k)
+                        label <- rep(0, N)
+            label[samples.set] <- .meta.hclass(hcPairs, k)
                 
             obj <- .Call("immunoC_metaME",
                         as.integer(N), as.integer(P), as.integer(k),
@@ -546,7 +547,7 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
 
             L <- obj$L
             
-            if( L == 1 ) break
+            #if( L == 1 ) break
             
 # output obj$s to sigma
             sigma <- array(0, c(L, P, P))

@@ -14,9 +14,14 @@
 extern "C" {
 #endif
 	
+    /*
+     *  .C methods
+     */
+
 	/*
 	 *	.Call Methods
 	 */
+
 	
 	/* hc events */
 	SEXP call_mvnHC(SEXP N, SEXP P, SEXP y, SEXP t);

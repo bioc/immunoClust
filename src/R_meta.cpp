@@ -30,7 +30,6 @@
 extern "C" {
 #endif	
 	
-    
 	
 	// metaScale
 	void metaScale(int* p, int* n, int* k, double* w, double* m, double* s, int* label, int* method)
@@ -102,7 +101,7 @@ extern "C" {
 		
 	}
     
-    
+
     //
     // call methods
     //

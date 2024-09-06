@@ -21,13 +21,14 @@ int print_text(const char* txt)
 	return 0;
 }
 	
-	/*
+    /*
 	static R_CMethodDef cMethods[] = {
-		{NULL, NULL, 0}
+        {NULL, NULL, 0}
 	};
-	 */
-	
+	*/
 	static R_CallMethodDef callMethods[] = {
+        /* utils */
+      
 		/* mvn */
 		{"immunoC_mvnME", (DL_FUNC)(&call_mvnME), 8},
 		{"immunoC_mvnMEt", (DL_FUNC)(&call_mvnMEt), 9},

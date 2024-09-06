@@ -229,26 +229,144 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
 }
 ## clust.hclass
 
+
 ###
 ## convert hcPairs structure to hclust class
-#.clust.hclust2 <- function(hcPairs)
+#clust.hclust2 <- function(hcPairs)
 #{
 # li <- hcPairs[1,]
 # lj <- hcPairs[2,]
 # crit <- attributes(hcPairs)$change
 # n <- length(li)
-# obj <- .Fortran("hcass2", n=as.integer(n+1), 
+# obj <- .Fortran("hcass2", n=as.integer(n+1),
 #         ia=as.integer(li), ib=as.integer(lj),
 #         order=integer(n+1), iia=integer(n+1), iib=integer(n+1),
 #         PACKAGE="stats")
-# hcls <- list(merge=cbind(obj$iia[1L:n], obj$iib[1L:n]), 
-#        height=crit, crit=crit, order=obj$order, 
+# hcls <- list(merge=cbind(obj$iia[1L:n], obj$iib[1L:n]),
+#        height=crit, crit=crit, order=obj$order,
 #        labels=1:n)
 # class(hcls) <- "hclust"
 # hcls
 #}
 ###
-
+.meta.hclass <- function (hcPairs, G, verbose=FALSE)
+{
+    initial <- attributes(hcPairs)$init
+    n <- length(initial)
+    
+    if (missing(G) || G > n)
+        stop("Number of components G to select missing or exceeding")
+        
+    if( G == n) return (initial)
+    
+    label <- rep(0,n)
+    
+    if( G == 0) return (label)
+    
+    k <- n
+    
+    if( G < n-2 ) {
+    ## length crit = n-1
+        crit <- attributes(hcPairs)$change
+    ## length diff = n-2
+        crit.diff <- crit[2:(n-1)] - crit[1:(n-2)]
+        crit.thres <- sort(crit.diff)[n-1-G]
+        k <- max(which( crit.diff >= crit.thres))+1
+        if( verbose )
+        cat(G, "\\", n, ">", crit.thres, k, crit[k], "\n")
+    }
+    select <- k - G
+    if(verbose)
+    cat(G, "\\", n, ">",  k, "=>", select, "\n")
+    
+    
+    if( select > 0)
+    for ( l in seq_len(select) ) {
+# merge at l
+        ij <- hcPairs[, l ]
+        i <- ij[1]
+        j <- ij[2]
+# i < j: all j became i
+        initial[initial == j] <- i
+        label[initial == i] <- i
+    }
+   
+    g <- length(unique(label[label!=0]))
+    if( g > G) {
+    for( l in ((select+1):(n-1)) ) {
+        ij <- hcPairs[, l]
+        i <- ij[1]
+        j <- ij[2]
+        
+        if( i %in% label) {
+            if( j %in% label ) {
+                #don#t join, keep both
+                
+                if( g > G ) {
+                    initial[initial == j] <- i
+                    label[initial==i] <- i
+                    g <- length(unique(label[label!=0]))
+                    if(verbose)
+                    cat( l, ": both in <", g, ">", j, "=>", i, "<", g, ">\n" )
+                    
+                    #if( g==G )
+                    #    break
+                }
+                else {
+                    if(verbose)
+                    cat( l, ": both in <", g, "> ", j, i, "=> <", g, ">\n" )
+                }
+            }
+            else {
+                ## j becomes i
+                #  label[initial == j] <- 0
+                
+                initial[initial == j] <- i
+                label[initial==i] <- i
+                g <- length(unique(label[label!=0]))
+                if(verbose)
+                cat( l, ":", i, "%in%", j, "=>", i, "<", g, ">\n" )
+            }
+        }
+        else {
+            ## i not in label
+            if( j %in% label ) {
+                ## j becomes i
+                
+                #  label[initial == j] <- 0
+                initial[initial == j] <- i
+                label[initial==i] <- i
+                g <- length(unique(label[label!=0]))
+                if(verbose)
+                cat( l, ":", j, "%in%", j, "=>", i, "<", g, ">\n" )
+            }
+            else {
+                ## both not in label
+                ## j becomes i
+               
+                #  label[initial == j] <- 0
+                initial[initial == j] <- i
+                #label[initial==i] <- i
+                g <- length(unique(label[label!=0]))
+                if(verbose)
+                cat( l, ": both %out%", j, "=>", i, "<", g, ">\n" )
+            }
+        }
+  
+    } ## for
+    } ## if g>G
+    
+    #return(label)
+    
+    y <- rep(0, n)
+    u <- unique(label[label != 0])
+    l <- length(u)
+    for(i in seq_len(l))
+        y[label == u[i]] <- i
+     
+    ## cat((unique(y)), "\n")
+    y
+}
 ###
 ## convert hclust merging nodes to hcPairs merging nodes 
 .clust.hpairs2 <- function(li, lj)
