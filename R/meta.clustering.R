@@ -599,7 +599,7 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
 ###
 # meta.hclust
 ###
-meta.hclust <- function(P, N, W, M, S) 
+meta.hclust <- function(P, N, W, M, S)
 {
     partition <- seq_len(N)
     attr(partition, "unique") <- N

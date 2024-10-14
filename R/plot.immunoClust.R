@@ -101,13 +101,22 @@ col.rm=1, pch.rm=1, cex.rm=0.6, ecol=col, elty=1,
 npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
 {
     more.par <- list(...)
+  
+
     
     if (!is.numeric(subset)) subset <- match(subset, x@parameters)
     
     if( !is.null(attr(x, "desc")) ) {
         desc <- attr(x, "desc")
         name <- gsub("\n", ": ", x@parameters)
-        lab <- paste(sep=": ", name, desc)[subset]
+        lab <- c()
+        for( i in subset ) {
+            if( !is.na(desc[i]) && desc[i] != "" )
+            lab <- append(lab, paste(sep=": ", name[i], desc[i]) )
+            else
+            lab <- append(lab, name[i])
+        }
+        #lab <- paste(sep=": ", name, desc)[subset]
     }
     else
     if( !is.null(attr(data, "parameters")) ) {
@@ -151,7 +160,10 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
             axis(2, at=pscales[[ subset[2] ]]$at,
                 labels=pscales[[ subset[2] ]]$labels, ...)
             
-            
+            if( isTRUE(more.par$grid) ) {
+                abline(h=pscales[[ subset[2] ]]$at, v=pscales[[ subset[1] ]]$at,
+                    col="lightgray", lty=1)
+            }
             cex.axis <- par("cex.axis")
             mtext(pscales[[ subset[1] ]]$unit, 1, line=3, adj=1, cex=cex.axis)
             mtext(pscales[[ subset[2] ]]$unit, 2, line=3, adj=1, cex=cex.axis)

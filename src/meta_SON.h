@@ -94,7 +94,11 @@ public:
     int     normStep2(const int* map_cluster, const int* use_cluster,
                      int cycles,int rlen,
                      double deltas[2], double blurring[2] );
-    
+   
+    int     normStep2w(const int* map_cluster, const int* use_cluster,
+                     int cycles,int rlen,
+                     double deltas[2], double blurring[2] );
+   
     int     normStep3(const int* map_cluster, const int* use_cluster,
                      int cycles,int rlen,
                      double deltas[2], double blurring[2] );
@@ -137,11 +141,17 @@ private:
     
 	double	logdet(const double* a, int& status);
     
-    BMU    bestMatchingUnit(int k, const int* map_cluster, const double* mappedM );
+    // scale_step helper
+    int     find_best_scale2(double* bestScale, double factor, int STEPS);
+    void    scaleModel(double* scaledM, int p, double scale) const;
+    std::string steps_hash(int STEPS, const int* steps) const;
+    double  logLikelihood(const double* scaledM);
     
-    //void   buildNeighbourProbabilities(const double* blurredS);
+    // map_step helper
+    BMU    bestMatchingUnit(int k, const int* map_cluster, const double* mappedM );
     void   buildNeighbourProbabilities(double blur);
   
+    // norm_step helper
     const double*   buildClusterProbabilities(int j);
     const double*   buildCoefficients();
     const double*   buildPosterior();

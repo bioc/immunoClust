@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #include "meta_SON.h"
-#include "model_scale.h"
+//#include "model_scale.h"
 
 #include "util.h"
 
@@ -16,7 +16,7 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_sf_log.h>
-
+#include <sstream>
 
 
 meta_SON::meta_SON(int p,
@@ -293,6 +293,9 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
                         }
                     }
                     else {
+                        //if(doTrace(j, k))
+                        //    dbg::printf("iter %d: %d => %d (%.4lf) %.4lf %.4lf", iter, j, k,  prob, delta, weight );
+                        
                         //move probability based patially in direction of k
                         //2018.09.21 question?: calculate direction from code or from bmu
                         for(p=0; p<P; ++p ) {
@@ -304,8 +307,8 @@ meta_SON::mapStep(const int* map_cluster, const int* use_cluster,
                 
             }
             else {
-                if(verbose)
-                dbg::printf("no BMU %ld, %d, %d", curIter, k, bmu.index);
+                //if(verbose)
+                //dbg::printf("no BMU %ld, %d, %d", curIter, k, bmu.index);
             }
             
         }
@@ -342,10 +345,14 @@ meta_SON::scaleStep(double factor, int steps)
 {
     if( steps <= 0 ) return 0;
     
+    /*
+    if(verbose)
+    dbg::printf("SON scale: step=%d factorr=%.1lf", steps, factor );
+    
     model_scale scale(P, G, gW, gM, gS, K, kW, kM, kS,
                       factor, steps, ALPHA, verbose);
     
-    int status = scale.find_best_scale(tmpP);
+    int status = scale.find_best_scale2(tmpP);
     
     for( int p=0; p<P; ++p ) {
         double* nM = normedM + p;
@@ -354,6 +361,19 @@ meta_SON::scaleStep(double factor, int steps)
             nM += P;
         }
     }
+    return status;
+    */
+    
+    double* bestScale = new double[P];
+    int status = find_best_scale2(bestScale, factor, steps);
+    for( int p=0; p<P; ++p ) {
+        double* nM = normedM + p;
+        for(int k=0; k<K; ++k ) {
+            *nM /= bestScale[p];
+            nM += P;
+        }
+    }
+    delete[] bestScale;
     return status;
 }
 /*
@@ -418,7 +438,7 @@ meta_SON::normStep( const int* map_cluster, const int* use_cluster,
 }
 
 int
-meta_SON::normStep2( const int* map_cluster, const int* use_cluster,
+meta_SON::normStep2w( const int* map_cluster, const int* use_cluster,
                     int cycles, int rlen, double deltas[2], double blurring[2]
                 )
 {
@@ -439,13 +459,13 @@ meta_SON::normStep2( const int* map_cluster, const int* use_cluster,
             
             if( gW[j] > 0.0 ){
                 
-                // doing it this way
-                //const double* post = buildClusterProbabilities(j);
                 for( int k=0; k < K; ++k ) {
-                    // 2024-07-04: respect cyrcles otherwise it move to much
+                    // 2024-07-04: respect cycles otherwise it move to much
+                    // für die CyTOF CytoNorm befriedigend, für swiftReg Daten nicht
+                    // posteriors <= 1, mapped muss nicht
                     double prob = post[k]/cycles;
                     if( doTrace(j, k) ){
-                        dbg::printf("%d: move %d => %d (%.4lf)", iter, k, j, prob);
+                        dbg::printf("SON[2]%d: move %d => %d (%.4lf)", iter, k, j, prob);
                     }
                    
                     for( int p=0; p<P; ++p ) {
@@ -453,7 +473,7 @@ meta_SON::normStep2( const int* map_cluster, const int* use_cluster,
                     }
                     
                 } // for k
-            }
+            } // if gW
             
             post += K;
             
@@ -462,6 +482,99 @@ meta_SON::normStep2( const int* map_cluster, const int* use_cluster,
 
     return 0;
 }
+
+int
+meta_SON::normStep2( const int* map_cluster, const int* use_cluster,
+                    int cycles, int rlen, double deltas[2], double blurring[2]
+                )
+{
+    
+    for( int iter= 0; iter < cycles; ++iter ) {
+        if(verbose)
+        dbg::printf("SON[2a] cycle: %d delta=(%.1lf %.1lf) blur=(%.1lf %.1lf)", iter, deltas[0], deltas[1], blurring[0], blurring[1] );
+// 2017.10.05: the use of the original model should be OK, since it reflects the real connectivity
+        cblas_dcopy(G*P, gM, 1, mappedM, 1);
+        mapStep( map_cluster, use_cluster, rlen, deltas, blurring);
+        
+        const double* post = buildCoefficients(); // GxK probability matrix
+        for( int j=0; j<G; ++j ){
+            
+            if( gW[j] > 0.0 ){
+                
+                for( int k=0; k < K; ++k ) {
+                    double prob = post[k]/cycles;
+                    if( doTrace(j, k) ){
+                        dbg::printf("SON[2a]%d: move %d => %d (%.4lf)", iter, k, j, prob);
+                    }
+                    // prob <= 1 in sofern maximal zur komponente hin verschoben
+                    // trotzdem nicht klar ob dies der richtige weg
+                    // gedankenspiel: es gibt zwei sub-population nahe component
+                    // map siedelt sich irgendwo zwischen den bei population an
+                    // p1 + p2 ~ 1 => beide cluster werden zur komponente hin bewegt
+                    // mehrfach bewegung führt dazu, dass beide cluster identisch werden können
+                    // und sub-population verloren gehen
+                    // => post / delta, dann können beide nur zum teil dort ankommen
+                    // die gesamt bewegung zu einer komponente hin bleibt = 1 und
+                    // zwei cluster können sich in richtung einer komponente bewegen
+                    // aber beide nicht gleichermaßen, sie bleiben getrennt
+                    for( int p=0; p<P; ++p ) {
+                        *(normedM+k*P+p) += prob * (*(gM+j*P+p) - *(normedM+k*P+p));
+                    }
+                    
+                } // for k
+            } // if gW
+            
+            post += K;
+            
+        } // for j
+    } // for iter
+
+    return 0;
+}
+
+/*
+int
+meta_SON::normStep2a( const int* map_cluster, const int* use_cluster,
+                    int cycles, int rlen, double deltas[2], double blurring[2]
+                )
+{
+    // wuerde jeden cluster zur componente mit höchster wahrscheinlichkiet verschieben
+    // die verteilungs struktur der messung geht dadurch verloren
+    for( int iter= 0; iter < cycles; ++iter ) {
+        if(verbose)
+        dbg::printf("SON[2a] cycle: %d delta=(%.1lf %.1lf) blur=(%.1lf %.1lf)", iter, deltas[0], deltas[1], blurring[0], blurring[1] );
+// 2017.10.05: the use of the original model should be OK, since it reflects the real connectivity
+        cblas_dcopy(G*P, gM, 1, mappedM, 1);
+        mapStep( map_cluster, use_cluster, rlen, deltas, blurring);
+        
+        // 2023-06-01: changing to buildCoefficients leads to minor changes in normStep
+        // da bisher die normed successive schon veraendert wurden, bevor der
+        // naechste model cluster dran kommt (was eigentlich falsch ist)
+        const double* post = buildPosterior(); // KxG posterior matrix
+        for( int k=0; k < K; ++k ) {
+            for( int j=0; j<G; ++j ){
+                if( gW[j] > 0.0 ){
+               
+                    double prob = post[j]/cycles;
+                    if( doTrace(j, k) ){
+                        dbg::printf("SON[2a]%d: move %d => %d (%.4lf)", iter, k, j, prob);
+                    }
+                   
+                    for( int p=0; p<P; ++p ) {
+                        *(normedM+k*P+p) += prob * (*(gM+j*P+p) - *(mappedM+j*P+p));
+                    }
+                    
+                } // if gW
+            } // fot j
+            
+            post += G;
+            
+        } // for k
+    } // for iter
+
+    return 0;
+}
+*/
 
 
 int
@@ -499,7 +612,7 @@ meta_SON::normStep3( const int* map_cluster, const int* use_cluster,
                 // posterior is normed = 1
                 double prob = post[j] * delta;
                 if( doTrace(j, k) ){
-                    dbg::printf("%d: move %d => %d (%.4lf)", iter, k, j, prob);
+                    dbg::printf("SON[3]%d: move %d => %d (%.4lf)", iter, k, j, prob);
                 }
  
                 for( int p=0; p<P; ++p )
@@ -526,6 +639,7 @@ meta_SON::bestMatchingUnit(int k, const int* map_cluster, const double* mappedM)
     const double* s_cov = kgS + k*G*P*P; // KxG (x PxP)
     const double* s_det = kgSdet + k*G;     // KxG
 
+    //double prob_sum = 0.0;
     for( int j=0; j<G; ++j ) if( !map_cluster || map_cluster[j]) {
 
         double  prob = gW[j] * bc_measure3(normedM+k*P, kS+k*P*P, kSdet[k],
@@ -536,8 +650,12 @@ meta_SON::bestMatchingUnit(int k, const int* map_cluster, const double* mappedM)
             bmu.probability = prob;
             bmu.index = j;
         }
+        //prob_sum += prob;
     }
-    
+    /*
+    if( blurredS == 0 && prob_sum > 0.0 )
+        bmu.probability /= prob_sum;
+    */
     return bmu;
     
 }
@@ -665,8 +783,8 @@ meta_SON::buildCoefficients()
     cblas_dcopy(G*K, &zero, 0, posterior, 1);
     double* prob = posterior;
     for( int j=0; j<G; ++j ) {
-        double sum=0;
-        
+        double k_sum = 0;
+        //double K_max = 0;
 
         const double* s_cov = kgS + j*P*P;  // j-te spalte KxG (x PxP)
         const double* s_det = kgSdet + j;    // j-te spalte KxG
@@ -685,21 +803,39 @@ meta_SON::buildCoefficients()
                 prob[k] = 0;
             }
             
-            sum += prob[k];
-
+            k_sum += prob[k];
+            
+            //if( prob[k] > k_max )
+             //   k_max = prob[k];
+            
             // next row
             s_cov += G*P*P;
             s_det += G;
 
         }
        
-        cblas_dscal(K, 1.0/sum, prob, 1);
+        //cblas_dscal(K, 1.0/k_max, prob, 1);
+        cblas_dscal(K, 1.0/k_sum, prob, 1);
         
         prob += K;
     }
     
+    /*
+    for( int k=0; k<K; ++k ) {
+        prob = posterior + k;
+        double g_sum = 0;
+        for( int j=0; j<G; ++j ) {
+            g_sum += *prob;
+            prob += K;
+        }
+        cblas_dscal(G, 1.0/g_sum, posterior+k, K);
+        
+    }
+    */
     return posterior;
 }
+
+
 
 const double*
 meta_SON::buildPosterior()
@@ -708,7 +844,7 @@ meta_SON::buildPosterior()
      classical aposteriori with MAP
      denken: eine Component muss den Cluster hervorgebracht haben
      posterior gibt für jeden cluster k die wahrscheinlich, dass er von componente g herührt
-     posterior_k,g = P(g | k) [P(. | k)=1] (die cluster k ist da, von irgend einer componente muss er kommen)
+     posterior_k,g = P(g | k) [P(. | k)=1] (der cluster k ist da, von irgend einer componente muss er kommen)
      wenn die wahrscheinlichkeit eines clusters zur componente zu gehören
      relativ höher ist als für die anderen componenten wird er stärker zur
      komponente hin geschoben
@@ -732,16 +868,15 @@ meta_SON::buildPosterior()
             double clsPDF = bc_probability3(mappedM+j*P, gS+j*P*P, gSdet[j],
                                             normedM+k*P, kS+k*P*P, kSdet[k],
                                             s_cov, *s_det);
-      
-
-            double clsLike = gEvts[j]* clsPDF;
-            z[j] = clsLike;
-            if( verbose ) {
-                int pc = fpclassify( clsLike );
-                if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
-                    dbg::printf("probability %d<>%d: NaN (%d|%d) ", j, k, pc, FP_NAN);
-                }
+    
+            int pc = fpclassify( clsPDF );
+            if( pc != FP_NORMAL && pc !=  FP_ZERO && pc != FP_SUBNORMAL) {
+                dbg::printf("probability %d<>%d: NaN (%d|%d) ", j, k, pc, FP_NAN);
+                clsPDF = 0;
             }
+            double clsLike = gEvts[j]* clsPDF;
+         
+            z[j] = clsLike;
             sumLike += clsLike;
             if( clsPDF > maxPDF ) {
                 maxPDF = clsPDF;
@@ -1145,6 +1280,163 @@ meta_SON::logdet(const double* a, int& status)
 }
 // model_scale::logdet
 
+int
+meta_SON::find_best_scale2(double* bestScale, double factor, int STEPS)
+{
+    double* SCALES = new double[2*STEPS+1];   // two addionals
+    for( int step=0; step < STEPS; step++) {
+        SCALES[step] = ((STEPS-step)/factor + step)/STEPS;
+        SCALES[2*STEPS-step] = ((STEPS-step)*factor + step)/STEPS;
+    }
+    SCALES[STEPS] = 1;
+    
+    int* bestSteps = new int[P];
+    for( int p = 0; p<P; ++p) {
+        bestSteps[p] = STEPS;
+        bestScale[p] = one;
+    }
+    
+    double* scaledM = new double[G*P];
+    cblas_dcopy(G*P, gM, 1, scaledM, 1 );
+    
+    double* testLikelihood = new double[2*STEPS+1];
+    for( int p=0; p<P; ++p ) {
+        
+        for( int step=0; step < 2*STEPS+1; step += 2 ) {
+            
+            scaleModel(scaledM, p, SCALES[step] );
+            testLikelihood[step] = logLikelihood(scaledM);
+            
+        }
+        
+        int best = bestSteps[p];
+        
+        for( int step=0; step < 2*STEPS+1; step += 2) {
+            if( testLikelihood[step] > testLikelihood[best] ) {
+                best = step;
+            }
+        }
+     
+        bestScale[p] = SCALES[best];
+        bestSteps[p] = best;
+        scaleModel(scaledM, p, bestScale[p]);
+        
+        if(verbose)
+        dbg::printf("%d: (%02d %.2lf) => %.4lf", p, best, SCALES[best], testLikelihood[best] );
+  
+    }
+
+    std::string testedHashes = "";
+    std::string testHash = steps_hash(STEPS, bestSteps);
+ 
+    int iter = 1;
+    //int steps = 4;
+    while( testedHashes.find(testHash) == std::string::npos ) {
+          
+        testedHashes += testHash;
+        iter++;
+            
+        for( int p=0; p<P; ++p ) {
+            int steps = int(STEPS/iter);
+            int b_step = std::max(0,bestSteps[p]-steps);
+            int e_step = std::min(2*STEPS+1, bestSteps[p]+steps+1);
+            for( int step=b_step; step < e_step; step++ ) {
+                    
+                scaleModel(scaledM, p, SCALES[step] );
+                testLikelihood[step] = logLikelihood(scaledM);
+                    
+                if(verbose)
+                    dbg::printf("%d: (%02d %.2lf) => %.4lf", p, step, SCALES[step], testLikelihood[step] );
+            }
+                
+            int best = bestSteps[p];
+                
+            for( int step=b_step; step < e_step; ++step) {
+                if( testLikelihood[step] > testLikelihood[best] ) {
+                    if(verbose)
+                    dbg::printf("%d: (%.2lf %.4lf) => (%.2lf %.4lf)", p,
+                                SCALES[best], testLikelihood[best],
+                                SCALES[step], testLikelihood[step]);
+                        
+                    best = step;
+                }
+            }
+             
+            bestScale[p] = SCALES[best];
+            bestSteps[p] = best;
+            scaleModel(scaledM, p, bestScale[p]);
+        }
+            
+        testHash = steps_hash(STEPS, bestSteps);
+    
+    }
+       
+    if( verbose ) {
+        dbg::print_vector(P, bestScale);
+    }
+        
+    delete[] testLikelihood;
+    delete[] scaledM;
+    delete[] bestSteps;
+    delete[] SCALES;
+    
+    return 0;
+}
+
+void
+meta_SON::scaleModel(double* scaledM, int p, double scale) const
+{
+    double* scaled = scaledM+p;
+    const double* m = gM+p;
+    for( int j=0; j<G; ++j) {
+        *scaled = (*m) * scale;
+        scaled += P;
+        m += P;
+    }
+}
+    
+std::string
+meta_SON::steps_hash(int STEPS, const int* steps) const
+{
+    long h = 0;
+    for( int p = 0; p<P; ++p)
+        h = h*(2*STEPS+1) + steps[p];
+    
+    std::stringstream ss;
+    ss << "," << h << ",";
+    return ss.str();
+}
+
+double
+meta_SON::logLikelihood(const double* scaledM)
+{
+    const double* s_cov = kgS;     // KxG (x PxP)
+    const double* s_det = kgSdet;    // KxG
+    
+    double logLike = 0;
+    for(int k=0; k<K; ++k ) {
+        double sumLike = 0;
+        for(int j=0; j<G; ++j ) {
+            double tmpPDF = bc_probability3(scaledM+j*P, gS+j*P*P, gSdet[j],
+                                            kM+k*P, kS+k*P*P, kSdet[k],
+                                            s_cov, *s_det);
+            int pc = fpclassify( tmpPDF );
+            if( pc != FP_NORMAL && pc != FP_ZERO && pc != FP_SUBNORMAL ) {
+                //dbg::printf("%d: NaN (%d) for PDF (%d) ", j, pc, k);
+                tmpPDF = 0.0;
+            }
+            
+            sumLike += gW[j] * tmpPDF;
+            
+            s_cov += P*P;
+            ++s_det;
+        }
+        logLike += (sumLike>0.0)? kW[k] * log(sumLike) : 0.0;
+    }
+    return logLike;
+}
+
+    
 int
 meta_SON::doTrace(int j, int k) const
 {

@@ -35,7 +35,7 @@ public:
 	~mvn_dendro();
 	
 	int hellinger(int* li, int* lj, double* crit);
-    int hellinger_fast(int* li, int* lj, double* crit); // ist nicht faster
+    int hellinger_fast(int* li, int* lj, double* crit, double alpha=1); // ist nicht faster
 	int mahalanobis(int* li, int* lj, double* crit);
 	int hellinger_d(int* li, int* lj, double* crit);
 	
@@ -43,9 +43,12 @@ public:
 	int mahalanobis_w(int* li, int* lj, double* crit);
 	
 private:
-    //void    init_logdet();
+
     void    init_D();
+    void    init_D_diag(double alpha);
     void    update_D(int oi, int oj);
+    void    update_D_diag(int oi, int oj, double alpha);
+    
 	void	swap_nodes(int j, int l);
 	void	join_nodes(int i, int j);
 	double	joined_ij(int i, int j, double* M_ij, double* S_ij) const;

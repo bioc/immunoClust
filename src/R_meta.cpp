@@ -75,6 +75,7 @@ extern "C" {
     
 	void metaHC(int* li, int* lj, double* crit, int* k, int* p, double* w, double* m, double* s)
 	{
+        //dbg::printf("metaHC: alpha=%.4lf", *alpha);
 		mvn_dendro dendro(*k, *p, w, m, s);
 		dendro.hellinger_fast(li, lj, crit);
 	}
@@ -494,23 +495,27 @@ extern "C" {
             
            
             /*
-            int traceK[2];
-            traceK[1] = -1;
-            if( n == 11 )
-                traceK[0] = 7;
-            else
+            int traceK[3];
+            traceK[2] = -1;
+            if( n == 24 ) {
+                traceK[0] = 84;
+                traceK[1] = 86;
+            }
+            else {
                 traceK[0] = -1;
-             
-             int traceG[3];
-             traceG[2] = -1;
-             if( n == 11 ) {
-                 traceG[0] = 6;
+            }
+            
+            int traceG[3];
+            traceG[0] = -1;
+            
+            if( n == 24 ) {
+                 traceG[0] = 0;
                  traceG[1] = -1;
              }
              else {
                  traceG[0] = -1;
              }
-            */
+             */
             
             meta_SON son(P, L, gW, gW, gM, gS,
                          K[n], nW, nW, nM, nS,
@@ -521,6 +526,7 @@ extern "C" {
             if(INTEGER(scale_steps)[0] > 0)
                 son.scaleStep(REAL(scale_factor)[0], INTEGER(scale_steps)[0] );
             // map
+            // 2024.09.19: normStep2 corrected?
             son.normStep2( 0, 0,
                          INTEGER(SON_cycles)[0], INTEGER(SON_rlen)[0],
                          REAL(SON_deltas), REAL(SON_blurring));
@@ -532,7 +538,8 @@ extern "C" {
         }
 
         // re-location normalized center to orignal
-        
+        // 2024.09.10: wirklich???
+        // habe die idee dazu vergessen
         const double* label = REAL(R_do_slot(res_model, install("label")));
         normedM = REAL(ret);
         
@@ -560,7 +567,7 @@ extern "C" {
                 }
             }
         } // for comp j
-        
+        //
 
         delete[] gW;
         delete[] gM;

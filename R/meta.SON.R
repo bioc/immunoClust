@@ -45,7 +45,7 @@ meta,
 cycles=6, alpha=0.5, scale.factor=2, scale.steps=0,
 meta.iter=1, meta.bias=0.3, meta.thres=meta.bias, meta.tol=1e-5,
 SON.cycles=1, SON.rlen=100, SON.deltas=c(1/SON.rlen,1/SON.rlen),
-SON.blurring=c(2,0.1),
+SON.blurring=c(2,0.1), batch.samples=nsam(meta)/4,
 verbose=0
 )
 {
@@ -71,7 +71,7 @@ verbose=0
         ## samples for nres-clusters
         cls.samples <- sapply(seq_len(ncls(nres)), 
             function(k) length(unique(sam.label[label(nres)==k])))
-        cls.use <- which(cls.samples > nsam(meta)/4)
+        cls.use <- which(cls.samples > batch.samples)
         res.nrm <- subset(nres, cls=cls.use)
         
         if(verbose>0) {
@@ -123,7 +123,7 @@ verbose=0
     attr(nres,"limits") <- attr(res, "limits")
     ret <- immunoMeta(nres, dat)
     ##  2024.04.17: oder eigentlich so?
-    ##ret$dat.clusters$nrm.M <- nM
+    ret$dat.clusters$nrm.M <- nM
     parameters(ret) <- parameters(meta)
     prop(ret,"pscales",c()) <- prop(meta,"pscales",c())
     attr(res,"SON.call") <- match.call()

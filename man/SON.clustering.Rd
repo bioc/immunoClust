@@ -10,7 +10,7 @@ meta clustering process with internal SON normalisation
 \description{
 The meta.SON.clustering is an extension of the meta-clustering
 process co-clustering several samples cluster results. It integrates
-a SON normalization step between the meta-clustering iterations.
+a SONormalization step between the meta-clustering iterations.
 }
 
 \usage{
@@ -19,7 +19,7 @@ meta,
 cycles=6, alpha=0.5, scale.factor=2, scale.steps=0,
 meta.iter=1, meta.bias=0.3, meta.thres=meta.bias, meta.tol=1e-5,
 SON.cycles=1, SON.rlen=100, SON.deltas=c(1/SON.rlen,1/SON.rlen),
-SON.blurring=c(2,0.1),
+SON.blurring=c(2,0.1), batch.samples=nsam(meta)/4,
 verbose=0
 )
 }
@@ -37,10 +37,11 @@ verbose=0
 \item{meta.bias}{ICL bias for meta-clustering step}
 \item{meta.thres}{sub.thres for meta-clustering step}
 \item{meta.tol}{maximal tolerance for meta-clustering step}
-\item{SON.cycles}{number of cycles in SON normalization step.}
+\item{SON.cycles}{number of cycles in SONormalization step}
 \item{SON.rlen}{runlength in SON normalization step}
-\item{SON.deltas}{deltas parameter in SON normalization step}
-\item{SON.blurring}{bluring parameter in SON normalisation step }
+\item{SON.deltas}{deltas parameter in SONormalization step}
+\item{SON.blurring}{bluring parameter in SONormalisation step}
+\item{batch.samples}{minimal number of sample for meta.clusters used in the SONormalisation step}
 \item{verbose}{detailed messages during process}
 }
 
