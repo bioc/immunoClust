@@ -77,7 +77,8 @@ extern "C" {
 		SET_STRING_ELT(names, 10, mkChar("tolerance"));
 		
 		SET_VECTOR_ELT(ret, 0, allocVector(INTSXP, 1));		// out L
-		SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, R_xlen_t(n)*R_xlen_t(k)));	// out z (!not initialzed!)
+        //SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, n*k));  // out z (!not initialized!)
+		SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, R_xlen_t(n)*R_xlen_t(k)));	// out z (!not initialized!)
 		SET_VECTOR_ELT(ret, 2, allocVector(REALSXP, k));	// out w
 		SET_VECTOR_ELT(ret, 3, allocVector(REALSXP, k*p));	// out m
 		SET_VECTOR_ELT(ret, 4, allocVector(REALSXP, k*p*p));// out s
@@ -151,8 +152,9 @@ extern "C" {
 		SET_STRING_ELT(names, 10, mkChar("tolerance"));
 		
 		SET_VECTOR_ELT(ret, 0, allocVector(INTSXP, 1));		// out L
-		SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, R_xlen_t(n)*R_xlen_t(k)));	// out z (!not initialized!)
-		SET_VECTOR_ELT(ret, 2, Rf_duplicate(w));			// in/out w
+        SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, n*k));  // out z (!not initialized!)
+        SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, R_xlen_t(n)*R_xlen_t(k)));	// out z (!not initialized!)
+     	SET_VECTOR_ELT(ret, 2, Rf_duplicate(w));			// in/out w
 		SET_VECTOR_ELT(ret, 3, Rf_duplicate(m));			// in/out m
 		SET_VECTOR_ELT(ret, 4, Rf_duplicate(s));			// in/out s
 		SET_VECTOR_ELT(ret, 5, allocVector(INTSXP,n));		// out label

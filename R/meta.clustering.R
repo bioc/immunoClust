@@ -533,7 +533,7 @@ function(x, P, N, W, M, S, J=8, B=500, tol=1e-5, bias=0.5, alpha=1.0,
         #for( j  in 2:J )
         j <- 2
         {
-           
+            
             k <- J+2-j
                         label <- rep(0, N)
             label[samples.set] <- .meta.hclass(hcPairs, k)

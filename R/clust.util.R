@@ -273,11 +273,11 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
         crit.thres <- sort(crit.diff)[n-1-G]
         k <- max(which( crit.diff >= crit.thres))+1
         if( verbose )
-        cat(G, "\\", n, ">", crit.thres, k, crit[k], "\n")
+        message(G, "\\", n, ">", crit.thres, k, crit[k], "\n")
     }
     select <- k - G
     if(verbose)
-    cat(G, "\\", n, ">",  k, "=>", select, "\n")
+    message(G, "\\", n, ">",  k, "=>", select, "\n")
     
     
     if( select > 0)
@@ -290,7 +290,7 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
         initial[initial == j] <- i
         label[initial == i] <- i
     }
-   
+    
     g <- length(unique(label[label!=0]))
     if( g > G) {
     for( l in ((select+1):(n-1)) ) {
@@ -307,14 +307,14 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
                     label[initial==i] <- i
                     g <- length(unique(label[label!=0]))
                     if(verbose)
-                    cat( l, ": both in <", g, ">", j, "=>", i, "<", g, ">\n" )
+                    message( l, ": both in <", g, ">", j, "=>", i, "<", g, ">\n" )
                     
                     #if( g==G )
                     #    break
                 }
                 else {
                     if(verbose)
-                    cat( l, ": both in <", g, "> ", j, i, "=> <", g, ">\n" )
+                    message( l, ": both in <", g, "> ", j, i, "=> <", g, ">\n" )
                 }
             }
             else {
@@ -325,7 +325,7 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
                 label[initial==i] <- i
                 g <- length(unique(label[label!=0]))
                 if(verbose)
-                cat( l, ":", i, "%in%", j, "=>", i, "<", g, ">\n" )
+                message( l, ":", i, "%in%", j, "=>", i, "<", g, ">\n" )
             }
         }
         else {
@@ -338,21 +338,21 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
                 label[initial==i] <- i
                 g <- length(unique(label[label!=0]))
                 if(verbose)
-                cat( l, ":", j, "%in%", j, "=>", i, "<", g, ">\n" )
+                message( l, ":", j, "%in%", j, "=>", i, "<", g, ">\n" )
             }
             else {
                 ## both not in label
                 ## j becomes i
-               
+                
                 #  label[initial == j] <- 0
                 initial[initial == j] <- i
                 #label[initial==i] <- i
                 g <- length(unique(label[label!=0]))
                 if(verbose)
-                cat( l, ": both %out%", j, "=>", i, "<", g, ">\n" )
+                message( l, ": both %out%", j, "=>", i, "<", g, ">\n" )
             }
         }
-  
+    
     } ## for
     } ## if g>G
     
@@ -363,7 +363,7 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
     l <- length(u)
     for(i in seq_len(l))
         y[label == u[i]] <- i
-     
+    
     ## cat((unique(y)), "\n")
     y
 }

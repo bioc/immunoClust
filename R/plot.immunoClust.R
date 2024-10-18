@@ -101,8 +101,6 @@ col.rm=1, pch.rm=1, cex.rm=0.6, ecol=col, elty=1,
 npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
 {
     more.par <- list(...)
-  
-
     
     if (!is.numeric(subset)) subset <- match(subset, x@parameters)
     
