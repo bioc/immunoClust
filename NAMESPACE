@@ -5,7 +5,7 @@ import(methods)
 
 importFrom(stats, density, mahalanobis, qt, quantile, sd, qchisq)
 importFrom(graphics, plot, pairs, points, polygon,
-    hist, title, axis, mtext, legend)
+    hist, title, axis, mtext, legend, abline)
 
 importFrom(grid, get.gpar, grid.points, current.viewport)
 importFrom(lattice, panel.points, splom, diag.panel.splom)
