@@ -544,6 +544,7 @@ Default_Scales <- function(trans.a, limits)
     for( p in seq_len(length(trans.a))) {
         if( trans.a[p] == 0 ) {
             decades <- round(log(limits[2,p],10))
+            if( decades > 1) {
             scale <- 10^(decades-2)
             minor <- 50
             ticks <- round(limits[2,p]/scale/minor)
@@ -564,6 +565,24 @@ Default_Scales <- function(trans.a, limits)
             limits=limits[,p],
             unit=sprintf("[/%d]", scale)
             )
+            }
+            else {
+                scale <- 1
+                minor <- 0.5
+                ticks <- round(limits[2,p]/scale/minor)
+                at <- c(0,seq_len(ticks))*minor
+                labels <- sprintf("%s", at)
+                i<-2
+                while(i<=length(labels)) {
+                    labels[i] <- ""
+                    i <- i+2
+                }
+                pscal[[p]] <- list(
+                at=at*scale,
+                labels=labels,
+                limits=limits[,p]
+                )
+            }
         }
         else {
             a <- trans.a[p]

@@ -974,8 +974,14 @@ em_mvt::m_step_diag_k(int k)
 	// co-variance -> precision
 
 	for(p=0; p<P; ++p) {
-		if( (*(s+p*P+p) /= z_sum) <= EPSMIN ) {
-			// 2014.04.29: 				
+        /*
+        if( *(s+p*P+p) == 0 && z_sum > 3 ) {
+            status = 1;
+            break;
+        }
+        */
+        if( (*(s+p*P+p) /= z_sum) <= EPSMIN ) {
+			// 2014.04.29:
 			//dbg::printf("%d: singularity in co-variance parameter %d (%g => %g, z-sum %.4lf)", k, p, (*(s+p*P+p))*z_sum, TRC[p]*z_sum, z_sum);
 			//				status = 1;
 			//				break;

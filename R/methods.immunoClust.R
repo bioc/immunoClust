@@ -103,6 +103,7 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
         label[x@label==k] <- l
     }
     
+    label[is.na(x@label)] <- NA
     mu <- x@mu[cls,par]
     sigma <- x@sigma[cls,par,par]
     dim(mu) <- c(L,P)
