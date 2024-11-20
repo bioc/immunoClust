@@ -1,4 +1,4 @@
-    
+
 ##
 bhattacharyya.prob <- function(gM,gS, cM,cS, alpha=1)
 {
@@ -269,7 +269,7 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
     ## length crit = n-1
         crit <- attributes(hcPairs)$change
     ## length diff = n-2
-        crit.diff <- crit[2:(n-1)] - crit[1:(n-2)]
+        crit.diff <- crit[seq_len(n-2)+1] - crit[seq_len(n-2)]
         crit.thres <- sort(crit.diff)[n-1-G]
         k <- max(which( crit.diff >= crit.thres))+1
         if( verbose )
@@ -282,11 +282,11 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
     
     if( select > 0)
     for ( l in seq_len(select) ) {
-# merge at l
+        # merge at l
         ij <- hcPairs[, l ]
         i <- ij[1]
         j <- ij[2]
-# i < j: all j became i
+        # i < j: all j became i
         initial[initial == j] <- i
         label[initial == i] <- i
     }
@@ -307,10 +307,8 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
                     label[initial==i] <- i
                     g <- length(unique(label[label!=0]))
                     if(verbose)
-                    message( l, ": both in <", g, ">", j, "=>", i, "<", g, ">\n" )
+                    message(l, ": both in <",g, ">",j, "=>",i, "<",g, ">\n")
                     
-                    #if( g==G )
-                    #    break
                 }
                 else {
                     if(verbose)
@@ -332,8 +330,8 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
             ## i not in label
             if( j %in% label ) {
                 ## j becomes i
-                
                 #  label[initial == j] <- 0
+
                 initial[initial == j] <- i
                 label[initial==i] <- i
                 g <- length(unique(label[label!=0]))
@@ -343,8 +341,8 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
             else {
                 ## both not in label
                 ## j becomes i
-                
                 #  label[initial == j] <- 0
+
                 initial[initial == j] <- i
                 #label[initial==i] <- i
                 g <- length(unique(label[label!=0]))
@@ -356,15 +354,12 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
     } ## for
     } ## if g>G
     
-    #return(label)
-    
     y <- rep(0, n)
     u <- unique(label[label != 0])
     l <- length(u)
     for(i in seq_len(l))
         y[label == u[i]] <- i
     
-    ## cat((unique(y)), "\n")
     y
 }
 ###

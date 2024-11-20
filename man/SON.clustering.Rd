@@ -41,7 +41,8 @@ verbose=0
 \item{SON.rlen}{runlength in SON normalization step}
 \item{SON.deltas}{deltas parameter in SONormalization step}
 \item{SON.blurring}{bluring parameter in SONormalisation step}
-\item{batch.samples}{minimal number of sample for meta.clusters used in the SONormalisation step}
+\item{batch.samples}{minimal number of sample for meta.clusters used in the 
+    SONormalisation step}
 \item{verbose}{detailed messages during process}
 }
 

@@ -69,9 +69,10 @@ verbose=0
         s <- strptime(date(), "%a %b %d %H:%M:%S %Y")
         
         ## samples for nres-clusters
-        cls.samples <- sapply(seq_len(ncls(nres)), 
-            function(k) length(unique(sam.label[label(nres)==k])))
-        cls.use <- which(cls.samples > batch.samples)
+        cls.samples <- vapply(seq_len(ncls(nres)), 
+            function(k) length(unique(sam.label[label(nres)==k])), 
+                batch.samples)
+        cls.use <- which(cls.samples >= batch.samples)
         res.nrm <- subset(nres, cls=cls.use)
         
         if(verbose>0) {
