@@ -1,5 +1,5 @@
 
-test_that("cell.EM", {
+test_that("cell.EMt", {
 
     data(dat.fcs)
     data(dat.exp)
@@ -7,8 +7,9 @@ test_that("cell.EM", {
     r <- dat.exp[[1]]
     ## apply model parameter to all (unfiltered) events
     dat.trans <- trans.ApplyToData(r, dat.fcs)
-    r2 <- cell.EM(dat.trans, parameters(r), K=ncls(r),
-                w=weights(r),m=mu(r),s=sigma(r))
+    r2 <- cell.EMt(dat.trans, K=ncls(r),
+                w=weights(r),m=mu(r),s=sigma(r),
+                parameters=parameters(r))
 
     expect_is(r2, "immunoClust")
 
@@ -44,6 +45,7 @@ test_that("cell.Estep", {
                 parameters(r1))
     expect_is(r2, "immunoClust")
 })
+
 test_that("cell.Mstep", {
     data(dat.fcs)
     data(dat.exp)

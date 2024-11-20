@@ -53,7 +53,7 @@ Till Sörensen \email{till-antoni.soerensen@charite.de}
 }
 
 \seealso{
-\code{\link{cell.process}}, \code{\link{cell.EM}}, \code{\link{cell.Estimation}}
+\code{\link{cell.process}}, \code{\link{cell.EMt}}, \code{\link{cell.Estep}}
 }
 
 \examples{

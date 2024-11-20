@@ -8,38 +8,39 @@
 ##  cell.EM(t)
 ##  fits model to sample data, initial estimation given by K, w, m, s
 ###
-cell.EM <- function(
-data, parameters=NULL, expName="immunoClust Experiment", history=NULL, 
-state=NULL, K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt"
-) {
-    
-    y <- .exprs(data, parameters)
-    N <- nrow(y)
-    P <- ncol(y)
-    
-    if (nrow(s)) {
-        dim(s) <- c(K,P*P)
-        S <- c(t(s))
-    }
-    else {
-        S <- s
-    }
-    if (nrow(m)) {
-        M <- c(t(m))
-    }
-    else{
-        M <- m
-    }
-    
-    obj <- .Call(paste(sep="","immunoC_", modelName, "EMt"), 
-                N=as.integer(N), P=as.integer(P), L=as.integer(K), 
-                as.double(t(y)), double(0), 
-                as.double(w), as.double(M), as.double(S),
-                as.integer(B), as.double(tol), as.double(bias) )
-
-    .immunoClust2(obj, K, P, N, state=state,
-                    expName=expName, parameters=parameters)
-}
+#cell.EM <- function(
+#data, parameters=NULL, expName="immunoClust Experiment", history=NULL,
+#state=NULL, K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt"
+#) {
+#
+#    y <- .exprs(data, parameters)
+#    N <- nrow(y)
+#    P <- ncol(y)
+#
+#    if (nrow(s)) {
+#        dim(s) <- c(K,P*P)
+#        S <- c(t(s))
+#    }
+#    else {
+#        S <- s
+#    }
+#    if (nrow(m)) {
+#        M <- c(t(m))
+#    }
+#    else{
+#        M <- m
+#    }
+#
+#    obj <- .Call(paste(sep="","immunoC_", modelName, "EMt"),
+#                N=as.integer(N), P=as.integer(P), L=as.integer(K),
+#                as.double(t(y)), double(0),
+#                as.double(w), as.double(M), as.double(S),
+#                as.integer(B), as.double(tol), as.double(bias) )
+#
+#    .immunoClust2(obj, K, P, N, state=state,
+#                    expName=expName, parameters=parameters)
+#}
+####
 
 ####
 ## cell.EMt
@@ -84,39 +85,39 @@ B=50, tol=1e-5, bias=0.5, modelName="mvt"
 ##  cell.Estimation
 ##  classify sample data according to model data given by K, w, m, s
 ###
-cell.Estimation <- function(
-data, parameters=NULL, expName="immunoClust Experiment", 
-history=NULL, state=NULL, K, w, m, s, scale_Z=TRUE, modelName="mvt"
-) {
-    
-    y <- .exprs(data, parameters)
-    
-    y <- as.matrix(y)
-    N <- nrow(y)
-    P <- ncol(y)
-    
-    if (nrow(s)) {
-        dim(s) <- c(K,P*P)
-        S <- c(t(s))
-    }
-    else {
-        S <- s
-    }
-    if (nrow(m)) {
-        M <- c(t(m))     
-    }
-    else{
-        M <- m
-    }
-    
-    obj <- .Call(paste(sep="", "immunoC_", modelName, "E"), 
-                as.integer(N), as.integer(P), as.integer(K), 
-                as.double(t(y)), double(0), 
-                as.double(w), as.double(M), as.double(S), as.integer(scale_Z) )
-
-    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters)
-    
-}
+#cell.Estimation <- function(
+#data, parameters=NULL, expName="immunoClust Experiment",
+#history=NULL, state=NULL, K, w, m, s, scale_Z=TRUE, modelName="mvt"
+#) {
+#
+#    y <- .exprs(data, parameters)
+#
+#    y <- as.matrix(y)
+#    N <- nrow(y)
+#    P <- ncol(y)
+#
+#    if (nrow(s)) {
+#        dim(s) <- c(K,P*P)
+#        S <- c(t(s))
+#    }
+#    else {
+#        S <- s
+#    }
+#    if (nrow(m)) {
+#        M <- c(t(m))
+#    }
+#    else{
+#        M <- m
+#    }
+#
+#    obj <- .Call(paste(sep="", "immunoC_", modelName, "E"),
+#                as.integer(N), as.integer(P), as.integer(K),
+#                as.double(t(y)), double(0),
+#                as.double(w), as.double(M), as.double(S), as.integer(scale_Z) )
+#
+#    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters)
+#
+#}
 ### cell.Estimation
 
 ## single Estep, Mstep
@@ -178,7 +179,6 @@ modelName="mvt"
 }
 
 ###
-## cell.EM does an EMt-iteration
 ## cell.EMstep
 cell.EMstep <- function(
 data, K, w, m, s, parameters=NULL,
@@ -217,28 +217,29 @@ B=1, tol=1e-5, modelName="mvt"
 ###
 ##  fit model to the sample data, initial event assignment given by label
 ###
-cell.ME <-function(
-data, parameters=NULL, expName="immunoClust Experiment", 
-history=NULL, state=NULL, label, B=50, tol=1e-5, modelName="mvt"
-) {
-    
-    y <- .exprs(data, parameters);
-    
-    inc <- !is.na(label)
-    
-    y <- as.matrix(y[inc,])
-    N <- nrow(y)
-    P <- ncol(y)
-    label <- label[inc]
-    K <- max(label)
-    
-    obj <- .Call(paste(sep="", "immunoC_", modelName, "ME"), 
-            as.integer(N), as.integer(P), as.integer(K), 
-            as.double(t(y)), NULL,  as.integer(label),
-            as.integer(B), as.double(tol) )
-
-    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters, inc=inc)
-}
+#cell.ME <-function(
+#data, parameters=NULL, expName="immunoClust Experiment",
+#history=NULL, state=NULL, label, B=50, tol=1e-5, modelName="mvt"
+#) {
+#
+#    y <- .exprs(data, parameters);
+#
+#    inc <- !is.na(label)
+#
+#    y <- as.matrix(y[inc,])
+#    N <- nrow(y)
+#    P <- ncol(y)
+#    label <- label[inc]
+#    K <- max(label)
+#
+#    obj <- .Call(paste(sep="", "immunoC_", modelName, "ME"),
+#            as.integer(N), as.integer(P), as.integer(K),
+#            as.double(t(y)), NULL,  as.integer(label),
+#            as.integer(B), as.double(tol) )
+#
+#    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters, 
+#       inc=inc)
+#}
 
 ###
 ## cell.ME has unlucky ordered (and unnessesary) call parameter
@@ -279,9 +280,13 @@ function(x, data, B=50, tol=1e-5, bias=0.5, modelName="mvt" )
 {
     s <- strptime(date(), "%a %b %d %H:%M:%S %Y")
     
-    res <- cell.EM(data, parameters=x@parameters,
-                history=attr(x, "history"), state=attr(x,"state"),
-                K=x@K, w=x@w, m=x@mu, s=x@sigma, 
+    #res <- cell.EM(data, parameters=x@parameters,
+    #            history=attr(x, "history"), state=attr(x,"state"),
+    #            K=x@K, w=x@w, m=x@mu, s=x@sigma,
+    #            B=B, tol=tol, bias=bias, modelName=modelName)
+    
+    res <- cell.EMt(data, K=x@K, w=x@w, m=x@mu, s=x@sigma,
+                parameters=x@parameters,
                 B=B, tol=tol, bias=bias, modelName=modelName)
     
     attr(res, "trans.a") <- attr(x,"trans.a")
@@ -303,9 +308,13 @@ function(x, data, B=50, tol=1e-5, bias=0.5, modelName="mvt" )
 ###
 cell.Classify <- function(x, data, modelName="mvt" ) {
     
-    res <- cell.Estimation(data, parameters=x@parameters, 
-                    history=x@history, state=attr(x,"state"),
-                    K=x@K, w=x@w, m=x@mu, s=x@sigma, modelName=modelName)
+    #res <- cell.Estimation(data, parameters=x@parameters,
+    #                history=x@history, state=attr(x,"state"),
+    #                K=x@K, w=x@w, m=x@mu, s=x@sigma, modelName=modelName)
+    
+    res <- cell.Estep(data, K=x@K, w=x@w, m=x@mu, s=x@sigma,
+                    parameters=x@parameters, modelName=modelName)
+    
     
     attr(res, "trans.a") <- attr(x,"trans.a")
     attr(res, "trans.b") <- attr(x,"trans.b")

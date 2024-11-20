@@ -1,5 +1,4 @@
 \name{cell.ME}
-\alias{cell.ME}
 \alias{cell.MEstep}
 \alias{cell.Mstep}
 
@@ -17,8 +16,6 @@ object of class \code{\link[=immunoClust.object]{immunoClust}}.
 }
 
 \usage{
-cell.ME(data, parameters=NULL, expName="immunoClust Experiment", 
-        history=NULL, state=NULL, label, B=50, tol=1e-5, modelName="mvt")
 
 cell.MEstep(data, label, parameters=NULL, 
     expName="immunoClust Experiment", 
@@ -35,8 +32,6 @@ flowFrame.}
 included in clustering. When it is left unspecified, all the parameters will be
 used.}
 \item{expName}{The name of the clustering experiment.}
-\item{history}{experimental; unused so far.}
-\item{state}{experimental: unused so far.}
 \item{label}{ The \eqn{N}-dimensional vector containing the initial cluster 
 membership. A label-number of 0 for an event indicates that this event is not 
 initially assigned to a cluster.}
@@ -67,7 +62,7 @@ Till Sörensen \email{till-antoni.soerensen@charite.de}
 }
 
 \seealso{
-\code{\link{cell.EM}}
+\code{\link{cell.EMt}}
 }
 
 \examples{
@@ -78,7 +73,7 @@ r1 <- dat.exp[[1]]
 summary(r1)
 ## apply model parameter to all (unfiltered) events
 dat.trans <- trans.ApplyToData(r1, dat.fcs)
-r2 <- cell.ME(dat.trans, parameters(r1), label=label(r1))
+r2 <- cell.MEstep(dat.trans, label(r1), parameters=parameters(r1) )
 summary(r2)
 }
 \keyword{ cluster }

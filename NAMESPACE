@@ -104,12 +104,12 @@ cell.MajorIterationTrans,
 cell.classifyAll)
 ## cell.clustering
 export(
-cell.EM,
+# cell.EM, removed use cell.EMt
 cell.EMt,
 cell.EMstep,
-cell.Estimation,
+# cell.Estimation, removed use cell.Estep
 cell.Estep,
-cell.ME,
+# cell.ME, removed use cell.MEstep
 cell.MEstep,
 cell.Mstep,
 cell.FitModel,

@@ -1,7 +1,5 @@
 \name{cell.EM}
-\alias{cell.EM}
 \alias{cell.EMt}
-\alias{cell.Estimation}
 \alias{cell.Estep}
 \alias{cell.EMstep}
 
@@ -19,10 +17,6 @@ parameters and returns the fitted clusters information in an object of class
 }
 
 \usage{
-cell.EM(data, parameters=NULL, expName="immunoClust Experiment", 
-    history=NULL, state=NULL,
-    K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt")
-
 cell.EMt(data,  K, w, m, s, parameters=NULL, 
     expName="immunoClust Experiment", 
     B=50, tol=1e-5, bias=0.5, modelName="mvt")
@@ -30,11 +24,6 @@ cell.EMt(data,  K, w, m, s, parameters=NULL,
 cell.EMstep(data,  K, w, m, s, parameters=NULL, 
     expName="immunoClust EMstep", 
     B=1, tol=1e-5, modelName="mvt")
-
-
-cell.Estimation(data, parameters=NULL, expName="immunoClust Experiment",  
-    history=NULL, state=NULL,
-    K, w, m, s, scale_Z=TRUE, modelName="mvt")
     
 cell.Estep(data, K, w, m, s, parameters=NULL,
     expName="immunoClust Estep", scale_Z=TRUE, modelName="mvt")
@@ -47,8 +36,6 @@ flowFrame.}
 included in clustering. When it is left unspecified, all the parameters will be
 used.}
 \item{expName}{The name of the clustering experiment.}
-\item{history}{experimental; unused so far.}
-\item{state}{experimental: unused so far.}
 \item{K}{The number of clusters. }
 \item{w}{The \eqn{K}-dimensional vector of the mixture proportions.}
 \item{m}{The \eqn{K x P}-dimensional matrix of the \eqn{K} estimated cluster 
@@ -65,17 +52,11 @@ covariance matrices.}
 }
 
 \details{
-Whereas \code{cell.EM} performs a complete EMt-iteration, \code{cell.Estimate} 
+Whereas \code{cell.EMt} performs a complete EMt-iteration, \code{cell.Estep} 
 only calculates the a-posteriori probabilities and the Maximum-A-Posteriori 
-estimators of cluster membership for all events.
-
-\code{cell.EM} is misspelling since it dose an EMt-iteration and becomes
-deprecated in future, so better use \code{cell.EMt}. For an EM-iteration use
+estimators of cluster membership for all events. For an EM-iteration use
 \code{cell.EMstep}.
 
-\code{cell.Estep} and \code{cell.Estimation} do the same call. In
-\code{cell.Estep} the calling options are a bit better structured and
-\code{cell.Estimation} becomes deprecated in future.
 }
 
 \value{
@@ -94,7 +75,7 @@ Till Sörensen \email{till-antoni.soerensen@charite.de}
 }
 
 \seealso{
-\code{\link{cell.ME}}, \code{\link{cell.FitModel}}
+\code{\link{cell.MEstep}}, \code{\link{cell.FitModel}}
 }
 \examples{
 data(dat.fcs)
@@ -104,8 +85,8 @@ r <- dat.exp[[1]]
 summary(r)
 ## apply model parameter to all (unfiltered) events
 dat.trans <- trans.ApplyToData(r, dat.fcs)
-r2 <- cell.EM(dat.trans, parameters(r), K=ncls(r), 
-            w=weights(r),m=mu(r),s=sigma(r))
+r2 <- cell.EMt(dat.trans, K=ncls(r), w=weights(r),m=mu(r),s=sigma(r),
+    parameters=parameters(r))
 summary(r2)
 }
 \keyword{ cluster }
