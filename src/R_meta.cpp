@@ -108,11 +108,11 @@ extern "C" {
     //
     static void _copyMixtureModel(SEXP res_cluster, double* W, double* M, double* S)
     {
-        int K = INTEGER(R_do_slot(res_cluster, install("K")))[0];
-        int P = INTEGER(Rf_getAttrib(res_cluster, install("P")))[0];
-        cblas_dcopy(K, REAL(R_do_slot(res_cluster, install("w"))), 1, W, 1);
-        const double* mu = REAL(R_do_slot(res_cluster, install("mu")));
-        const double* sigma =  REAL(R_do_slot(res_cluster, install("sigma")));
+        int K = INTEGER(R_do_slot(res_cluster, Rf_install("K")))[0];
+        int P = INTEGER(Rf_getAttrib(res_cluster, Rf_install("P")))[0];
+        cblas_dcopy(K, REAL(R_do_slot(res_cluster, Rf_install("w"))), 1, W, 1);
+        const double* mu = REAL(R_do_slot(res_cluster, Rf_install("mu")));
+        const double* sigma =  REAL(R_do_slot(res_cluster, Rf_install("sigma")));
         
         for( int k=0; k<K; ++k ) {
             cblas_dcopy(P, mu+k, K, M+k*P, 1);
@@ -123,37 +123,37 @@ extern "C" {
     static SEXP _ME_ret(int n, int p, int k) 
 	{
         
-		SEXP ret = Rf_protect(allocVector(VECSXP, 12));
-		SEXP names = Rf_protect(allocVector(STRSXP, 12));
+		SEXP ret = Rf_protect(Rf_allocVector(VECSXP, 12));
+		SEXP names = Rf_protect(Rf_allocVector(STRSXP, 12));
 		
-		SET_STRING_ELT(names, 0, mkChar("L"));
-		SET_STRING_ELT(names, 1, mkChar("z"));
-		SET_STRING_ELT(names, 2, mkChar("w"));
-		SET_STRING_ELT(names, 3, mkChar("m"));
-		SET_STRING_ELT(names, 4, mkChar("s"));
-		SET_STRING_ELT(names, 5, mkChar("label"));
-		SET_STRING_ELT(names, 6, mkChar("logLike"));
-		SET_STRING_ELT(names, 7, mkChar("history"));
-		SET_STRING_ELT(names, 8, mkChar("status"));
-		SET_STRING_ELT(names, 9, mkChar("iterations"));
-		SET_STRING_ELT(names, 10, mkChar("tolerance"));
-        SET_STRING_ELT(names, 11, mkChar("normedM"));
+		SET_STRING_ELT(names, 0, Rf_mkChar("L"));
+		SET_STRING_ELT(names, 1, Rf_mkChar("z"));
+		SET_STRING_ELT(names, 2, Rf_mkChar("w"));
+		SET_STRING_ELT(names, 3, Rf_mkChar("m"));
+		SET_STRING_ELT(names, 4, Rf_mkChar("s"));
+		SET_STRING_ELT(names, 5, Rf_mkChar("label"));
+		SET_STRING_ELT(names, 6, Rf_mkChar("logLike"));
+		SET_STRING_ELT(names, 7, Rf_mkChar("history"));
+		SET_STRING_ELT(names, 8, Rf_mkChar("status"));
+		SET_STRING_ELT(names, 9, Rf_mkChar("iterations"));
+		SET_STRING_ELT(names, 10, Rf_mkChar("tolerance"));
+        SET_STRING_ELT(names, 11, Rf_mkChar("normedM"));
         
-		SET_VECTOR_ELT(ret, 0, allocVector(INTSXP, 1));		// out L
-		SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, n*k));	// out z (!not initialzed!)
-		SET_VECTOR_ELT(ret, 2, allocVector(REALSXP, k));	// out w
-		SET_VECTOR_ELT(ret, 3, allocVector(REALSXP, k*p));	// out m
-		SET_VECTOR_ELT(ret, 4, allocVector(REALSXP, k*p*p));// out s
-		SET_VECTOR_ELT(ret, 5, allocVector(INTSXP, n));		// out label
-		SET_VECTOR_ELT(ret, 6, allocVector(REALSXP, 4));	// out logLike
-		SET_VECTOR_ELT(ret, 7, allocVector(INTSXP, k));		// out history
-		SET_VECTOR_ELT(ret, 8, allocVector(INTSXP, 1));		// out status
-		SET_VECTOR_ELT(ret, 9, allocVector(INTSXP, 1));		// out iteratioms
-		SET_VECTOR_ELT(ret, 10, allocVector(REALSXP, 1));	// out tolerance
+		SET_VECTOR_ELT(ret, 0, Rf_allocVector(INTSXP, 1));		// out L
+		SET_VECTOR_ELT(ret, 1, Rf_allocVector(REALSXP, n*k));	// out z (!not initialzed!)
+		SET_VECTOR_ELT(ret, 2, Rf_allocVector(REALSXP, k));	// out w
+		SET_VECTOR_ELT(ret, 3, Rf_allocVector(REALSXP, k*p));	// out m
+		SET_VECTOR_ELT(ret, 4, Rf_allocVector(REALSXP, k*p*p));// out s
+		SET_VECTOR_ELT(ret, 5, Rf_allocVector(INTSXP, n));		// out label
+		SET_VECTOR_ELT(ret, 6, Rf_allocVector(REALSXP, 4));	// out logLike
+		SET_VECTOR_ELT(ret, 7, Rf_allocVector(INTSXP, k));		// out history
+		SET_VECTOR_ELT(ret, 8, Rf_allocVector(INTSXP, 1));		// out status
+		SET_VECTOR_ELT(ret, 9, Rf_allocVector(INTSXP, 1));		// out iteratioms
+		SET_VECTOR_ELT(ret, 10, Rf_allocVector(REALSXP, 1));	// out tolerance
 		
-        SET_VECTOR_ELT(ret, 11, allocVector(REALSXP, n*p));   //normedM
+        SET_VECTOR_ELT(ret, 11, Rf_allocVector(REALSXP, n*p));   //normedM
         
-    	setAttrib(ret, R_NamesSymbol, names);
+        Rf_setAttrib(ret, R_NamesSymbol, names);
 		
 		Rf_unprotect(1);	// unproctedt names
 		
@@ -270,9 +270,9 @@ extern "C" {
                                     )
     {
         
-        int G = INTEGER(R_do_slot(res_model, install("K")))[0];
-        int K = INTEGER(Rf_getAttrib(res_sample, install("K")))[0];
-        int P = INTEGER(Rf_getAttrib(res_model, install("P")))[0];
+        int G = INTEGER(R_do_slot(res_model, Rf_install("K")))[0];
+        int K = INTEGER(Rf_getAttrib(res_sample, Rf_install("K")))[0];
+        int P = INTEGER(Rf_getAttrib(res_model, Rf_install("P")))[0];
         int N = G+K;
         
         dbg::printf("SON_combineClustering: G=%d, K=%d, P=%d, N=%d", G, K, P, N);
@@ -286,10 +286,10 @@ extern "C" {
         double* nS = new double[N*P*P];
         
         
-        cblas_dcopy(G, REAL(R_do_slot(res_model, install("evts"))), 1, nEvts, 1);
+        cblas_dcopy(G, REAL(R_do_slot(res_model, Rf_install("evts"))), 1, nEvts, 1);
         _copyMixtureModel(res_model, nW, nM, nS);
    
-        cblas_dcopy(K, REAL(R_do_slot(res_sample, install("evts"))), 1, nEvts+G, 1);
+        cblas_dcopy(K, REAL(R_do_slot(res_sample, Rf_install("evts"))), 1, nEvts+G, 1);
         _copyMixtureModel(res_sample, nW+G, nM+G*P, nS+G*P*P);
         
         int* label = INTEGER(VECTOR_ELT(ret,5));
@@ -462,8 +462,8 @@ extern "C" {
                             SEXP SON_cycles, SEXP SON_rlen, SEXP SON_deltas, SEXP SON_blurring
                             )
     {
-        int P = INTEGER(Rf_getAttrib(res_model, install("P")))[0];
-        int G = INTEGER(Rf_getAttrib(res_model, install("K")))[0];
+        int P = INTEGER(Rf_getAttrib(res_model, Rf_install("P")))[0];
+        int G = INTEGER(Rf_getAttrib(res_model, Rf_install("K")))[0];
         
         double* gW = new double[G];
         double* gM = new double[G*P];
@@ -482,7 +482,7 @@ extern "C" {
             totK += K[i];
         
         
-        SEXP ret = Rf_protect(allocVector(REALSXP, totK*P));
+        SEXP ret = Rf_protect(Rf_allocVector(REALSXP, totK*P));
         
         double* normedM = REAL(ret);
         const double* nW = W;
@@ -540,7 +540,7 @@ extern "C" {
         // re-location normalized center to orignal
         // 2024.09.10: wirklich???
         // habe die idee dazu vergessen
-        const double* label = REAL(R_do_slot(res_model, install("label")));
+        const double* label = REAL(R_do_slot(res_model, Rf_install("label")));
         normedM = REAL(ret);
         
         for( int j = 0; j < G; ++j ) {
@@ -584,15 +584,15 @@ extern "C" {
     SEXP call_mvnDist(SEXP P, SEXP K, SEXP W, SEXP M, SEXP S)
     {
         int k = INTEGER(K)[0];
-        SEXP ret = Rf_protect(allocVector(VECSXP, k*(k-1)/2));
+        SEXP ret = Rf_protect(Rf_allocVector(VECSXP, k*(k-1)/2));
         
         dist_mvn dist(INTEGER(P)[0], INTEGER(K)[0],
                  REAL(W), REAL(M), REAL(S));
         
         dist.hellinger(REAL(ret));
-        Rf_setAttrib(ret,install("Size"), Rf_duplicate(K));
-        Rf_setAttrib(ret,install("Diag"), Rf_ScalarLogical(0));
-        Rf_setAttrib(ret,install("Upper"), Rf_ScalarLogical(0));
+        Rf_setAttrib(ret,Rf_install("Size"), Rf_duplicate(K));
+        Rf_setAttrib(ret,Rf_install("Diag"), Rf_ScalarLogical(0));
+        Rf_setAttrib(ret,Rf_install("Upper"), Rf_ScalarLogical(0));
         Rf_setAttrib(ret,R_ClassSymbol, Rf_mkString("dist"));
         Rf_unprotect(1);
         

@@ -61,35 +61,35 @@ extern "C" {
 	static SEXP _ME_ret(int n, int p, int k)
 	{
         
-		SEXP ret = Rf_protect(allocVector(VECSXP, 11));
-		SEXP names = Rf_protect(allocVector(STRSXP, 11));
+		SEXP ret = Rf_protect(Rf_allocVector(VECSXP, 11));
+		SEXP names = Rf_protect(Rf_allocVector(STRSXP, 11));
 		
-		SET_STRING_ELT(names, 0, mkChar("L"));
-		SET_STRING_ELT(names, 1, mkChar("z"));
-		SET_STRING_ELT(names, 2, mkChar("w"));
-		SET_STRING_ELT(names, 3, mkChar("m"));
-		SET_STRING_ELT(names, 4, mkChar("s"));
-		SET_STRING_ELT(names, 5, mkChar("label"));
-		SET_STRING_ELT(names, 6, mkChar("logLike"));
-		SET_STRING_ELT(names, 7, mkChar("history"));
-		SET_STRING_ELT(names, 8, mkChar("status"));
-		SET_STRING_ELT(names, 9, mkChar("iterations"));
-		SET_STRING_ELT(names, 10, mkChar("tolerance"));
+		SET_STRING_ELT(names, 0, Rf_mkChar("L"));
+		SET_STRING_ELT(names, 1, Rf_mkChar("z"));
+		SET_STRING_ELT(names, 2, Rf_mkChar("w"));
+		SET_STRING_ELT(names, 3, Rf_mkChar("m"));
+		SET_STRING_ELT(names, 4, Rf_mkChar("s"));
+		SET_STRING_ELT(names, 5, Rf_mkChar("label"));
+		SET_STRING_ELT(names, 6, Rf_mkChar("logLike"));
+		SET_STRING_ELT(names, 7, Rf_mkChar("history"));
+		SET_STRING_ELT(names, 8, Rf_mkChar("status"));
+		SET_STRING_ELT(names, 9, Rf_mkChar("iterations"));
+		SET_STRING_ELT(names, 10, Rf_mkChar("tolerance"));
 		
-		SET_VECTOR_ELT(ret, 0, allocVector(INTSXP, 1));		// out L
-        //SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, n*k));  // out z (!not initialized!)
-		SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, R_xlen_t(n)*R_xlen_t(k)));	// out z (!not initialized!)
-		SET_VECTOR_ELT(ret, 2, allocVector(REALSXP, k));	// out w
-		SET_VECTOR_ELT(ret, 3, allocVector(REALSXP, k*p));	// out m
-		SET_VECTOR_ELT(ret, 4, allocVector(REALSXP, k*p*p));// out s
-		SET_VECTOR_ELT(ret, 5, allocVector(INTSXP, n));		// out label
-		SET_VECTOR_ELT(ret, 6, allocVector(REALSXP, 3));	// out logLike
-		SET_VECTOR_ELT(ret, 7, allocVector(INTSXP, k));		// out history
-		SET_VECTOR_ELT(ret, 8, allocVector(INTSXP, 1));		// out status
-		SET_VECTOR_ELT(ret, 9, allocVector(INTSXP, 1));		// out iterations
-		SET_VECTOR_ELT(ret, 10, allocVector(REALSXP, 1));	// out tollerance
+		SET_VECTOR_ELT(ret, 0, Rf_allocVector(INTSXP, 1));		// out L
+        //SET_VECTOR_ELT(ret, 1, Rf_allocVector(REALSXP, n*k));  // out z (!not initialized!)
+		SET_VECTOR_ELT(ret, 1, Rf_allocVector(REALSXP, R_xlen_t(n)*R_xlen_t(k)));	// out z (!not initialized!)
+		SET_VECTOR_ELT(ret, 2, Rf_allocVector(REALSXP, k));	// out w
+		SET_VECTOR_ELT(ret, 3, Rf_allocVector(REALSXP, k*p));	// out m
+		SET_VECTOR_ELT(ret, 4, Rf_allocVector(REALSXP, k*p*p));// out s
+		SET_VECTOR_ELT(ret, 5, Rf_allocVector(INTSXP, n));		// out label
+		SET_VECTOR_ELT(ret, 6, Rf_allocVector(REALSXP, 3));	// out logLike
+		SET_VECTOR_ELT(ret, 7, Rf_allocVector(INTSXP, k));		// out history
+		SET_VECTOR_ELT(ret, 8, Rf_allocVector(INTSXP, 1));		// out status
+		SET_VECTOR_ELT(ret, 9, Rf_allocVector(INTSXP, 1));		// out iterations
+		SET_VECTOR_ELT(ret, 10, Rf_allocVector(REALSXP, 1));	// out tollerance
 		        
-		setAttrib(ret, R_NamesSymbol, names);
+        Rf_setAttrib(ret, R_NamesSymbol, names);
 		
 		Rf_unprotect(1);	// unproctect names
 		
@@ -99,34 +99,34 @@ extern "C" {
     
     static SEXP _M_ret(int n, int p, int k, SEXP label) 
 	{
-		SEXP ret = Rf_protect(allocVector(VECSXP, 11));
-		SEXP names = Rf_protect(allocVector(STRSXP, 11));
+		SEXP ret = Rf_protect(Rf_allocVector(VECSXP, 11));
+		SEXP names = Rf_protect(Rf_allocVector(STRSXP, 11));
 		
-		SET_STRING_ELT(names, 0, mkChar("L"));
-		SET_STRING_ELT(names, 1, mkChar("z"));
-		SET_STRING_ELT(names, 2, mkChar("w"));
-		SET_STRING_ELT(names, 3, mkChar("m"));
-		SET_STRING_ELT(names, 4, mkChar("s"));
-		SET_STRING_ELT(names, 5, mkChar("label"));
-		SET_STRING_ELT(names, 6, mkChar("logLike"));
-		SET_STRING_ELT(names, 7, mkChar("history"));
-		SET_STRING_ELT(names, 8, mkChar("status"));
-		SET_STRING_ELT(names, 9, mkChar("iterations"));
-		SET_STRING_ELT(names, 10, mkChar("tolerance"));
+		SET_STRING_ELT(names, 0, Rf_mkChar("L"));
+		SET_STRING_ELT(names, 1, Rf_mkChar("z"));
+		SET_STRING_ELT(names, 2, Rf_mkChar("w"));
+		SET_STRING_ELT(names, 3, Rf_mkChar("m"));
+		SET_STRING_ELT(names, 4, Rf_mkChar("s"));
+		SET_STRING_ELT(names, 5, Rf_mkChar("label"));
+		SET_STRING_ELT(names, 6, Rf_mkChar("logLike"));
+		SET_STRING_ELT(names, 7, Rf_mkChar("history"));
+		SET_STRING_ELT(names, 8, Rf_mkChar("status"));
+		SET_STRING_ELT(names, 9, Rf_mkChar("iterations"));
+		SET_STRING_ELT(names, 10, Rf_mkChar("tolerance"));
 		
-		SET_VECTOR_ELT(ret, 0, allocVector(INTSXP, 1));		// out L
-		SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, 0));	// out z (=NULL)
-		SET_VECTOR_ELT(ret, 2, allocVector(REALSXP, k));	// out w
-		SET_VECTOR_ELT(ret, 3, allocVector(REALSXP, k*p));	// out m
-		SET_VECTOR_ELT(ret, 4, allocVector(REALSXP, k*p*p));// out s
+		SET_VECTOR_ELT(ret, 0, Rf_allocVector(INTSXP, 1));		// out L
+		SET_VECTOR_ELT(ret, 1, Rf_allocVector(REALSXP, 0));	// out z (=NULL)
+		SET_VECTOR_ELT(ret, 2, Rf_allocVector(REALSXP, k));	// out w
+		SET_VECTOR_ELT(ret, 3, Rf_allocVector(REALSXP, k*p));	// out m
+		SET_VECTOR_ELT(ret, 4, Rf_allocVector(REALSXP, k*p*p));// out s
 		SET_VECTOR_ELT(ret, 5, Rf_duplicate(label));		// out label
-		SET_VECTOR_ELT(ret, 6, allocVector(REALSXP, 3));	// out logLike
-		SET_VECTOR_ELT(ret, 7, allocVector(INTSXP, k));     // out history
-		SET_VECTOR_ELT(ret, 8, allocVector(INTSXP, 1));		// out status
-		SET_VECTOR_ELT(ret, 9, allocVector(INTSXP, 1));		// out iterations
-		SET_VECTOR_ELT(ret, 10, allocVector(REALSXP, 1));	// out tollerance
+		SET_VECTOR_ELT(ret, 6, Rf_allocVector(REALSXP, 3));	// out logLike
+		SET_VECTOR_ELT(ret, 7, Rf_allocVector(INTSXP, k));     // out history
+		SET_VECTOR_ELT(ret, 8, Rf_allocVector(INTSXP, 1));		// out status
+		SET_VECTOR_ELT(ret, 9, Rf_allocVector(INTSXP, 1));		// out iterations
+		SET_VECTOR_ELT(ret, 10, Rf_allocVector(REALSXP, 1));	// out tollerance
         
-		setAttrib(ret, R_NamesSymbol, names);
+        Rf_setAttrib(ret, R_NamesSymbol, names);
 		
 		Rf_unprotect(1);	// unproctect names
 		
@@ -136,35 +136,35 @@ extern "C" {
 	
 	static SEXP _EM_ret(int n, int p, int k, SEXP w, SEXP m, SEXP s) 
 	{
-		SEXP ret = Rf_protect(allocVector(VECSXP, 11));
-		SEXP names = Rf_protect(allocVector(STRSXP, 11));
+		SEXP ret = Rf_protect(Rf_allocVector(VECSXP, 11));
+		SEXP names = Rf_protect(Rf_allocVector(STRSXP, 11));
 		
-		SET_STRING_ELT(names, 0, mkChar("L"));
-		SET_STRING_ELT(names, 1, mkChar("z"));
-		SET_STRING_ELT(names, 2, mkChar("w"));
-		SET_STRING_ELT(names, 3, mkChar("m"));
-		SET_STRING_ELT(names, 4, mkChar("s"));
-		SET_STRING_ELT(names, 5, mkChar("label"));
-		SET_STRING_ELT(names, 6, mkChar("logLike"));
-		SET_STRING_ELT(names, 7, mkChar("history"));
-		SET_STRING_ELT(names, 8, mkChar("status"));
-		SET_STRING_ELT(names, 9, mkChar("iterations"));
-		SET_STRING_ELT(names, 10, mkChar("tolerance"));
+		SET_STRING_ELT(names, 0, Rf_mkChar("L"));
+		SET_STRING_ELT(names, 1, Rf_mkChar("z"));
+		SET_STRING_ELT(names, 2, Rf_mkChar("w"));
+		SET_STRING_ELT(names, 3, Rf_mkChar("m"));
+		SET_STRING_ELT(names, 4, Rf_mkChar("s"));
+		SET_STRING_ELT(names, 5, Rf_mkChar("label"));
+		SET_STRING_ELT(names, 6, Rf_mkChar("logLike"));
+		SET_STRING_ELT(names, 7, Rf_mkChar("history"));
+		SET_STRING_ELT(names, 8, Rf_mkChar("status"));
+		SET_STRING_ELT(names, 9, Rf_mkChar("iterations"));
+		SET_STRING_ELT(names, 10, Rf_mkChar("tolerance"));
 		
-		SET_VECTOR_ELT(ret, 0, allocVector(INTSXP, 1));		// out L
-        SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, n*k));  // out z (!not initialized!)
-        SET_VECTOR_ELT(ret, 1, allocVector(REALSXP, R_xlen_t(n)*R_xlen_t(k)));	// out z (!not initialized!)
+		SET_VECTOR_ELT(ret, 0, Rf_allocVector(INTSXP, 1));		// out L
+        SET_VECTOR_ELT(ret, 1, Rf_allocVector(REALSXP, n*k));  // out z (!not initialized!)
+        SET_VECTOR_ELT(ret, 1, Rf_allocVector(REALSXP, R_xlen_t(n)*R_xlen_t(k)));	// out z (!not initialized!)
      	SET_VECTOR_ELT(ret, 2, Rf_duplicate(w));			// in/out w
 		SET_VECTOR_ELT(ret, 3, Rf_duplicate(m));			// in/out m
 		SET_VECTOR_ELT(ret, 4, Rf_duplicate(s));			// in/out s
-		SET_VECTOR_ELT(ret, 5, allocVector(INTSXP,n));		// out label
-		SET_VECTOR_ELT(ret, 6, allocVector(REALSXP, 3));	// out logLike
-		SET_VECTOR_ELT(ret, 7, allocVector(INTSXP, k));		// summaryout histroy
-		SET_VECTOR_ELT(ret, 8, allocVector(INTSXP, 1));		// out status
-		SET_VECTOR_ELT(ret, 9, allocVector(INTSXP, 1));		// out iterations
-		SET_VECTOR_ELT(ret, 10, allocVector(REALSXP, 1));	// out tolerance
+		SET_VECTOR_ELT(ret, 5, Rf_allocVector(INTSXP,n));		// out label
+		SET_VECTOR_ELT(ret, 6, Rf_allocVector(REALSXP, 3));	// out logLike
+		SET_VECTOR_ELT(ret, 7, Rf_allocVector(INTSXP, k));		// summaryout histroy
+		SET_VECTOR_ELT(ret, 8, Rf_allocVector(INTSXP, 1));		// out status
+		SET_VECTOR_ELT(ret, 9, Rf_allocVector(INTSXP, 1));		// out iterations
+		SET_VECTOR_ELT(ret, 10, Rf_allocVector(REALSXP, 1));	// out tolerance
 		
-		setAttrib(ret, R_NamesSymbol, names);
+        Rf_setAttrib(ret, R_NamesSymbol, names);
 
 		Rf_unprotect(1);	// unprotect names
 		
@@ -758,15 +758,15 @@ extern "C" {
 	{
 		const int n = INTEGER(N)[0];
 		const int p = INTEGER(P)[0];
-		SEXP ret = Rf_protect(allocVector(VECSXP,3));
-		SEXP names = Rf_protect(allocVector(STRSXP,3));
-		SET_STRING_ELT(names, 0, mkChar("li"));
-		SET_STRING_ELT(names, 1, mkChar("lj"));
-		SET_STRING_ELT(names, 2, mkChar("crit"));
-		SET_VECTOR_ELT(ret, 0, allocVector(INTSXP, n-1));
-		SET_VECTOR_ELT(ret, 1, allocVector(INTSXP, n-1));
-		SET_VECTOR_ELT(ret, 2, allocVector(REALSXP, n-1));
-		setAttrib(ret, R_NamesSymbol, names);
+		SEXP ret = Rf_protect(Rf_allocVector(VECSXP,3));
+		SEXP names = Rf_protect(Rf_allocVector(STRSXP,3));
+		SET_STRING_ELT(names, 0, Rf_mkChar("li"));
+		SET_STRING_ELT(names, 1, Rf_mkChar("lj"));
+		SET_STRING_ELT(names, 2, Rf_mkChar("crit"));
+		SET_VECTOR_ELT(ret, 0, Rf_allocVector(INTSXP, n-1));
+		SET_VECTOR_ELT(ret, 1, Rf_allocVector(INTSXP, n-1));
+		SET_VECTOR_ELT(ret, 2, Rf_allocVector(REALSXP, n-1));
+        Rf_setAttrib(ret, R_NamesSymbol, names);
 		
 		// observation matrix is changed by hc_mvn, so make a copy
 		SEXP x = Rf_protect(Rf_duplicate(y));
@@ -788,7 +788,7 @@ extern "C" {
 	{
 		vs_htrans ml(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), REAL(z));
 		
-		SEXP ret = Rf_protect(allocVector(VECSXP,4));
+		SEXP ret = Rf_protect(Rf_allocVector(VECSXP,4));
 		
 		SET_VECTOR_ELT(ret,0, Rf_duplicate(a));
 		SET_VECTOR_ELT(ret,1, Rf_duplicate(b));
@@ -797,12 +797,12 @@ extern "C" {
 		
 		ml.estimate(REAL(VECTOR_ELT(ret,0)), REAL(VECTOR_ELT(ret,1)), INTEGER(VECTOR_ELT(ret,2))[0], REAL(VECTOR_ELT(ret,3))[0], REAL(certainty)[0], method);
 
-		SEXP names = Rf_protect(allocVector(STRSXP,4));
-		SET_STRING_ELT(names, 0, mkChar("a"));
-		SET_STRING_ELT(names, 1, mkChar("b"));
-		SET_STRING_ELT(names, 2, mkChar("iter"));
-		SET_STRING_ELT(names, 3, mkChar("tol"));
-		setAttrib(ret, R_NamesSymbol, names);
+		SEXP names = Rf_protect(Rf_allocVector(STRSXP,4));
+		SET_STRING_ELT(names, 0, Rf_mkChar("a"));
+		SET_STRING_ELT(names, 1, Rf_mkChar("b"));
+		SET_STRING_ELT(names, 2, Rf_mkChar("iter"));
+		SET_STRING_ELT(names, 3, Rf_mkChar("tol"));
+        Rf_setAttrib(ret, R_NamesSymbol, names);
 		
 		Rf_unprotect(2);
 		
@@ -837,7 +837,7 @@ extern "C" {
 	{
 		vs_htrans ml(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), REAL(z));
 		
-		SEXP ret = Rf_protect(allocVector(VECSXP,4));
+		SEXP ret = Rf_protect(Rf_allocVector(VECSXP,4));
 		
 		SET_VECTOR_ELT(ret,0, Rf_duplicate(a));
 		SET_VECTOR_ELT(ret,1, Rf_duplicate(b));
@@ -846,12 +846,12 @@ extern "C" {
 		
 		ml.estimateA(REAL(VECTOR_ELT(ret,0)), REAL(VECTOR_ELT(ret,1)), INTEGER(VECTOR_ELT(ret,2))[0], REAL(VECTOR_ELT(ret,3))[0], REAL(certainty)[0], method);
 		
-		SEXP names = Rf_protect(allocVector(STRSXP,4));
-		SET_STRING_ELT(names, 0, mkChar("a"));
-		SET_STRING_ELT(names, 1, mkChar("b"));
-		SET_STRING_ELT(names, 2, mkChar("iter"));
-		SET_STRING_ELT(names, 3, mkChar("tol"));
-		setAttrib(ret, R_NamesSymbol, names);
+		SEXP names = Rf_protect(Rf_allocVector(STRSXP,4));
+		SET_STRING_ELT(names, 0, Rf_mkChar("a"));
+		SET_STRING_ELT(names, 1, Rf_mkChar("b"));
+		SET_STRING_ELT(names, 2, Rf_mkChar("iter"));
+		SET_STRING_ELT(names, 3, Rf_mkChar("tol"));
+        Rf_setAttrib(ret, R_NamesSymbol, names);
 		
 		Rf_unprotect(2);
 		
