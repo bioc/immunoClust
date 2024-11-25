@@ -249,6 +249,8 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
 # hcls
 #}
 ###
+
+## .meta.hclass
 .meta.hclass <- function (hcPairs, G, verbose=FALSE)
 {
     initial <- attributes(hcPairs)$init
@@ -362,6 +364,8 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
     
     y
 }
+## meta.hclass
+
 ###
 ## convert hclust merging nodes to hcPairs merging nodes 
 .clust.hpairs2 <- function(li, lj)
@@ -397,7 +401,6 @@ bhattacharyya.coeff <- function(gM,gS, cM,cS, alpha=1)
 
 ###
 ##
-
 
 .clust.mergedClusters <- function(x, cls)
 {

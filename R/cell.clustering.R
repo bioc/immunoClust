@@ -78,7 +78,6 @@ B=50, tol=1e-5, bias=0.5, modelName="mvt"
 
     .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters)
 }
-
 ### cell.EM(t)
 
 ###
@@ -177,6 +176,7 @@ modelName="mvt"
 
     .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters, inc=inc)
 }
+## single Estep, Mstep
 
 ###
 ## cell.EMstep
@@ -212,6 +212,7 @@ B=1, tol=1e-5, modelName="mvt"
 
     .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters)
 }
+### cell.EMstep
 
 ### cell.ME
 ###
@@ -267,8 +268,7 @@ B=1, tol=1e-5, modelName="mvt"
 
     .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters, inc=inc)
 }
-
-### cell.ME
+### cell.MEstep
 
 
 ### cell.FitModel
@@ -325,25 +325,6 @@ cell.Classify <- function(x, data, modelName="mvt" ) {
 }
 ### cell.Classify
 
-
-### cell.FitCluster
-###
-##  carry cluster-asignment to sample data 
-##  (especially uncompensated model/assignment to compensated sample data)
-###
-#cell.FitCluster <- function(x, data, B=50, tol=1e-5, modelName="mvt" ) {
-# res <- cell.ME(data, parameters=x@parameters, 
-#                history=attr(x, "history"), state=attr(x, "state"),
-#                label=x@label, B=B, tol=tol, modelName=modelName)
-# 
-# attr(res, "trans.a") <- attr(x, "trans.a")
-# attr(res, "trans.b") <- attr(x, "trans.b")
-# attr(res, "trans.decade") <- attr(x, "trans.decade")
-# attr(res, "trans.scale") <- attr(x,"trans.scale")
-#
-# res 
-#}
-### cell.FitCluster
 
 ### cell.ClustData
 ##  cluster sample data in K clusters

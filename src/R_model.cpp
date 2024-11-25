@@ -18,7 +18,6 @@
 #include "sub_mvn.h"
 #include "util.h"
 
-
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Print.h>
@@ -188,7 +187,7 @@ extern "C" {
 		
 		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
                        REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
-                       (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, 0.0);
+                       (Rf_isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, 0.0);
 		
 		status = em.start(INTEGER(label));
 		if( status == 0 ) {
@@ -217,7 +216,7 @@ extern "C" {
    	SEXP ret = _M_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], label);
   		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
 					   0, REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
-					   (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);	
+					   (Rf_isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);
 		
   		status = em.build(INTEGER(label), REAL(VECTOR_ELT(ret,6)),INTEGER(VECTOR_ELT(ret,7)));
         INTEGER(VECTOR_ELT(ret,0))[0] =  INTEGER(K)[0];
@@ -244,7 +243,7 @@ extern "C" {
 		
 		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
 					   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
-					   (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0, REAL(bias)[0] );
+					   (Rf_isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0, REAL(bias)[0] );
 		
 		status = em.start(INTEGER(label));
 		if( status == 0 ) {
@@ -279,7 +278,7 @@ extern "C" {
 		
 		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
 					   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)) , REAL(VECTOR_ELT(ret,4)), 
-					   (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);	
+					   (Rf_isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);
 		
 		status = em.start(0);
 		if( status == 0 ) {
@@ -315,7 +314,7 @@ extern "C" {
 		
 		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
 					   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
-					   (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0, REAL(bias)[0]);	
+					   (Rf_isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0, REAL(bias)[0]);
 		
 		status = em.start(0);
 		if( status == 0 ) {
@@ -346,7 +345,7 @@ extern "C" {
 
 		em_gaussian em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
 					   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
-					   (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);	
+					   (Rf_isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);
 		
 		status = em.start(0);
 		if( status == 0 ) {
@@ -382,7 +381,7 @@ extern "C" {
 		
 		em_mvt em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
 				  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
-				  MVT_Nu, (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0, 0.0);
+				  MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0, 0.0);
 		
 		status = em.start(INTEGER(label));
 		if( status == 0 ) {
@@ -416,7 +415,7 @@ extern "C" {
 		
 		em_mvt em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
 				  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
-				  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, REAL(bias)[0]);
+				  MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, REAL(bias)[0]);
 		
 		status = em.start(INTEGER(label));
 		if( status == 0 ) {
@@ -446,7 +445,7 @@ extern "C" {
         SEXP ret = _M_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], label);
         em_mvt em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
                        0, REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
-                       MVT_Nu, (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);
+                       MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);
         
         status = em.build(INTEGER(label), REAL(VECTOR_ELT(ret,6)),INTEGER(VECTOR_ELT(ret,7)));
         INTEGER(VECTOR_ELT(ret,0))[0] =  INTEGER(K)[0];
@@ -472,7 +471,7 @@ extern "C" {
 		
 		em_mvt em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
 				  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
-				  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);	
+				  MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);
 		
 		status = em.start(0);
 		if( status == 0 ) {
@@ -508,7 +507,7 @@ extern "C" {
 		
 		em_mvt em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
 				  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
-				  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, REAL(bias)[0]);
+				  MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, REAL(bias)[0]);
 		
 		status = em.start(0);
 		if( status == 0 ) {
@@ -538,7 +537,7 @@ extern "C" {
 
 		em_mvt em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y), 
 				  REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)), 
-				  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);	
+				  MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);
 		
 		status = em.start(0);
 		if( status == 0 ) {
@@ -576,7 +575,7 @@ extern "C" {
         
         em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
                   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
-                  MVT_Nu, (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0, 0.0);
+                  MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0, 0.0);
         
         status = em.start(INTEGER(label));
         if( status == 0 ) {
@@ -610,7 +609,7 @@ extern "C" {
         
         em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
                   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
-                  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, REAL(bias)[0]);
+                  MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, REAL(bias)[0]);
         
         status = em.start(INTEGER(label));
         if( status == 0 ) {
@@ -640,7 +639,7 @@ extern "C" {
         SEXP ret = _M_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], label);
         em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
                   0, REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
-                  MVT_Nu, (isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);
+                  MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0) ? REAL(t) : 0);
         
         status = em.build(INTEGER(label), REAL(VECTOR_ELT(ret,6)),INTEGER(VECTOR_ELT(ret,7)));
         INTEGER(VECTOR_ELT(ret,0))[0] =  INTEGER(K)[0];
@@ -666,7 +665,7 @@ extern "C" {
         
         em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
                   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
-                  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);
+                  MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);
         
         status = em.start(0);
         if( status == 0 ) {
@@ -702,7 +701,7 @@ extern "C" {
         
         em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
                   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
-                  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, REAL(bias)[0]);
+                  MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0, REAL(bias)[0]);
         
         status = em.start(0);
         if( status == 0 ) {
@@ -732,7 +731,7 @@ extern "C" {
         
         em_mvt2 em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], REAL(y),
                   REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)), REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
-                  MVT_Nu, (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);
+                  MVT_Nu, (Rf_isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);
         
         status = em.start(0);
         if( status == 0 ) {
@@ -770,7 +769,7 @@ extern "C" {
 		
 		// observation matrix is changed by hc_mvn, so make a copy
 		SEXP x = Rf_protect(Rf_duplicate(y));
-		hc_mvn hc(n, p, REAL(x), (isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);
+		hc_mvn hc(n, p, REAL(x), (Rf_isReal(t) && Rf_length(t) > 0 ) ? REAL(t) : 0);
 		hc.process(INTEGER(VECTOR_ELT(ret,0)), INTEGER(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)));
 		
 		Rf_unprotect(3);
