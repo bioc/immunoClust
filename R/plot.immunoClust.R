@@ -107,6 +107,10 @@ npoints=501, add=FALSE, gates=NULL, pscales=NULL, ...)
     if( !is.null(attr(x, "desc")) ) {
         desc <- attr(x, "desc")
         name <- gsub("\n", ": ", x@parameters)
+        ## 2024.11.26: sanitize param
+        for( i in seq_along(name) )
+            name[i] <- gsub(paste0(": ", desc[i]), "", name[i])
+       
         lab <- c()
         for( i in subset ) {
             if( !is.na(desc[i]) && desc[i] != "" )

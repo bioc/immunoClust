@@ -9,7 +9,11 @@ immunoMeta <- function(res, dat, gating) {
         M <- res@mu
         desc <- attr(res, "desc")
         if( !is.null(desc) ) {
-            colnames(M) <- paste(sep="\n", res@parameters, desc)
+            params <- res@parameters
+            ## 2024.11.26: sanitize parameters
+            for( i in seq_along(params) )
+                params[i] <- gsub(paste0( " ", desc[i]), "", params[i])
+            colnames(M) <- paste(sep="\n", params, desc)
             res@parameters <- colnames(M)
         }
         else {
