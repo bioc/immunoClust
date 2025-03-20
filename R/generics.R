@@ -29,13 +29,15 @@ setGeneric("subset")
 
 transformParams <- function(object, ... ) UseMethod("transformParams")
 
+## transform: already S4 in base
+setGeneric("transform")
 
-## generics only for immunoMeta S3methods (replacement)
 
 ## events
 events <- function(object,...) UseMethod("events")
 cells <- function(object,...) UseMethod("cells")
 
+## generics only for immunoMeta S3methods (replacement)
 prop <- function(object, ...) UseMethod("prop")
 "prop<-" <- function(object, ..., value) UseMethod("prop<-")
 setGeneric("prop<-")

@@ -72,7 +72,7 @@ Documentation of the accessors and methods for immunoClust-objects
 }
 
 \item{npar}{
-    the number of parameters measured, cell-clustered 
+    the number of parameters measured, cell-clustered
 
     \emph{Usage:}
 
@@ -151,7 +151,7 @@ Documentation of the accessors and methods for immunoClust-objects
 
 \item{cells}{
     the cell-events indices in the FCS-file for the cluster selection 
-    (all cluster by default). if na.rm ist TRUE the removed events aer
+    (all cluster by default). if na.rm ist TRUE the removed events are
     obmitted and the indices fits to the a-posteriori matrix \code{z} in the
     \code{immunoClust}-object 
 

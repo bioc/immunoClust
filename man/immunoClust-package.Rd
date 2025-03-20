@@ -25,17 +25,6 @@ After this all cell-clustering results are collected in a vector and
 meta-clustering is performed to obtain the across samples popluations.
 }
 
-\details{ 
-    \tabular{ll}{
-    Package: \tab immunoClust\cr 
-    Type: \tab Package\cr 
-    Version: \tab 1.0.0\cr
-    Depends: \tab R(>= 2.13.0), methods, stats, graphics, grid, lattice, 
-    flowCore\cr 
-    Date: \tab 2015-01-28\cr 
-    License: \tab Artistic-2.0\cr 
-    }
-}
 \author{
 Till Sörensen <till-antoni.soerensen@charited.de>  
 }
