@@ -3,45 +3,6 @@
 ####
 
 
-
-###
-##  cell.EM(t)
-##  fits model to sample data, initial estimation given by K, w, m, s
-###
-#cell.EM <- function(
-#data, parameters=NULL, expName="immunoClust Experiment", history=NULL,
-#state=NULL, K, w, m, s, B=50, tol=1e-5, bias=0.5, modelName="mvt"
-#) {
-#
-#    y <- .exprs(data, parameters)
-#    N <- nrow(y)
-#    P <- ncol(y)
-#
-#    if (nrow(s)) {
-#        dim(s) <- c(K,P*P)
-#        S <- c(t(s))
-#    }
-#    else {
-#        S <- s
-#    }
-#    if (nrow(m)) {
-#        M <- c(t(m))
-#    }
-#    else{
-#        M <- m
-#    }
-#
-#    obj <- .Call(paste(sep="","immunoC_", modelName, "EMt"),
-#                N=as.integer(N), P=as.integer(P), L=as.integer(K),
-#                as.double(t(y)), double(0),
-#                as.double(w), as.double(M), as.double(S),
-#                as.integer(B), as.double(tol), as.double(bias) )
-#
-#    .immunoClust2(obj, K, P, N, state=state,
-#                    expName=expName, parameters=parameters)
-#}
-####
-
 ####
 ## cell.EMt
 ## cell.EM is missspelling, because it calls EMt
@@ -80,44 +41,6 @@ B=50, tol=1e-5, bias=0.5, modelName="mvt"
 }
 ### cell.EM(t)
 
-###
-##  cell.Estimation
-##  classify sample data according to model data given by K, w, m, s
-###
-#cell.Estimation <- function(
-#data, parameters=NULL, expName="immunoClust Experiment",
-#history=NULL, state=NULL, K, w, m, s, scale_Z=TRUE, modelName="mvt"
-#) {
-#
-#    y <- .exprs(data, parameters)
-#
-#    y <- as.matrix(y)
-#    N <- nrow(y)
-#    P <- ncol(y)
-#
-#    if (nrow(s)) {
-#        dim(s) <- c(K,P*P)
-#        S <- c(t(s))
-#    }
-#    else {
-#        S <- s
-#    }
-#    if (nrow(m)) {
-#        M <- c(t(m))
-#    }
-#    else{
-#        M <- m
-#    }
-#
-#    obj <- .Call(paste(sep="", "immunoC_", modelName, "E"),
-#                as.integer(N), as.integer(P), as.integer(K),
-#                as.double(t(y)), double(0),
-#                as.double(w), as.double(M), as.double(S), as.integer(scale_Z) )
-#
-#    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters)
-#
-#}
-### cell.Estimation
 
 ## single Estep, Mstep
 cell.Estep <- function(
@@ -214,37 +137,10 @@ B=1, tol=1e-5, modelName="mvt"
 }
 ### cell.EMstep
 
-### cell.ME
+### cell.MEstep
 ###
 ##  fit model to the sample data, initial event assignment given by label
 ###
-#cell.ME <-function(
-#data, parameters=NULL, expName="immunoClust Experiment",
-#history=NULL, state=NULL, label, B=50, tol=1e-5, modelName="mvt"
-#) {
-#
-#    y <- .exprs(data, parameters);
-#
-#    inc <- !is.na(label)
-#
-#    y <- as.matrix(y[inc,])
-#    N <- nrow(y)
-#    P <- ncol(y)
-#    label <- label[inc]
-#    K <- max(label)
-#
-#    obj <- .Call(paste(sep="", "immunoC_", modelName, "ME"),
-#            as.integer(N), as.integer(P), as.integer(K),
-#            as.double(t(y)), NULL,  as.integer(label),
-#            as.integer(B), as.double(tol) )
-#
-#    .immunoClust2(obj, K, P, N, expName=expName, parameters=parameters, 
-#       inc=inc)
-#}
-
-###
-## cell.ME has unlucky ordered (and unnessesary) call parameter
-##  better use cell.MEstep
 cell.MEstep <-function(
 data, label, parameters=NULL,
 expName="immunoClust Experiment",
@@ -518,12 +414,25 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
         
         ks <- strptime(date(), "%a %b %d %H:%M:%S %Y")
         
-        res <- cell.TestSubCluster( x, as.matrix(y[cinc,]), t, k, J=J, 
-                            B=B, tol=tol, bias=bias,
-                            sample.EM=sample.EM, sample.number=sample.number, 
-                            sample.standardize=sample.standardize, 
-                            modelName=modelName) 
-        
+        if( sample.number==0 ) {
+        res <- cell.TestSubCluster_kmeans( x, as.matrix(y[cinc,]), t,
+                J=J, B=B, tol=tol, bias=bias,
+                sample.EM=sample.EM, modelName=modelName)
+        }
+        #else
+        #if( sample.number==1 ) {
+        #    ## mieser hack
+        #res <- cell.TestSubCluster_hclust( x, as.matrix(y[cinc,]), t,
+        #        k, J=J, B=B, tol=tol, bias=bias,
+        #        sample.EM=sample.EM, sample.number=1500,
+        #        sample.standardize=sample.standardize, modelName=modelName)
+        #}
+        else {
+        res <- cell.TestSubCluster( x, as.matrix(y[cinc,]), t,
+                k, J=J, B=B, tol=tol, bias=bias,
+                sample.EM=sample.EM, sample.number=sample.number,
+                sample.standardize=sample.standardize, modelName=modelName)
+        }
         ke <- strptime(date(), "%a %b %d %H:%M:%S %Y")
         
         duration[k] <- difftime(ke,ks,units="min")
@@ -570,9 +479,6 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
             icl_l[k] <- 0
             tst_l[k] <- 1
         }
-        #        if( length(res) > 0 )
-        #message("cluster ", k, " (N=", res[[1]]@N,
-        #    ") ICL=", format(icl_l[k],digits=2))
         
     } ## for cluster k
     
@@ -840,7 +746,7 @@ modelName="mvt"
         }
         else {
             label[ySubset] <- .clust.hclass(hcPairs, k)
-        }   
+        }
         
 # EMs        
         obj <- .Call(paste(sep="", "immunoC_", modelName, sample.EM), 
@@ -904,6 +810,294 @@ modelName="mvt"
         obj <- NULL
         
     } ## for k
+    
+    result
+    
+}
+
+
+cell.TestSubCluster_hclust <- function(
+x, y, t, cluster, J=8, B=500, tol=1e-5, bias=0.5,
+sample.EM="MEt", sample.df=5, sample.number=1500, sample.standardize=TRUE,
+modelName="mvt"
+) {
+## total model
+    N <- nrow(y)
+    P <- ncol(y)
+    K <- x@K
+    
+    sumT <- N
+    if( !is.null(t) )
+    sumT <- sum(t)
+    
+    tY <- t(y)
+    
+    prob <- NULL
+    
+    if( J > N ) {
+        return(NULL)
+    }
+    
+    result <- vector("list")
+    
+    label <- rep(1, N)
+    
+    obj <- .Call(paste(sep="", "immunoC_", modelName, "ME"),
+                as.integer(N), as.integer(P), L=as.integer(1),
+                as.double(tY), as.double(t), as.integer(label),
+                as.integer(B), as.double(tol))
+    
+    
+    if( obj$L < 1 )
+    return(NULL)
+    
+# output obj$s to sigma
+    sigma <- array(0, c(1, P, P))
+    s <- matrix(obj$s, 1, P * P, byrow=TRUE)
+    sigma[1,,] <- matrix(s[1,], P, P, byrow=TRUE)
+    
+    
+# output BIC & ICL
+    BIC <- obj$logLike[1]
+    ICL <- 0
+    logLike <- obj$logLike[3]
+    
+    iclLike <- obj$logLike[2]
+    
+# outp
+    result[[1]] <- new("immunoClust", parameters=x@parameters,
+                    K=1, N=N, P=P, w=obj$w,
+                    mu=matrix(obj$m, 1, P, byrow=TRUE), sigma=sigma,
+                    logLike=obj$logLike, BIC=BIC, ICL=ICL)
+    attr(result[[1]], "iterations") <- obj$itertations
+    
+    obj <- NULL
+# initialization based on hierarchical clustering
+    if (J>1 && P>1 ) {
+        prob <- NULL
+        maha <- NULL
+        
+        use_p <- which(diag(x@sigma[cluster,,]) > 1e-8)
+        try( maha <- mahalanobis(y[,use_p], x@mu[cluster,use_p],
+                            x@sigma[cluster, use_p, use_p]), silent=TRUE )
+        
+        if( is.null(maha) ) {
+            warning(" singularity in cluster ", cluster, "\n")
+        }
+        else {
+            abv <- qchisq(0.95,P)^2
+            maha[maha>abv] <- abv
+            
+# density based down sampling: should be adapted to model (mvt -> t, mvn -> n)
+            if( "mvt" == modelName ) {
+                prob <- (1 + maha/sample.df)^(0.5*(sample.df+P))
+            }
+            else
+            if( "mvn" == modelName ) {
+                prob <- exp(0.5*maha)
+            }
+        }
+        
+# if more than sample.number (1500) observations, only use testSample at random
+        if (N > sample.number) {
+# 2012.11.07:
+# enhence outliers in sub sample
+            if( !is.null(maha) ) {
+                ySubset <- sample(seq_len(N), sample.number, prob=prob)
+            }
+            else {
+                ySubset <- sample(seq_len(N), sample.number)
+            }
+        }
+        else {
+            ySubset <- seq_len(N)
+        }
+        
+##    hcPairs <- HClust(y[ySubset,], weights=t[ySubset])
+## ... or standardize?
+        sub <- y[ySubset,]
+        if( sample.standardize ) {
+            for( p in seq_len(P) ) {
+                if( sd(sub[,p]) > 0 ) {
+                    sub[,p] <- (sub[,p]-mean(sub[,p]))/sd(sub[,p])
+                }
+            }
+        }
+        
+        hcPairs <- cell.hclust(sub, t[ySubset])
+        
+        attr(hcPairs, "ySubset") <- ySubset
+    }
+    
+##  to perform the cluster analysis via EM for each specific number of clusters
+    {
+    
+        obj <- NULL
+        
+        label <- rep(0, N)
+        
+## TODO: clarify P=1 case
+        if (P==1) {
+            q <- quantile(y, seq(from=0, to=1, by=1/J))
+            q[1] <- q[1]-1
+            for (l in seq_len(J)) label[y>q[l] & y<=q[l+1]] <- l
+        }
+        else {
+            label[ySubset] <- .clust.hclass(hcPairs, J)
+        }
+        
+# EMs
+        obj <- .Call(paste(sep="", "immunoC_", modelName, sample.EM),
+                    as.integer(N), as.integer(P), as.integer(J),
+                    as.double(tY), as.double(t), as.integer(label),
+                    as.integer(B), as.double(tol), as.double(bias) )
+        
+## 2012.12.12: singularity problems
+        if( obj$L < 1 || obj$logLike[3] == Inf ) {
+            return(result)
+        }
+        
+        L <- obj$L
+        
+# output obj$s to sigma
+        sigma <- array(0, c(L, P, P))
+        s <- matrix(obj$s, J, P * P, byrow=TRUE)
+        for (l in seq_len(L))
+        sigma[l,,] <- matrix(s[l,], P, P, byrow=TRUE)
+        
+        mu <- matrix(obj$m, J, P, byrow=TRUE)[seq_len(L),]
+        dim(mu) <- c(L,P)
+        
+# output BIC & ICL
+        BIC <- obj$logLike[1]
+        
+
+        if( L > 1 )
+        ICL <- obj$logLike[3] - logLike - .icl_delta(sumT, P, K, L)*bias
+        else
+        ICL <- obj$logLike[3] - .icl_delta(sumT, P, K, L)*bias
+
+
+        result[[2]] <- new("immunoClust", parameters=x@parameters,
+                        K=L, N=N, P=P, w=obj$w[seq_len(L)], mu=mu, sigma=sigma,
+                        logLike=obj$logLike, BIC=BIC, ICL=ICL)
+        attr(result[[2]], "iterations") <- obj$iterations
+        
+        
+        obj <- NULL
+        
+    } ## J
+    
+    result
+    
+}
+
+cell.TestSubCluster_kmeans<-function(
+x, y, t, J=8, B=500, tol=1e-5, bias=0.5,
+sample.EM="MEt", modelName="mvt"
+) {
+    
+## total model
+    N <- nrow(y)
+    P <- ncol(y)
+    K <- x@K
+    
+    sumT <- N
+    if( !is.null(t) )
+    sumT <- sum(t)
+    
+    tY <- t(y)
+    
+    prob <- NULL
+    
+    if( J > N ) {
+        return(NULL)
+    }
+    
+    result <- vector("list")
+    
+    label <- rep(1, N)
+    
+    obj <- .Call(paste(sep="", "immunoC_", modelName, "ME"),
+                as.integer(N), as.integer(P), L=as.integer(1),
+                as.double(tY), as.double(t), as.integer(label),
+                as.integer(B), as.double(tol))
+    
+    
+    if( obj$L < 1 )
+    return(NULL)
+    
+# output obj$s to sigma
+    sigma <- array(0, c(1, P, P))
+    s <- matrix(obj$s, 1, P * P, byrow=TRUE)
+    sigma[1,,] <- matrix(s[1,], P, P, byrow=TRUE)
+    
+    
+# output BIC & ICL
+    BIC <- obj$logLike[1]
+    ICL <- 0
+    logLike <- obj$logLike[3]
+    
+    iclLike <- obj$logLike[2]
+    
+# outp
+    result[[1]] <- new("immunoClust", parameters=x@parameters,
+                    K=1, N=N, P=P, w=obj$w,
+                    mu=matrix(obj$m, 1, P, byrow=TRUE), sigma=sigma,
+                    logLike=obj$logLike, BIC=BIC, ICL=ICL)
+    attr(result[[1]], "iterations") <- obj$itertations
+    
+    {
+        
+        obj <- NULL
+        
+        if (P==1) {
+            label <- rep(0, N)
+            q <- quantile(y, seq(from=0, to=1, by=1/J))
+            q[1] <- q[1]-1
+            for (l in seq_len(k)) label[y>q[l] & y<=q[l+1]] <- l
+        }
+        else {
+            label<-try(kmeans(scale(y),J,nstart=10,iter.max=100,
+                algorithm="MacQueen")$cluster,silent=TRUE)
+        }
+        
+# EMs
+        obj <- .Call(paste(sep="", "immunoC_", modelName, sample.EM),
+                    as.integer(N), as.integer(P), as.integer(J),
+                    as.double(tY), as.double(t), as.integer(label),
+                    as.integer(B), as.double(tol), as.double(bias) )
+        
+## 2012.12.12: singularity problems
+        if( obj$L < 1 || obj$logLike[3] == Inf ) {
+            return(result)
+        }
+        
+        L <- obj$L
+        
+# output obj$s to sigma
+        sigma <- array(0, c(L, P, P))
+        s <- matrix(obj$s, J, P * P, byrow=TRUE)
+        for (l in seq_len(L))
+        sigma[l,,] <- matrix(s[l,], P, P, byrow=TRUE)
+        
+        mu <- matrix(obj$m, J, P, byrow=TRUE)[seq_len(L),]
+        dim(mu) <- c(L,P)
+        
+        BIC <- obj$logLike[1]
+        
+        if( L > 1 )
+        ICL <- obj$logLike[3] - logLike - .icl_delta(sumT, P, K, L)*bias
+        else
+        ICL <- obj$logLike[3] - .icl_delta(sumT, P, K, L)*bias
+
+
+        result[[2]] <- new("immunoClust", parameters=x@parameters,
+                        K=L, N=N, P=P, w=obj$w[seq_len(L)], mu=mu, sigma=sigma,
+                        logLike=obj$logLike, BIC=BIC, ICL=ICL)
+        attr(result[[2]], "iterations") <- obj$iterations
+      
+    }
     
     result
     

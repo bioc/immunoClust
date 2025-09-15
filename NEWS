@@ -1,3 +1,7 @@
+Changes in Version 1.41.1
+-CHANGES
+    * experimental trail for sub-clustering using kmeans
+    
 Changes in Version 1.39.4
 -CHANGES
     * sanitize parameter desciption in immunoMeta-object

@@ -71,6 +71,7 @@ finalize <- function(object, ...) UseMethod("finalize")
 #makeModel <- function(x,remove.empty=TRUE, depth=-1) UseMethod("makeModel")
 
 nsam <- function(object, ...) UseMethod("nsam")
+sam_names <- function(object, ...) UseMethod("sam_names")
 sam_ncls <- function(object, ...) UseMethod("sam_ncls")
 sam_clsWeights <- function(object, ...) UseMethod("sam_clsWeights")
 sam_clsEvents <- function(object, ...) UseMethod("sam_clsEvents")

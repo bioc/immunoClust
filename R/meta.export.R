@@ -175,6 +175,11 @@ meta.numEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
                                     out.unclassified=out.unclassified))
     
     colnames(tbl) <- c(meta$dat.clusters$expNames, parDesc)
+    
+    
+    if( isFALSE(out.unclassified) )
+        tbl <- tbl[,seq_len(nsam(meta))]
+    
     tbl
 }
 ## meta.numEvents
@@ -354,6 +359,10 @@ meta.relEvents <- function(meta, out.all=TRUE, out.removed=FALSE,
     }
     
     colnames(tbl) <- c(meta$dat.clusters$expNames, parDesc)
+    
+    if( isFALSE(out.unclassified) )
+        tbl <- tbl[,seq_len(nsam(meta))]
+    
     tbl
 }
 ## meta.relEvents
@@ -890,8 +899,11 @@ function(meta, out.all=TRUE, out.removed=FALSE, out.unclassified=TRUE)
                 out.unclassified=out.unclassified)
                 )
     
-    
+
     colnames(tbl) <- c(meta$dat.clusters$expNames, parDesc)
+
+    if( isFALSE(out.unclassified) )
+        tbl <- tbl[,seq_len(nsam(meta))]
     tbl
 }
 ## meta.relParent

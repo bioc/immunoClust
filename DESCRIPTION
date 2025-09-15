@@ -2,12 +2,12 @@ Package: immunoClust
 Type: Package
 Title: immunoClust - Automated Pipeline for Population Detection in
         Flow Cytometry
-Version: 1.41.0
-Date: 2025-03-20
+Version: 1.41.1
+Date: 2025-05-15
 Authors@R: person("Till", "Soerensen", email="till.soerensen@bioretis.com",
                     role=c("aut", "cre"))
 Maintainer: Till Soerensen <till.soerensen@bioretis.com>
-Depends: R(>= 3.6), flowCore
+Depends: R(>= 4.2), flowCore
 Imports: methods, stats, graphics, grid, lattice, grDevices
 Suggests: BiocStyle, utils, testthat
 Description: immunoClust is a model based clustering approach for Flow Cytometry

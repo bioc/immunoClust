@@ -12,10 +12,11 @@
 #include "util.h"
 
 #include <gsl/gsl_cblas.h>
-#include <gsl/gsl_math.h>
+//#include <gsl/gsl_math.h>
+#include <gsl/gsl_machine.h>
 #include <algorithm>
 #include <gsl/gsl_errno.h>
-#include <string.h>
+
 
 using std::max;
 using std::min;

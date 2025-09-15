@@ -4,6 +4,8 @@
 \alias{nsam,immunoMeta-method}
 \alias{sam_ncls.immunoMeta}
 \alias{sam_ncls,immunoMeta-method}
+\alias{sam_names.immunoMeta}
+\alias{sam_names,immunoMeta-method}
 \alias{sam_clsWeights.immunoMeta}
 \alias{sam_clsWeights,immunoMeta-method}
 \alias{sam_clsMu.immunoMeta}
@@ -128,6 +130,15 @@ the sequence of indices into these sub-levels begining at root level.}
     \emph{Usage:}
 
     \code{nsam(immunoMeta)}
+}
+
+\item{sam_names}{
+    the sample names i.e. \code{expName} in the\code{immunoClust}-objects
+    (samples) which are co-clustered.
+
+    \emph{Usage:}
+
+    \code{sam_ncls(immunoMeta, for.samples=seq_len(nsam(meta))}
 }
 
 \item{sam_ncls}{

@@ -57,7 +57,7 @@ pscal=NULL,...)
                     rest.color <- pop$plot.color.unclassified
                 rest <- pop$clusters[ is.na( match(pop$clusters, clusters) ) ]
                 if( plot.unclassified ) {
-                    col <- c(rep("gray95", length(clusters)), rest + 1 )
+                    col <- c(rep(rest.color, length(clusters)), rest + 1 )
                     clusters <- c(clusters, rest)
                 }
                 else {
@@ -89,7 +89,7 @@ pscal=NULL,...)
                 
             parent.color <- "gray95"
             if( !is.null(pop$plot.color.parent) )
-                rest.color <- pop$plot.color.parent
+                parent.color <- pop$plot.color.parent
             if( length(parent.clusters) > 0 ) {
                 rest <- parent.clusters[is.na(match(parent.clusters, clusters))]
                 clusters <- c(rest, clusters)
@@ -100,7 +100,7 @@ pscal=NULL,...)
         mmain <- paste(sep=".", paste(pop$position, collapse="."), main)
         key <- NULL
         g <- length(pop$childs)
-        if( g > 0 ) {
+        if( g > 0 && plot.childs ) {
             #key.pch <- rep(1,g)
             key.pch <- rep(16,g)
             key.col <- seq_len(g)+1
@@ -110,13 +110,13 @@ pscal=NULL,...)
             #key.text <- sapply(pop$childs,function(x)x$desc)
             key.text <- vapply(pop$childs,function(x)x$desc, "")
             key <- list(title="Sub Level",
-            cex.title=1,
-            columns=1,
-            points=list(pch=key.pch, col=key.col),
-            text = list(key.text,adj=0, cex=1),
-            adj=0,
-            space="right",
-            just="top")
+                cex.title=1,
+                columns=1,
+                points=list(pch=key.pch, col=key.col),
+                text = list(key.text,adj=0, cex=1),
+                adj=0,
+                space="right",
+                just="top")
         }
         
         if( length(subset) > 2 && length(clusters) > 0 ) {

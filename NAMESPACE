@@ -3,7 +3,7 @@ useDynLib(immunoClust)
 import(methods)
 
 
-importFrom(stats, density, mahalanobis, qt, quantile, sd, qchisq)
+importFrom(stats, density, mahalanobis, qt, quantile, sd, qchisq, kmeans)
 importFrom(graphics, plot, pairs, points, polygon,
     hist, title, axis, mtext, legend, abline)
 
@@ -69,6 +69,7 @@ transformParams
 export(immunoMeta)
 exportMethods(
 nsam,
+sam_names,
 sam_ncls,
 sam_clsWeights,
 sam_clsEvents,

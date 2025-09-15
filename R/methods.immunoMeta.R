@@ -7,6 +7,10 @@ setMethod("sam_ncls", signature(object="immunoMeta"),
 function(object, for.samples=seq_len(nsam(object))) {
     object$dat.clusters$K[for.samples]
 })
+setMethod("sam_names", signature(object="immunoMeta"),
+function(object, for.samples=seq_len(nsam(object))) {
+    object$dat.clusters$expNames[for.samples]
+})
 setMethod("sam_clsWeights", signature(object="immunoMeta"),
 function(object) {
     object$dat.clusters$W

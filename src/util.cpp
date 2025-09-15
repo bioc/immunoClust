@@ -10,7 +10,7 @@
 #include "util.h"
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_sf_gamma.h>
-#include <gsl/gsl_sf_log.h>
+//#include <gsl/gsl_sf_log.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
@@ -535,11 +535,12 @@ namespace mvn {
 		double sum_square=0;   // store sqrt of Mahalanobis distance
 		
 		
-		pdf = -0.5 * P * gsl_sf_log(2.*M_PI);
+		//pdf = -0.5 * P * gsl_sf_log(2.*M_PI);
+        pdf = -0.5 * P * log(2.*M_PI);
 		
 		for(i=0;i<P;i++)
 		{
-			pdf += gsl_sf_log(*(S+i*P+i));
+			pdf += log(*(S+i*P+i));
 			tmpT[i] = Y[i]-M[i];
 		}
 		
