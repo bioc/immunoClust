@@ -2,6 +2,7 @@
 \docType{class}
 \alias{nsam}
 \alias{sam_ncls}
+\alias{sam_names}
 \alias{sam_clsWeights}
 \alias{sam_clsEvents}
 \alias{sam_clsMu}
@@ -37,6 +38,8 @@ either for an \code{immunoClust} or an \code{immunoMeta} object.
 nsam(object, \dots)
 
 sam_ncls(object, \dots)
+
+sam_names(object, \dots)
 
 sam_clsWeights(object, \dots)
 
@@ -89,9 +92,13 @@ The appropriate value for the specific cal (see dection Details).
 
 \section{Details}{
 \describe{
-    \item{nsam}{returns the number of cell-event \code{immunoClust}-objects 
-    co-clustered in the \code{immunoMeta}-object.}
-
+    \item{nsam}{returns the number of samples co-clustered in the object.}
+    
+    \item{sam_names}{returns the names of co-clustered samples.}
+        
+    \item{sam_ncls}{returns the number of clusters for each co-clustered
+    samples.}
+        
     \item{sam_clsWeights}{returns the cluster weights of all samples 
     cell-clusters.}
 

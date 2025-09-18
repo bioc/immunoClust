@@ -1051,13 +1051,14 @@ sample.EM="MEt", modelName="mvt"
         
         obj <- NULL
         
-        if (P==1) {
-            label <- rep(0, N)
-            q <- quantile(y, seq(from=0, to=1, by=1/J))
-            q[1] <- q[1]-1
-            for (l in seq_len(k)) label[y>q[l] & y<=q[l+1]] <- l
-        }
-        else {
+        #if (P==1) {
+        #    label <- rep(0, N)
+        #    q <- quantile(y, seq(from=0, to=1, by=1/J))
+        #    q[1] <- q[1]-1
+        #    for (l in seq_len(k)) label[y>q[l] & y<=q[l+1]] <- l
+        #}
+        #else
+        {
             label<-try(kmeans(scale(y),J,nstart=10,iter.max=100,
                 algorithm="MacQueen")$cluster,silent=TRUE)
         }

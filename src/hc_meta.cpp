@@ -108,7 +108,7 @@ mvn_dendro::init_D_diag(double alpha)
     //const double zero = 0.0;
     const double *M_i, *M_j, *S_i, *S_j;
     double detS, detS_i, detS_j, logD;
-    int status = 0;
+    //int status = 0;
     double* dij;
     dij = D;
     
@@ -259,8 +259,6 @@ mvn_dendro::update_D(int oi, int oj)
     // update D<<oi,oj>,k> -> D<oi,k>
     S_j = S+oi*P*P;
     M_j = M+oi*P;
-    //W_j = W[oi];
-    //W_j = 0.5;
     
     detS_j = logdet_S(S_j, status);
     
@@ -340,7 +338,7 @@ mvn_dendro::update_D(int oi, int oj)
 void
 mvn_dendro::update_D_diag(int oi, int oj, double alpha)
 {
-    int i, j, /*status_i, status_j,*/ status;
+    int i, j; /* status; */
     const double *M_i, *M_j, *S_i, *S_j;
     double detS, detS_i, detS_j, logD;
     double* dij;
@@ -348,9 +346,7 @@ mvn_dendro::update_D_diag(int oi, int oj, double alpha)
     // update D<<oi,oj>,k> -> D<oi,k>
     S_j = S+oi*P*P;
     M_j = M+oi*P;
-    //W_j = W[oi];
-    //W_j = 0.5;
-    
+   
     detS_j = 0.0;
     for( int p=0; p<P; ++p ) {
         // log det invert
@@ -386,9 +382,9 @@ mvn_dendro::update_D_diag(int oi, int oj, double alpha)
         *dij = alpha * (*dij) + (1-alpha)*(1. - exp(0.5*logD));
         ++dij;
     }
+    
     S_i = S_j;
     M_i = M_j;
-    //W_i = W_j;
     detS_i = detS_j;
     dij += oi;
     for(j=oi+1; j<oj; ++j) {
@@ -402,7 +398,6 @@ mvn_dendro::update_D_diag(int oi, int oj, double alpha)
             detS_j += log(1.0/(*(S_j+p*P+p)) );
         }
        
-        //dbg::printf("meta-HC logdet <%d,%d>: status=%d", oi, j, status);
         // use only diagonal elements
         cblas_dcopy(P*P, &zero, 0, tmpS, 1);
         detS = 0.0;
