@@ -69,6 +69,7 @@ int print_text(const char* txt)
         
         /* meta */
         {"immunoC_metaME", (DL_FUNC)(&call_metaME), 13},
+        {"immunoC_metaM", (DL_FUNC)(&call_metaM), 8},
         {"immunoC_mvnDist", (DL_FUNC)(&call_mvnDist), 5},
         
         /* model scale

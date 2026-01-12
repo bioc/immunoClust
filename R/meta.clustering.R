@@ -159,7 +159,53 @@ bias=0.25, alpha=0.5, min.class=0
     
 }
 ## meta.ME
+meta.Mstep <- function(
+P, N, K, W, M, S, label, alpha=0.5
+) {
+    G <- max(label)
+    
+    obj <- .Call("immunoC_metaM",
+            as.integer(sum(K)), as.integer(P), as.integer(G),
+            as.double(W), as.double(c(t(M))), as.double(c(t(S))),
+            as.integer(label),  as.double(alpha) )
+    
+    
+    L <- obj$L
+# output obj$s to sigma
+    sigma <- array(0, c(L, P, P))
+    s <- matrix(obj$s, G, P * P, byrow=TRUE)
+    for (k in seq_len(L))
+    sigma[k,,] <- matrix(s[k,], P, P, byrow = TRUE)
+    
+    mu <- matrix(obj$m, G, P, byrow=TRUE)[seq_len(L),]
+    dim(mu) <- c(L,P)
+    
+    z <- matrix(obj$z, sum(K), G, byrow=TRUE)
+    z <- as.matrix(z[,seq_len(L)])
+    
+    if( sum(is.na(z)) > 0 ) {
+        warning("meta.ME: N/As in Z\n")
+        z[is.na(z)] <- 0
+    }
 
+# output BIC & ICL
+    BIC <- obj$logLike[1]
+    ICL <- obj$logLike[2]
+    
+# output meta-model
+    parameters <- colnames(M)
+    if( length(parameters) == 0 ) {
+        parameters <- paste(sep="", "P", seq_len(P))
+    }
+    result <- new("immunoClust", expName="meta.ME", parameters=parameters,
+                    K=L, P=P, w=obj$w[seq_len(L)], mu=mu, sigma=sigma,
+                    z=z, label=obj$label,
+                    logLike=obj$logLike, BIC=BIC, ICL=ICL,
+                    history=paste(obj$history[seq_len(L)]) )
+    
+    result
+    
+}
 
 ####
 ##  meta.Clustering: major iteration loop

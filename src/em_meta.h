@@ -83,6 +83,8 @@ public:
 	
 	
 	int		start(int* label, bool weighted);
+    int     build(int* label, double* loglike, int* history);
+    
 	int		final1(int* label, double* loglike, int* history);
     int     final2(int* label, double* loglike, int* history);
     int     final3(int* label, double* loglike, int* history);

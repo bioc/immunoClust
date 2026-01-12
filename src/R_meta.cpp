@@ -121,7 +121,7 @@ extern "C" {
         }
        
     }
-    static SEXP _ME_ret(int n, int p, int k) 
+    static SEXP _ME_ret(int n, int p, int k)
 	{
         
 		SEXP ret = Rf_protect(Rf_allocVector(VECSXP, 12));
@@ -145,8 +145,9 @@ extern "C" {
 		SET_VECTOR_ELT(ret, 2, Rf_allocVector(REALSXP, k));	// out w
 		SET_VECTOR_ELT(ret, 3, Rf_allocVector(REALSXP, k*p));	// out m
 		SET_VECTOR_ELT(ret, 4, Rf_allocVector(REALSXP, k*p*p));// out s
-		SET_VECTOR_ELT(ret, 5, Rf_allocVector(INTSXP, n));		// out label
-		SET_VECTOR_ELT(ret, 6, Rf_allocVector(REALSXP, 4));	// out logLike
+        SET_VECTOR_ELT(ret, 5, Rf_allocVector(INTSXP, n));		// out label
+        
+        SET_VECTOR_ELT(ret, 6, Rf_allocVector(REALSXP, 4));	// out logLike
 		SET_VECTOR_ELT(ret, 7, Rf_allocVector(INTSXP, k));		// out history
 		SET_VECTOR_ELT(ret, 8, Rf_allocVector(INTSXP, 1));		// out status
 		SET_VECTOR_ELT(ret, 9, Rf_allocVector(INTSXP, 1));		// out iteratioms
@@ -161,7 +162,48 @@ extern "C" {
 		return ret;
 		
 	}
+    static SEXP _M_ret(int n, int p, int k, SEXP label)
+    {
     
+        SEXP ret = Rf_protect(Rf_allocVector(VECSXP, 12));
+        SEXP names = Rf_protect(Rf_allocVector(STRSXP, 12));
+        
+        SET_STRING_ELT(names, 0, Rf_mkChar("L"));
+        SET_STRING_ELT(names, 1, Rf_mkChar("z"));
+        SET_STRING_ELT(names, 2, Rf_mkChar("w"));
+        SET_STRING_ELT(names, 3, Rf_mkChar("m"));
+        SET_STRING_ELT(names, 4, Rf_mkChar("s"));
+        SET_STRING_ELT(names, 5, Rf_mkChar("label"));
+        SET_STRING_ELT(names, 6, Rf_mkChar("logLike"));
+        SET_STRING_ELT(names, 7, Rf_mkChar("history"));
+        SET_STRING_ELT(names, 8, Rf_mkChar("status"));
+        SET_STRING_ELT(names, 9, Rf_mkChar("iterations"));
+        SET_STRING_ELT(names, 10, Rf_mkChar("tolerance"));
+        SET_STRING_ELT(names, 11, Rf_mkChar("normedM"));
+        
+        SET_VECTOR_ELT(ret, 0, Rf_allocVector(INTSXP, 1));        // out L
+        SET_VECTOR_ELT(ret, 1, Rf_allocVector(REALSXP, n*k));    // out z (!not initialzed!)
+        SET_VECTOR_ELT(ret, 2, Rf_allocVector(REALSXP, k));    // out w
+        SET_VECTOR_ELT(ret, 3, Rf_allocVector(REALSXP, k*p));    // out m
+        SET_VECTOR_ELT(ret, 4, Rf_allocVector(REALSXP, k*p*p));// out s
+        SET_VECTOR_ELT(ret, 5, Rf_duplicate(label));
+        
+        SET_VECTOR_ELT(ret, 6, Rf_allocVector(REALSXP, 4));    // out logLike
+        SET_VECTOR_ELT(ret, 7, Rf_allocVector(INTSXP, k));        // out history
+        SET_VECTOR_ELT(ret, 8, Rf_allocVector(INTSXP, 1));        // out status
+        SET_VECTOR_ELT(ret, 9, Rf_allocVector(INTSXP, 1));        // out iteratioms
+        SET_VECTOR_ELT(ret, 10, Rf_allocVector(REALSXP, 1));    // out tolerance
+        
+        SET_VECTOR_ELT(ret, 11, Rf_allocVector(REALSXP, n*p));   //normedM
+        
+        Rf_setAttrib(ret, R_NamesSymbol, names);
+        
+        Rf_unprotect(1);    // unproctedt names
+        
+        return ret;
+    
+    }
+
     // metaME
 	SEXP call_metaME(SEXP N, SEXP P, SEXP K, SEXP W, SEXP M, SEXP S,
                      SEXP label, SEXP max_iter, SEXP max_tol, SEXP method, 
@@ -257,6 +299,31 @@ extern "C" {
         
 	}
     
+    SEXP call_metaM(SEXP N, SEXP P, SEXP K, SEXP W, SEXP M, SEXP S,
+                 SEXP label, SEXP alpha)
+    {
+    //int status = 0, L = INTEGER(K)[0];
+   
+        //Rprintf("label: %i = %s\n", TYPEOF(label), type2char(TYPEOF(label)));
+        
+        SEXP ret = _M_ret(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0], label);
+    
+        em_meta em(INTEGER(N)[0], INTEGER(P)[0], INTEGER(K)[0],
+               REAL(W), REAL(M), REAL(S),
+               REAL(VECTOR_ELT(ret,1)), REAL(VECTOR_ELT(ret,2)),
+               REAL(VECTOR_ELT(ret,3)), REAL(VECTOR_ELT(ret,4)),
+               0.0, REAL(alpha)[0]);
+    
+        INTEGER(VECTOR_ELT(ret,0))[0] = em.build(INTEGER(VECTOR_ELT(ret,5)),
+                 REAL(VECTOR_ELT(ret,6)),
+                 INTEGER(VECTOR_ELT(ret,7)));
+    
+        
+        Rf_unprotect(1);    // unprocted ret
+                                             
+        return ret;
+    
+    }
 
 
     // >> SON clustering

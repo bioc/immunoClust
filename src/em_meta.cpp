@@ -566,6 +566,49 @@ em_meta::start(int* label, bool weighted)
     return L;
 } // em_meta::start
 
+int
+em_meta::build(int* label, double logLike[3], int* history)
+{
+    //dbg::printf("meta.EM start %s (%s)", label? "ME" : "EM", weighted? "weighted": "straight" );
+    int status = 0;
+    
+    // straight
+    T = &one;
+    T_sum = N;
+    T_inc = 0;
+    
+    cblas_dcopy(N*G, &zero, 0, Z, 1);
+    cblas_dcopy(G, &zero, 0, Z_sum, 1);
+
+    memset(g_changed, 0, G*sizeof(int));
+    
+    double* z = Z;
+    const double* t = T;
+    for(int i=0; i<N; ++i) {
+        // Initialize Z-matrix (with 1's and 0's) according to initial partition
+        int l = label[i];
+        if(l>0) {
+            g_changed[l-1] += 1;
+            e_label[i] = l-1;
+            z[l-1] = (*t);
+            Z_sum[l-1] += (*t);
+        }
+        else {
+            //dbg::printf("start obs %d w/o component",i);
+        }
+        z += G;
+        t += T_inc;
+    }
+    status = m_init();
+    
+    u_step();
+    
+    status = final3(label, logLike, history);
+    
+    return status;
+    
+} // em_meta::build
+
 /*
 	em-iteration
  */

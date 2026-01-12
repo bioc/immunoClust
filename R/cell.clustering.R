@@ -419,14 +419,14 @@ sample.standardize=TRUE, extract.thres=0.8, modelName="mvt"
                 J=J, B=B, tol=tol, bias=bias,
                 sample.EM=sample.EM, modelName=modelName)
         }
-        #else
-        #if( sample.number==1 ) {
-        #    ## mieser hack
-        #res <- cell.TestSubCluster_hclust( x, as.matrix(y[cinc,]), t,
-        #        k, J=J, B=B, tol=tol, bias=bias,
-        #        sample.EM=sample.EM, sample.number=1500,
-        #        sample.standardize=sample.standardize, modelName=modelName)
-        #}
+        else
+        if( sample.number==1 ) {
+            ## mieser hack
+        res <- cell.TestSubCluster_hclust( x, as.matrix(y[cinc,]), t,
+                k, J=J, B=B, tol=tol, bias=bias,
+                sample.EM=sample.EM, sample.number=1500,
+                sample.standardize=sample.standardize, modelName=modelName)
+        }
         else {
         res <- cell.TestSubCluster( x, as.matrix(y[cinc,]), t,
                 k, J=J, B=B, tol=tol, bias=bias,
