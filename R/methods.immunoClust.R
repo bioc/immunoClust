@@ -123,7 +123,7 @@ function(x, cls=seq_len(ncls(x)), par=seq_len(npar(x)))
     attr(y,"fcsName") <- attr(x,"fcsName")
     attr(y,"trans.a") <- attr(x,"trans.a")[par]
     attr(y,"trans.b") <- attr(x,"trans.b")[par]
-    
+    attr(y,"limits") <- attr(x,"limits")[,par]
     y
 })
 

@@ -112,7 +112,7 @@ function(object,cls=seq_len(ncls(object)), for.sample=NA) {
     N <- length(K)
     
     if( !is.na(for.sample) ) {
-        if( for.sample < 1 || for.sample > length(K) )
+        if( for.sample < 1 || for.sample > length(N) )
         stop("for.sample option is out of range")
         
         n <- for.sample
@@ -168,6 +168,25 @@ function(object, name="", pos=c())
 "prop<-.immunoMeta" <-
 function(object, name, pos, for.level=TRUE, for.sublevels=FALSE, ..., value)
 {
+    ## known/used properties
+    props <- c(
+    "desc",
+    "M",
+    "S",
+    "pscales",
+    "parent.position",
+    
+    "plot.color",
+    "plot.color.unclassified",
+    "plot.subset",
+    "plot.tiles",
+    "plot.childs",
+    "plot.parent",
+    "plot.order"
+    )
+    if( match(name, props, nomatch=0) <= 0 )
+        warning( "property ", name, " is not common")
+        
     object$gating <- .annotate.setProp(object$gating, pos, name, value,
     for.level=for.level, for.sublevels=for.sublevels)
     object
@@ -292,6 +311,7 @@ function(object, pos)
         stop("some level clusters are not in meta cluster range")
     }
 
+    object$restore <- object$gating
     object$gating <- .annotate.addPop(object$gating, pos, value, desc)
     object
 }
@@ -322,6 +342,7 @@ function(object, pos)
         stop("some clusters are not in cluster range")
     }
 
+    object$restore <- object$gating
     if( add )
     object$gating <- .annotate.addClusters(object$gating, value, pos)
     else
