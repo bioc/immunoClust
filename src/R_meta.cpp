@@ -241,7 +241,7 @@ extern "C" {
          
                 
 			case 20:	// bc EM-T: classification with weights
-            case 200:   // bc EM-T: classification with weights / final no weights: macht eher keine sinn
+            case 200:   // bc EM-T: classification with weights / final no weights: macht eher keinen sinn
             case 300:   // trail for changed final, kann wieder weg == 20
 				L = em.start(INTEGER(label), true);
 				status = em.bc_classify(iterations, tolerance, INTEGER(min_g)[0]);

@@ -362,7 +362,7 @@ trans.proc="vsHtransAw"
             
             t <- trans.FitToData(res, dat_t, 
                             B=10, certainty=0.3, proc=trans.proc)
-           
+            
             attr(res, "trans.a") <- t[1,]
             attr(res, "trans.b") <- t[2,]
             

@@ -1097,7 +1097,7 @@ sample.EM="MEt", modelName="mvt"
                         K=L, N=N, P=P, w=obj$w[seq_len(L)], mu=mu, sigma=sigma,
                         logLike=obj$logLike, BIC=BIC, ICL=ICL)
         attr(result[[2]], "iterations") <- obj$iterations
-      
+        
     }
     
     result

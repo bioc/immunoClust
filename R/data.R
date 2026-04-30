@@ -131,7 +131,20 @@ meta.exprs <- function(exp, sub=c())
 ###
 .cell.compensate <- function(x, parameters=NULL)
 {
-    spill <- spillover(x)$SPILL
+    #spill <- spillover(x)$SPILL
+    spill <- keyword(x)[['$SPILLOVER']]
+    if(is.null(spill))
+        spill <- keyword(x)[['SPILLOVER']]
+    if(is.null(spill))
+        spill <- keyword(x)[['SSPILL']]
+    if(is.null(spill))
+        spill <- keyword(x)[['SPILL']]
+            
+    if(is.null(spill)){
+        warning(baasename(keyword(x)[['FILENAME']]), " has no spillover matrix")
+        return(x)
+    }
+    
     cols <- colnames(spill)
     if( !is.null(parameters) ) {
         sel <- cols %in% parameters

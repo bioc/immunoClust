@@ -7,8 +7,8 @@ Date: 2025-12-12
 Authors@R: person("Till", "Soerensen", email="till.soerensen@bioretis.com",
                     role=c("aut", "cre"))
 Maintainer: Till Soerensen <till.soerensen@bioretis.com>
-Depends: R(>= 4.2), flowCore
-Imports: methods, stats, graphics, grid, lattice, grDevices
+Depends: R(>= 4.2)
+Imports: methods, stats, graphics, grid, lattice, grDevices, flowCore
 Suggests: BiocStyle, utils, testthat
 Description: immunoClust is a model based clustering approach for Flow Cytometry
     samples. The cell-events of single Flow Cytometry samples are modelled by a

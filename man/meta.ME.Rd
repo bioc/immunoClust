@@ -1,5 +1,6 @@
 \name{meta.ME}
 \alias{meta.ME}
+\alias{meta.Mstep}
 
 \encoding{utf8}
 
@@ -17,6 +18,9 @@ information in an object of class
 \usage{
 meta.ME(P, N, K, W, M, S, label, B=100, tol=1e-5, method=20, bias=0.25, 
     alpha=0.5, min.class=0)
+
+meta.Mstep(P, N, K, W, M, S, label, alpha=0.5)
+
 }
 
 \arguments{
@@ -58,6 +62,9 @@ the diagonal elements of it. }
 This function is used internally by the meta-clustering procedures 
 \code{\link{meta.process}} and \code{\link{meta.Clustering}} in 
 \emph{immuno}Clust.
+
+While \code{meta.ME} performs a complete EM-iteration with ICL testing to
+maintain the clusters, \code{meta.Mstep} performs a single maximisation step.
 }
 
 \value{
