@@ -141,7 +141,7 @@ meta.exprs <- function(exp, sub=c())
         spill <- keyword(x)[['SPILL']]
             
     if(is.null(spill)){
-        warning(baasename(keyword(x)[['FILENAME']]), " has no spillover matrix")
+        warning(basename(keyword(x)[['FILENAME']]), " has no spillover matrix")
         return(x)
     }
     
