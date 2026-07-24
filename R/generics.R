@@ -3,6 +3,10 @@
 setGeneric("nobs")
 
 npar <- function(object, ...) UseMethod("npar")
+
+## relaxing ICL_bias
+ICL_bias <- function(object, ...) UseMethod("ICL_bias")
+
 ncls <- function(object, ...) UseMethod("ncls")
 ## weights already S3 in stats
 setGeneric("weights")

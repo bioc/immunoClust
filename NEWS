@@ -1,3 +1,7 @@
+Changes in Version 1.45.1
+-CHANGES
+    * added ICL_bias accessor for immunoClust- and immunoMeta-objects
+    
 Changes in Version 1.43.1
 -CHANGES
     * added meta.Mstep function

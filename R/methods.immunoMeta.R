@@ -35,6 +35,11 @@ setMethod("npar", signature(object="immunoMeta"),
 function(object) {
     length(object$res.clusters@parameters)
 })
+setMethod("ICL_bias", signature(object="immunoMeta"),
+function(object) {
+    attr(object$res.clusters,"bias")
+}
+)
 setMethod("ncls", signature(object="immunoMeta"),
 function(object) {
     object$res.clusters@K

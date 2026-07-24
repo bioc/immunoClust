@@ -16,6 +16,8 @@
 \alias{sam_clsEvents,immunoMeta-method}
 \alias{nobs.immunoMeta}
 \alias{nobs,immunoMeta-method}
+\alias{ICL_bias.immunoMeta}
+\alias{ICL_bias,immunoMeta-method}
 \alias{ncls.immunoMeta}
 \alias{ncls,immunoMeta-method}
 \alias{npar.immunoMeta}
@@ -194,6 +196,14 @@ the sequence of indices into these sub-levels begining at root level.}
     \emph{Usage:}
 
     \code{nobj(immunoMeta)}
+}
+
+\item{ICL_bias}{
+    the ICL bias applied in meta-clustering
+
+    \emph{Usage:}
+
+    \code{ICL_bias(immunoMeta)}
 }
 
 \item{ncls}{

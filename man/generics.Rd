@@ -9,6 +9,7 @@
 \alias{sam_clsSigma}
 \alias{nobs}
 \alias{npar}
+\alias{ICL_bias}
 \alias{ncls}
 \alias{weights}
 \alias{mu}
@@ -52,6 +53,8 @@ sam_clsSigma(object, \dots)
 nobs(object, \dots)
 
 npar(object, \dots)
+
+ICL_bias(object, \dots)
 
 ncls(object, \dots)
 
@@ -116,7 +119,9 @@ The appropriate value for the specific cal (see dection Details).
 
     \item{npar}{returns the number of parameters used for clustering.}
 
-    \item{ncls}{returns the number of clusters, either cell-event cluster or 
+    \item{ICL_bias}{return the relaxing ICL_bias used for clustering.}
+
+    \item{ncls}{returns the number of clusters, either cell-event cluster or
     meta-cluster.}
 
     \item{weights}{already generic in \code{stats}. Here, returns the weights 

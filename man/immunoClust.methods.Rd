@@ -6,6 +6,8 @@
 \alias{ncls,immunoClust-method}
 \alias{npar.immunoClust}
 \alias{npar,immunoClust-method}
+\alias{ICL_bias.immunoClust}
+\alias{ICL_bias,immunoClust-method}
 \alias{parameters.immunoClust}
 \alias{parameters,immunoClust-method}
 \alias{parameters<-.immunoClust}
@@ -61,6 +63,14 @@ Documentation of the accessors and methods for immunoClust-objects
     \emph{Usage:}
 
     \code{nobs(immunoClust)}
+}
+
+\item{ICL_bias}{
+    the ICL bias applied in clustering
+
+    \emph{Usage:}
+
+    \code{ICL_bias(immunoClust)}
 }
 
 \item{ncls}{

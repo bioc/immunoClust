@@ -7,8 +7,13 @@ setMethod("npar", signature(object="immunoClust"),
 function(object) {
     length(object@parameters)
 })
+setMethod("ICL_bias", signature(object="immunoClust"),
+function(object) {
+    attr(object,"bias")
+})
+
 setMethod("ncls", signature(object="immunoClust"),
-function(object, ...) {
+function(object) {
     object@K
 })
 setMethod("weights", signature(object="immunoClust"),
@@ -63,14 +68,12 @@ function(object) {
 })
 setMethod("events", signature(object="immunoClust"),
 function(object,cls=seq_len(ncls(object)) ) {
-    #ret <- sapply(cls, function(k) sum(!is.na(object@label) & object@label==k))
     ret <- vapply(cls, function(k) 
             sum(!is.na(object@label) & object@label==k), 0 )
     if( !is.null(ret) )
     names(ret) <- sprintf("cls-%d",cls)
     ret
 })
-
 setMethod("cells", signature(object="immunoClust"),
 function(object,cls=seq_len(ncls(object)), na.rm=FALSE ) {
     ret <- c()
